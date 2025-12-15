@@ -1,0 +1,393 @@
+function [FFT_block_data, ex]  = collectFFTBlock(FFTBlock_stimuli,...
+    FFTBlock_stimuli_dur, jitterdur, itrial, ifreq, iamp, ifft, rec_params, channel_names, ex, Nchan,fs)
+% Goal: To record from the 4 channel electrodes, convert signal from digital
+% values to microVolts, and parse of the response into discrete portions
+% (prestim, stimresp, and poststimresp periods) and save into output variables
+% mysig = [jitter prestim_sig mywaveform poststim_pause mylatency];
+
+%% Downsampling has yet to be implemented!
+
+%% Validation of input variables
+if isempty(FFTBlock_stimuli)
+    error('FFTBlock_stimuli cannot be empty');
+end
+
+if isempty(FFTBlock_stimuli_dur)
+    error('FFTBlock_stimuli_dur cannot be empty');
+end
+
+if isempty(jitterdur)
+    error('jitterdur cannot be empty');
+end
+
+% Check that the number of stimuli matches the number of jitter durations
+if length(jitterdur) ~= size(FFTBlock_stimuli, 1)
+    error('Number of jitter durations (%d) must match number of stimuli (%d)', ...
+        length(jitterdur), size(FFTBlock_stimuli, 1));
+end
+
+% Validate that FFTBlock_stimuli_dur is a single value (all stimuli same duration)
+if length(FFTBlock_stimuli_dur) ~= 1
+    error('FFTBlock_stimuli_dur must be a single value (all stimuli in block must have same duration)');
+end
+
+%% Validate rec_params structure
+if ~isfield(rec_params, 'AEP_scalefact')
+    error('rec_params must contain AEP_scalefact field');
+end
+
+fprintf('Input validation passed: %d stimuli, duration %d samples\n', ...
+    size(FFTBlock_stimuli, 1), FFTBlock_stimuli_dur);
+
+%% Validate downsample factor
+if ~isfield(rec_params, 'downsample_factor')
+    error('rec_params must contain downsample_factor field');
+end
+
+if ~isnumeric(rec_params.downsample_factor) || rec_params.downsample_factor <= 0 || ...
+   mod(rec_params.downsample_factor, 1) ~= 0
+    error('downsample_factor must be a positive integer');
+end
+
+fprintf('Downsampling validation passed: factor = %d\n', rec_params.downsample_factor);
+
+%% Variable initialization
+voltScaleFactor = rec_params.AEP_scalefact; %#% This is to change digital val -> volts right?
+
+%% Calculate downsampled timing parameters
+downsample_factor = rec_params.downsample_factor;
+curstimdur_ds = round(curstimdur / downsample_factor);
+jitterdur_ds = round(jitterdur / downsample_factor);
+
+% Validate that downsampled durations are reasonable
+if curstimdur_ds < 1
+    error('Downsampled stimulus duration too small: %d samples', curstimdur_ds);
+end
+
+if any(jitterdur_ds < 0)
+    error('Downsampled jitter durations contain negative values');
+end
+
+fprintf('Downsampled timing: stimulus duration = %d samples, jitter range = [%d, %d] samples\n', ...
+    curstimdur_ds, min(jitterdur_ds), max(jitterdur_ds));
+
+%% Initialize signal sections
+curstimdur = FFTBlock_stimuli_dur;
+
+% Get block dimensions
+num_stimuli = size(FFTBlock_stimuli, 1);
+stim_length = size(FFTBlock_stimuli, 2);
+
+% Validate that stimuli are properly formatted
+if stim_length ~= curstimdur
+    error('Stimulus waveform length (%d) does not match specified duration (%d)', ...
+        stim_length, curstimdur);
+end
+fprintf('Block setup: %d stimuli, each %d samples long\n', num_stimuli, curstimdur);
+
+%% Pre allocate arrays
+prestim_sig = zeros(num_stimuli, curstimdur_ds, Nchan);
+stimresp_sig = zeros(num_stimuli, curstimdur_ds, Nchan);
+poststimresp_sig = zeros(num_stimuli, curstimdur_ds, Nchan);
+
+fprintf('Pre-allocated arrays (downsampled): [%d x %d x %d]\n', num_stimuli, curstimdur_ds, Nchan);
+
+%% Begin recording
+fprintf('Presenting 10 trial block of stimuli...')
+for iwave = 1:num_stimuli
+    fprintf('Presenting Stimuli %1.0f / 10\n', iwave)    
+    curjitter = jitterdur(iwave);
+    current_wave = FFTBlock_stimuli(iwave,:);
+    current_wave = current_wave(:); % ensure that it is a column vector
+
+    %% Validate current wave
+    if any(isnan(current_wave)) || any(isinf(current_wave))
+        error('Invalid stimulus data in wave %d: contains NaN or Inf values', iwave);
+    end
+
+    try
+        % Send stimulus and record response
+        ipage = playrec('playrec', [current_wave], [1 4], -1, 3:8);
+        % Outputs [1 4]: 1 = UW30; 4 = Loopback output
+        % 3:8: 3 = hydrophone; 4 = loopback; 5,6,7,8 = Electrodes
+
+        % Wait for recording to complete
+        playrec('block', ipage);
+
+        % Get recorded data
+        rec_data = double(playrec('getRec', ipage));
+
+        % Clean up the page
+        playrec('delPage', ipage);
+
+    catch ME
+        % Clean up on error
+        try
+            playrec('delPage', ipage);
+        catch
+            % Ignore cleanup errors
+        end
+        error('Audio recording failed for stimulus %d: %s', iwave, ME.message);
+    end
+
+    %% Validate recorded data
+    if isempty(rec_data)
+        error('No data recorded for stimulus %d', iwave);
+    end
+
+    if size(rec_data, 2) < 8
+        error('Insufficient channels recorded for stimulus %d: expected 8, got %d', ...
+            iwave, size(rec_data, 2));
+    end
+
+    %% Convert to microvolts with validation
+    try
+        rec_data = rec_data .* voltScaleFactor;
+        rec_data = rec_data * 1e6;
+
+        % Check for reasonable voltage ranges (basic sanity check)
+        if any(abs(rec_data(:)) > 1e6) % More than 1V seems unreasonable for EEG
+            warning('Unusually large voltage values detected in stimulus %d (max: %.2f µV)', ...
+                iwave, max(abs(rec_data(:))));
+        end
+
+    catch ME
+        error('Voltage conversion failed for stimulus %d: %s', iwave, ME.message);
+    end
+
+    fprintf('Stimulus %d/%d recorded successfully\n', iwave, num_stimuli);
+
+    %% Downsample the recorded data
+    try
+        rec_data_original = rec_data; % Keep original for debugging if needed
+        rec_data = downsample(rec_data, downsample_factor);
+        
+        fprintf('Downsampled data from %d to %d samples (factor: %d)\n', ...
+            size(rec_data_original, 1), size(rec_data, 1), downsample_factor);
+        
+        % Validate downsampled data
+        if isempty(rec_data)
+            error('Downsampling resulted in empty data for stimulus %d', iwave);
+        end
+        
+    catch ME
+        error('Downsampling failed for stimulus %d: %s', iwave, ME.message);
+    end
+
+    %% Calculate total samples needed for validation (using downsampled values)
+    curjitter_ds = jitterdur_ds(iwave);
+    total_samples_needed_ds = curjitter_ds + 3*curstimdur_ds;
+
+    % Validate total recorded data length once
+    if size(rec_data, 1) < total_samples_needed_ds
+        error('Insufficient downsampled data for stimulus %d. Need %d samples, got %d', ...
+            iwave, total_samples_needed_ds, size(rec_data, 1));
+    end
+
+    %% PROCESS EACH CHANNEL (WAVEFORMS ORGANIZED BY ROW)
+    for ich = 1:Nchan
+        realchan = ich + 4; % The true channel from the DAC (channels 5-8)
+
+        % Validate channel index
+        if realchan > size(rec_data, 2)
+            error('Channel index %d exceeds available channels (%d) for stimulus %d', ...
+                realchan, size(rec_data, 2), iwave);
+        end
+
+        % Extract channel data and ensure it's a row vector
+        channel_data = rec_data(:, realchan);
+        channel_data = channel_data(:).'; % Force row vector
+
+        % Validate channel data
+        if any(isnan(channel_data)) || any(isinf(channel_data))
+            error('Invalid data in stimulus %d, channel %d: contains NaN or Inf', iwave, ich);
+        end
+
+        %% Calculate segment boundaries with bounds checking (using downsampled timing)
+        try
+            % Pre-stimulus period (after jitter)
+            prestim_start = curjitter_ds + 1;
+            prestim_end = prestim_start + curstimdur_ds - 1;
+
+            if prestim_end > length(channel_data)
+                error('Pre-stimulus segment extends beyond data for stimulus %d, channel %d', iwave, ich);
+            end
+            prestim_sig(iwave, :, ich) = channel_data(prestim_start:prestim_end);
+
+            % During stimulus period (response)
+            stimresp_start = prestim_end + 1;
+            stimresp_end = stimresp_start + curstimdur_ds - 1;
+
+            if stimresp_end > length(channel_data)
+                error('Stimulus response segment extends beyond data for stimulus %d, channel %d', iwave, ich);
+            end
+            stimresp_sig(iwave, :, ich) = channel_data(stimresp_start:stimresp_end);
+
+            % Post-stimulus period
+            poststim_start = stimresp_end + 1;
+            poststim_end = poststim_start + curstimdur_ds - 1;
+
+            if poststim_end > length(channel_data)
+                error('Post-stimulus segment extends beyond data for stimulus %d, channel %d', iwave, ich);
+            end
+            poststimresp_sig(iwave, :, ich) = channel_data(poststim_start:poststim_end);
+
+        catch ME
+            error('Data segmentation failed for stimulus %d, channel %d: %s', iwave, ich, ME.message);
+        end
+    end
+
+    % Log progress every few stimuli
+    if mod(iwave, 5) == 0 || iwave == num_stimuli
+        fprintf('Processed %d/%d stimuli\n', iwave, num_stimuli);
+    end
+end
+
+%% Save to output FFT_block_data
+FFT_block_data = struct();
+FFT_block_data.prestim_sig = prestim_sig;
+FFT_block_data.stimresp_sig = stimresp_sig;
+FFT_block_data.poststimresp_sig = poststimresp_sig;
+
+% Add comprehensive metadata for downstream functions
+FFT_block_data.metadata.num_stimuli = num_stimuli;
+FFT_block_data.metadata.signal_duration = curstimdur_ds;
+FFT_block_data.metadata.signal_duration_original = curstimdur;
+FFT_block_data.metadata.num_channels = Nchan;
+FFT_block_data.metadata.frequency_index = ifreq;
+FFT_block_data.metadata.amplitude_index = iamp;
+FFT_block_data.metadata.fft_block_number = ifft;
+FFT_block_data.metadata.channel_names = channel_names;
+FFT_block_data.metadata.collection_time = datestr(now);
+FFT_block_data.metadata.downsample_factor = downsample_factor;
+FFT_block_data.metadata.original_fs = fs;
+FFT_block_data.metadata.downsampled_fs = fs / downsample_factor;
+
+fprintf('FFT_block_data prepared with metadata\n');
+
+%% Save to ex structure
+% Keep track how the number of trials
+if ~isfield(ex{ifreq, iamp}, 'trialnum') || isempty(ex{ifreq, iamp}.trialnum)
+    ex{ifreq, iamp}.trialnum = (itrial-num_stimuli+1):itrial;
+else
+    ex{ifreq, iamp}.trialnum = [ex{ifreq, iamp}.trialnum, (itrial-num_stimuli+1):itrial];
+end
+
+for ich = 1:Nchan
+    curchan_name = channel_names{ich};
+
+    % Initialize signal fields as cell arrays if they are empty []
+    if isempty(ex{ifreq, iamp}.electrodes.(curchan_name).signals.prestim_sig)
+        ex{ifreq, iamp}.electrodes.(curchan_name).signals.prestim_sig = {};
+    end
+    if isempty(ex{ifreq, iamp}.electrodes.(curchan_name).signals.stimresp_sig)
+        ex{ifreq, iamp}.electrodes.(curchan_name).signals.stimresp_sig = {};
+    end
+    if isempty(ex{ifreq, iamp}.electrodes.(curchan_name).signals.poststimresp_sig)
+        ex{ifreq, iamp}.electrodes.(curchan_name).signals.poststimresp_sig = {};
+    end
+
+    % Store signal data in cell arrays
+    ex{ifreq, iamp}.electrodes.(curchan_name).signals.prestim_sig{ifft} = prestim_sig(:,:,ich);
+    ex{ifreq, iamp}.electrodes.(curchan_name).signals.stimresp_sig{ifft} = stimresp_sig(:,:,ich);
+    ex{ifreq, iamp}.electrodes.(curchan_name).signals.poststimresp_sig{ifft} = poststimresp_sig(:,:,ich);
+
+    fprintf('Stored FFT block %d data for %s\n', ifft, curchan_name);
+
+    % Initialize N fields as arrays if they are empty []
+    if isempty(ex{ifreq, iamp}.electrodes.(curchan_name).running_stats.prestim.N)
+        ex{ifreq, iamp}.electrodes.(curchan_name).running_stats.prestim.N = [];
+    end
+    if isempty(ex{ifreq, iamp}.electrodes.(curchan_name).running_stats.stimresp.N)
+        ex{ifreq, iamp}.electrodes.(curchan_name).running_stats.stimresp.N = [];
+    end
+    if isempty(ex{ifreq, iamp}.electrodes.(curchan_name).running_stats.poststimresp.N)
+        ex{ifreq, iamp}.electrodes.(curchan_name).running_stats.poststimresp.N = [];
+    end
+
+    % Store trial counts in regular arrays (extend array if needed)
+    ex{ifreq, iamp}.electrodes.(curchan_name).running_stats.prestim.N(ifft) = num_stimuli;
+    ex{ifreq, iamp}.electrodes.(curchan_name).running_stats.stimresp.N(ifft) = num_stimuli;
+    ex{ifreq, iamp}.electrodes.(curchan_name).running_stats.poststimresp.N(ifft) = num_stimuli;
+
+    % Calculate cumulative trials for this channel
+    cumulative_trials = sum(ex{ifreq, iamp}.electrodes.(curchan_name).running_stats.prestim.N);
+    % Validation: All signal types should have same trial counts
+    prestim_trials = ex{ifreq, iamp}.electrodes.(curchan_name).running_stats.prestim.N(ifft);
+    stimresp_trials = ex{ifreq, iamp}.electrodes.(curchan_name).running_stats.stimresp.N(ifft);
+    poststim_trials = ex{ifreq, iamp}.electrodes.(curchan_name).running_stats.poststimresp.N(ifft);
+
+    if prestim_trials ~= stimresp_trials || stimresp_trials ~= poststim_trials
+        warning('Trial count mismatch for %s, FFT block %d: prestim=%d, stimresp=%d, poststim=%d', ...
+            curchan_name, ifft, prestim_trials, stimresp_trials, poststim_trials);
+    end
+
+    fprintf('Trial counts for %s, block %d: %d trials (cumulative: %d)\n', ...
+        curchan_name, ifft, num_stimuli, cumulative_trials);
+end
+
+%% FINAL VALIDATION AND CLEANUP
+% Validate that all channels have consistent data for this FFT block
+trial_counts = zeros(1, Nchan);
+signal_sizes = zeros(Nchan, 3);  % [prestim, stimresp, poststim] sizes
+
+for check_ch = 1:Nchan
+    check_channel_name = channel_names{check_ch};
+    
+    % Validate that the channel structure exists
+    if ~isfield(ex{ifreq, iamp}.electrodes, check_channel_name)
+        error('Channel %s not found in ex structure after storage', check_channel_name);
+    end
+    
+    % Check trial counts
+    trial_counts(check_ch) = ex{ifreq, iamp}.electrodes.(check_channel_name).running_stats.prestim.N(ifft);
+    
+    % Check signal array sizes
+    signal_sizes(check_ch, 1) = size(ex{ifreq, iamp}.electrodes.(check_channel_name).signals.prestim_sig{ifft}, 1);
+    signal_sizes(check_ch, 2) = size(ex{ifreq, iamp}.electrodes.(check_channel_name).signals.stimresp_sig{ifft}, 1);
+    signal_sizes(check_ch, 3) = size(ex{ifreq, iamp}.electrodes.(check_channel_name).signals.poststimresp_sig{ifft}, 1);
+end
+
+% Validate trial count consistency across channels
+if length(unique(trial_counts)) > 1
+    error('Inconsistent trial counts across channels for FFT block %d: %s', ...
+        ifft, mat2str(trial_counts));
+end
+
+
+% Validate that FFT block data matches ex structure (downsampled dimensions)
+if size(FFT_block_data.prestim_sig, 1) ~= num_stimuli || ...
+   size(FFT_block_data.stimresp_sig, 1) ~= num_stimuli || ...
+   size(FFT_block_data.poststimresp_sig, 1) ~= num_stimuli
+    error('FFT_block_data size mismatch: expected %d trials, got [%d, %d, %d]', ...
+        num_stimuli, size(FFT_block_data.prestim_sig, 1), ...
+        size(FFT_block_data.stimresp_sig, 1), size(FFT_block_data.poststimresp_sig, 1));
+end
+
+% Validate downsampled signal dimensions
+expected_samples = curstimdur_ds;
+if size(FFT_block_data.prestim_sig, 2) ~= expected_samples || ...
+   size(FFT_block_data.stimresp_sig, 2) ~= expected_samples || ...
+   size(FFT_block_data.poststimresp_sig, 2) ~= expected_samples
+    error('FFT_block_data downsampled dimension mismatch: expected %d samples, got [%d, %d, %d]', ...
+        expected_samples, size(FFT_block_data.prestim_sig, 2), ...
+        size(FFT_block_data.stimresp_sig, 2), size(FFT_block_data.poststimresp_sig, 2));
+end
+
+fprintf('Downsampling validation complete: signals downsampled from %d to %d samples\n', ...
+    curstimdur, curstimdur_ds);
+
+%% SUCCESS SUMMARY
+fprintf('\n=== FFT BLOCK %d COLLECTION COMPLETE ===\n', ifft);
+fprintf('Frequency index: %d, Amplitude index: %d\n', ifreq, iamp);
+fprintf('Trials collected: %d\n', num_stimuli);
+fprintf('All %d channels validated successfully\n', Nchan);
+fprintf('Downsampled data stored in ex structure and FFT_block_data\n');
+fprintf('Downsampling: %d → %d samples (factor: %d)\n', curstimdur, curstimdur_ds, downsample_factor);
+fprintf('========================================\n');
+
+% Final check that ex structure is ready for next processing steps
+total_trials_so_far = length(ex{ifreq, iamp}.trialnum);
+fprintf('Total trials for this condition: %d\n', total_trials_so_far);
+
+end
