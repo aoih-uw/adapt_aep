@@ -1,6 +1,7 @@
 %% function main_loop %%
 %% Setup
 try
+    addpath(genpath('matlab'))
     ex = setup_exp;
 catch ME
     fprintf('Experiment setup error: %s\n', ME.message)
@@ -44,6 +45,8 @@ try
         end
         save_data(ex)
     end
+    % Add data to csv that shows threshold data for all other frequencies
+    % tested
 catch ME
     fprintf('Experiment error: %s\n', ME.message)
     save_data(ex)
