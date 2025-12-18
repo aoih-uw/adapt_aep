@@ -11,3 +11,5 @@ dependencies:
   - scikit-learn
   - scipy
   - altair
+  - time
+  - h5py
