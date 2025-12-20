@@ -1,4 +1,5 @@
 function ex = model_response(ex)
+% original modeling code found here https://github.com/aoih-uw/fish_eeg/blob/aoi-branch-whoopsie/analysis/visualize_prelim_CI_data.ipynb
 % Get current iteration number
 iblock = [ex.block.iteration_num];
 iblock = iblock(end);
