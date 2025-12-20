@@ -1,5 +1,0 @@
-function ex = setup_ex
-ex = struct('exp',);
-setup_GUI_vars()
-setup_data_struct
-end

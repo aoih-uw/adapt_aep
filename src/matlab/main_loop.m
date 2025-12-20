@@ -1,4 +1,4 @@
-function ex = run_adapt_aep(gui_args,app)
+function ex = main_loop(app)
 %% function main_loop %%
 
 %   .-*'`    `*-.._.-'/
@@ -18,7 +18,8 @@ end
 try
     while ~ex.trial.exp_done % While testing current stimulus frequency
         ex = select_next(ex); % Select amplitude to test
-
+        ex.block.iteration_num = 0;
+        
         % Update GUI
         try
             ex = update_GUI(ex,app);
@@ -27,36 +28,55 @@ try
         end
 
         while ~ex.trial.amp_done % While testing current stimulus amplitude
-            % Check if max block count met
-            ex = check_max_count(ex);
-            if ex.trial.amp_done
-                break
-            end
-
             % Data collection
             ex = make_stim_block(ex); % Create block of stimuli
             ex = present_and_measure(ex); % Present stimuli and measure signals
-                % Note: use single precision for large arrays
+            ex.block.iteration_num = ex.block.iteration_num + 1; % Iterate block number
+
+            % Plot all downsampled raw signals (hydrophone and channel signals) in block
+            try
+                ex = update_main_GUI(ex);
+            catch
+                warning('Main GUI update failed')
+            end
+            
+            % Data processing
             ex = preprocess_signal(ex);
             ex = analyze_signal(ex); % Analyze electrode signal
+            ex = make_decision(ex); % Is a response present?
 
-            % Update GUI
+            % Inspect analysis results
             try
-                ex = update_GUI(ex);
+                ex = inspect_analysis_GUI(ex); % at this point make decision of ex.trial.amp_done in the GUI
             catch
-                warning('GUI update failed')
+                warning('Analysis result GUI error')
+            end
+            
+            % Update GUI Summary Plots
+            try
+                ex = update_main_GUI(ex);
+            catch
+                warning('Main GUI update failed')
             end
 
-            ex = make_decision(ex); % Is a response present?
+            % Check if max block count met
+            trials_presented = ex.block.iteration_num*ex.info.adaptive.trials_per_block;
+            
+            if trials_presented >= ex.info.adaptive.max_trials % Maximum trials reached
+                ex.trial.amp_done = 1;
+                fprintf('Maximum trial number reached. Select new amplitude or conclude test')
+            end
 
             if ex.trial.amp_done
                 save_data(ex)
-                ex = select_next(ex);
+                ex = select_next_GUI(ex);
             else
-                ex = select_next(ex);
+                ex = select_next_GUI(ex);
             end
         end
+        ex = prepare_next_amp(ex);
     end
+
     % Add data to csv that shows threshold data for all other frequencies
     % tested
     ex = finish_experiment(ex);

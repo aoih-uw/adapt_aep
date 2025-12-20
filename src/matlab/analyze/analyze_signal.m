@@ -4,4 +4,3 @@ ex = calc_period_diffs(ex);
 ex = calc_bootstrap_dist(ex);
 ex = model_response(ex);
 ex = make_prediction(ex);
-end

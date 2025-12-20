@@ -5,4 +5,4 @@ function ex = reject_artefacts(ex)
 % be thrown out? Think about this
 
 ex.block(iblock).num_rejected
-ex.block(iblock)
+ex.block(iblock).reject_rate
