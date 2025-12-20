@@ -1,54 +1,43 @@
+function ex = run_adapt_aep(gui_args,app)
+%% function main_loop %%
+%   .-*'`    `*-.._.-'/
+% < * ))     ,       (
+%   `*-._`._(__.--*"`.\
+
 %% Setup
 try
-    % Initialize data structure
-    ex = setup_ex();
-
-    % Stimulus calibration variables
-    ex = load_stim_cali(ex);
-
-    % Create sound stimulus
-    ex = make_tone_burst(ex);
-
-    %% Initialization
-    ex = init_hardware(ex);
+    addpath(genpath('matlab'))
+    ex = setup(gui_args);
 catch ME
-    fprintf('Initialization error: %s\n', ME.message)
-    shutdown_hardware(ex)
+    fprintf('Experiment setup error: %s\n', ME.message)
     rethrow(ME)
 end
 
 %% Main experiment loop
 try
-    while ~ex.trial.exp_done
-        % Select amplitude to test
-        ex = select_amplitude(ex);
-        ex.trial.block_count = 0;
-        ex.trial.amp_done = false; 
+    while ~ex.trial.exp_done % While testing current stimulus frequency
+        ex = select_next(ex); % Select amplitude to test
 
         % Update GUI
         try
-            ex = update_GUI(ex);
+            ex = update_GUI(ex,app);
         catch
             warning('GUI update failed')
         end
 
-        while ~ex.trial.amp_done
+        while ~ex.trial.amp_done % While testing current stimulus amplitude
             % Check if max block count met
-            ex.trial.block_count = ex.trial.block_count + 1;
-            if ex.trial.block_count > ex.params.maxBlocks
-                fprintf('Max blocks exceeded')
-                ex.trial.amp_done = true;
+            ex = check_max_count(ex);
+            if ex.trial.amp_done
                 break
             end
 
-            % Create block of stimuli
-            ex = make_stim_block(ex);
-
-            % Present stimuli and measure electrode signal
-            ex = present_and_measure(ex);
-
-            % Analyze electrode signal
-            ex = analyze_signal(ex);
+            % Data collection
+            ex = make_stim_block(ex); % Create block of stimuli
+            ex = present_and_measure(ex); % Present stimuli and measure signals
+                % Note: use single precision for large arrays
+            ex = preprocess_signal(ex);
+            ex = analyze_signal(ex); % Analyze electrode signal
 
             % Update GUI
             try
@@ -57,16 +46,22 @@ try
                 warning('GUI update failed')
             end
 
-            % Make decision
-            ex = make_decision(ex);
+            ex = make_decision(ex); % Is a response present?
+
+            if ex.trial.amp_done
+                save_data(ex)
+                ex = select_next(ex);
+            else
+                ex = select_next(ex);
+            end
         end
-        % Save data
-        save_data(ex)
     end
+    % Add data to csv that shows threshold data for all other frequencies
+    % tested
+    ex = finish_experiment(ex);
 catch ME
     fprintf('Experiment error: %s\n', ME.message)
     save_data(ex)
-    shutdown_hardware(ex)
     rethrow(ME)
 end
 

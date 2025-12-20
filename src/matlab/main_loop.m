@@ -1,22 +1,27 @@
+function ex = run_adapt_aep(gui_args,app)
 %% function main_loop %%
+
+%   .-*'`    `*-.._.-'/
+% < * ))     ,       (
+%   `*-._`._(__.--*"`.\
+
 %% Setup
 try
     addpath(genpath('matlab'))
-    ex = setup_exp;
+    ex = setup(gui_args);
 catch ME
     fprintf('Experiment setup error: %s\n', ME.message)
-    shutdown_hardware(ex)
     rethrow(ME)
 end
 
 %% Main experiment loop
 try
     while ~ex.trial.exp_done % While testing current stimulus frequency
-        ex = select_amp(ex); % Select amplitude to test
+        ex = select_next(ex); % Select amplitude to test
 
         % Update GUI
         try
-            ex = update_GUI(ex);
+            ex = update_GUI(ex,app);
         catch
             warning('GUI update failed')
         end
@@ -32,6 +37,7 @@ try
             ex = make_stim_block(ex); % Create block of stimuli
             ex = present_and_measure(ex); % Present stimuli and measure signals
                 % Note: use single precision for large arrays
+            ex = preprocess_signal(ex);
             ex = analyze_signal(ex); % Analyze electrode signal
 
             % Update GUI
@@ -42,11 +48,18 @@ try
             end
 
             ex = make_decision(ex); % Is a response present?
+
+            if ex.trial.amp_done
+                save_data(ex)
+                ex = select_next(ex);
+            else
+                ex = select_next(ex);
+            end
         end
-        save_data(ex)
     end
     % Add data to csv that shows threshold data for all other frequencies
     % tested
+    ex = finish_experiment(ex);
 catch ME
     fprintf('Experiment error: %s\n', ME.message)
     save_data(ex)
