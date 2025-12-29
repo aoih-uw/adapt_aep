@@ -8,7 +8,7 @@ function ex = main_loop(app)
 %% Setup
 try
     addpath(genpath('matlab'))
-    ex = setup(gui_args);
+    ex = setup();
 catch ME
     fprintf('Experiment setup error: %s\n', ME.message)
     rethrow(ME)

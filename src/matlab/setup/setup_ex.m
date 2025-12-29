@@ -18,21 +18,17 @@ ex.next_amplitude = NaN; % Will be assigned a value in select_next_GUI
 % use iblocks but you can get all data easily using all_num_blocks = [ex.block.num_blocks]  % Easy extraction
 ex.block(1).iteration_num = NaN;
 ex.block(1).water_temp_C = NaN; % Get thermometer working
-ex.block(1).jitter = NaN; 
+ex.block(1).jitter = NaN;
+ex.block(1).stimulus_block = NaN;
 
 %% Raw data
 N_channels = ex.info.channels.N_channels;
-ex.raw(1).hydrophone = NaN;
-for i = 1:N_channels
-    ex.raw(1).(sprintf('ch%d', i)) = NaN;
-end
+ex.raw(1).hydrophone = NaN; % Only keep RMS? or the mean across each block?
+ex.raw(1).electrodes = NaN; % order follows ex.info.channels.names
 ex.raw(1).time_stamp = NaN;
 
 %% Cleaned data
-for i = 1:N_channels
-    ex.cleaned(1).(sprintf('ch%d', i)) = NaN;
-end
-ex.cleaned(1).time_stamp = NaN;
+ex.cleaned(1).electrodes = NaN;
 
 %% Model data
 ex.model(1).x_vector = [];
