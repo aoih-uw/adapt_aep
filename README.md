@@ -1,3 +1,4 @@
+![logo](adapt_aep_logo.png "Logo")
 # adapt_aep
 
 Auditory evoked potential (AEP) acquisition software with online response detection.
