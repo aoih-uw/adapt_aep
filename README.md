@@ -1,20 +1,26 @@
 ![logo](adapt_aep_logo.png "Logo")
 # adapt_aep
 
-Auditory evoked potential (AEP) acquisition software with online response detection.
+Auditory evoked potential (AEP) acquisition software tool with online response detection.
 
-## Overview
+## Key Features
+1. Simultaneous presentation of sound stimuli and measurement of electrode signals
+2. Live detection of auditory responses
+3. Adaptive control of the number of stimulus trials
 
-A more detailed description of the project.
-- What problem does this solve?
-- What are the key features?
-- Who is this for?
+![logo](GUI_preview.png "GUI Preview")
 
-## Features
+### Stimuli
+The user can select stimulus frequency in the experiment GUI
+Stimuli are windowed tone bursts with cosine off and onramps. Stimulus features related to signal and ramp duration can be adjusted in `setup_info.m`
 
-- Feature 1
-- Feature 2
-- Feature 3
+### Electrode
+This software is designed for measuremnt of far-field potentials via sub-dermal electrodes. Measurement from surface electrodes is also possible.
+
+### Experiment flow
+- Stimuli will be presented in blocks (The user will indicate the number of trials per block via the GUI)
+- After each block has been measured, the program will perform signal preprocessing and analysis to determine if there is a auditory response present
+- Based on the results from this analysis, the user can decide whether to continue testing at this current stimulus frequency and amplitude, to test the stimulus at a different amplitude, or conclude testing at the current frequency.
 
 ## Installation
 
@@ -22,68 +28,22 @@ A more detailed description of the project.
 # Clone the repository
 git clone https://github.com/aoih-uw/adapt_aep.git
 cd adapt_aep
-
-# Install dependencies
-# Add your installation commands here
 ```
 
 ## Quick Start
-
-```bash
-# Basic usage example
-# Add your quickstart commands here
-```
-
-## Usage
-
-### Basic Example
-
-```python
-# or whatever language you're using
-# Add a simple example here
-```
-
-### Advanced Usage
-
-More detailed examples and use cases.
-
-## Configuration
-
-Explain any configuration options, environment variables, or settings files.
-
-## Documentation
-
-Link to more detailed documentation if available.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+1. Edit `setup_info.m` with the experiment parameters specific to your experiment.
+2. Run adapt_aep_app.mlapp to launch the experiment GUI 
 
 ## Requirements
-
-- List any system requirements
-- Required dependencies
-- Minimum versions
+This software tool currently runs on MATLAB. A complete python version may be developed in the future!
 
 ## License
 
-This project is licensed under the [LICENSE NAME] - see the LICENSE file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Authors
 
 - Aoi Hunsaker - [@aoih-uw](https://github.com/aoih-uw)
-
-## Acknowledgments
-
-- Credit any libraries, tools, or people that helped
-- Inspiration sources
-- References
 
 ## Contact
 
@@ -92,4 +52,4 @@ This project is licensed under the [LICENSE NAME] - see the LICENSE file for det
 
 ## Status
 
-Project status: [Development]
+Project status: In development
