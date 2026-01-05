@@ -1,4 +1,6 @@
 function ex = main_loop(app)
+addpath(genpath("\\wsl$\ubuntu\home\aoih\adapt_aep\src\matlab"))
+
 %% function main_loop %%
 
 %   .-*'`    `*-.._.-'/
@@ -7,8 +9,10 @@ function ex = main_loop(app)
 
 %% Setup
 try
+    ex = app.ex;
+    app.ex = [];  % Set to empty
     addpath(genpath('matlab'))
-    ex = setup();
+    ex = setup(ex);
 catch ME
     fprintf('Experiment setup error: %s\n', ME.message)
     rethrow(ME)

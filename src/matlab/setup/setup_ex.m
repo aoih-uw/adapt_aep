@@ -22,7 +22,6 @@ ex.block(1).jitter = NaN;
 ex.block(1).stimulus_block = NaN;
 
 %% Raw data
-N_channels = ex.info.channels.N_channels;
 ex.raw(1).hydrophone = NaN; % Only keep RMS? or the mean across each block?
 ex.raw(1).electrodes = NaN; % order follows ex.info.channels.names
 ex.raw(1).time_stamp = NaN;

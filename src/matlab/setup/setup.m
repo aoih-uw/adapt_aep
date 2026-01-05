@@ -1,17 +1,11 @@
-function ex = setup()
-ex = setup_ex(); % Initialize data structure
-ex = make_tone_burst(ex); % Create sound stimulus template
+function ex = setup(ex)
+%% Create sound stimulus template
+ex = make_tone_burst(ex);
 
-% Load stimulus calibration variables
-if isempty(ex.info.stimulus.calibration)
-    try
-        % Load existing calibration data
-        load('calibration_data.mat', 'calibration_data'); %# edit this later...
-        fprintf('Loaded existing calibration data.\n');
-        ex.info.stimulus.calibration = calibration_data;
-    catch
-        error('No calibration data found');
-    end
-end
+%% Initialize Hardware
+% D/A converter
+ex = init_dac(ex);
+ex = test_latency(ex);
 
-ex = init_hardware(ex); % Initialization
+% Check that other hardware is on and uses the right settings
+check_hardware_on
