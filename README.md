@@ -11,11 +11,11 @@ Auditory evoked potential (AEP) acquisition software tool with online response d
 ![logo](GUI_preview.png "GUI Preview")
 
 ### Stimuli
-The user can select the stimulus frequency (Hz) in the experiment GUI
+The user can select the stimulus frequency (Hz) in the experiment GUI.  
 Stimuli are windowed tone bursts with cosine off and onramps. Stimulus features related to signal and ramp duration can be adjusted in `setup_info.m`
 
 ### Electrode
-This software is designed for measuremnt of far-field potentials via sub-dermal electrodes. Measurement from surface electrodes is also possible.
+This software is designed for measuremnt of far-field potentials via sub-dermal electrodes. Measurement from surface electrodes is also possible.  
 
 ### Experiment flow
 1. Stimuli will be presented in blocks (The user will indicate the number of trials per block via the GUI)
