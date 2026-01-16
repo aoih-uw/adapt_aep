@@ -34,7 +34,7 @@ for itrial = 1:height(stimulus_block)
             itrial, max_amplitude, amplitude_threshold);
     end
 
-    % Present
+    % Rip it
     try
         ipage = playrec('playrec', current_waveform, output_channels, -1, input_channels);
 

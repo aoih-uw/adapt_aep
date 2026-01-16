@@ -11,7 +11,8 @@ ramp_dur_ms = ex.info.stimulus.ramp_duration_ms;
 
 % Nyquist check
 if stim_freq >= fs/2
-    error('Stimulus frequency must be below Nyquist limit (fs/2 = %.1f Hz)', fs/2)
+    error('make_tone_burst:NyquistViolation', ...
+        'Stimulus frequency must be below Nyquist limit (fs/2 = %.1f Hz)', fs/2)
 end
 
 % Samples
@@ -22,7 +23,8 @@ ramp_samp = round(ramp_dur_s*fs);
 
 % Check if sample numbers are reasonable
 if full_amp_samp < 1 || ramp_samp < 1
-    error('Tone burst sample number less than 1, check stimulus duration values')
+    error('make_tone_burst:InvalidDuration', ...
+        'Tone burst sample number less than 1, check stimulus duration values')
 end
 
 % Create window

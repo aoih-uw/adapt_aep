@@ -1,5 +1,5 @@
 function ex = make_stim_block(ex)
-iblock = ex.block(end).iteration_num+1; % for the upcoming block
+iblock = ex.counter(1).iblock +1; % for the upcoming block
 
 % Load variables
 fs = ex.info.recording.sampling_rate_hz;
@@ -8,7 +8,7 @@ waveform = ex.info.stimulus.waveform;
 
 latency_samples = ex.info.recording.latency_samples;
 current_amplitude = ex.info.stimulus.amplitude_spl;
-correction_factor = ex.info.stimulus.calibration.correction_factor_sf;
+correction_factor = ex.info.stimulus.correction_factor_sf;
 
 % Generate random phase offsets within one 60 Hz cycle
 period_60_hz = 1/60; % time it takes to complete 1 cycle of 60 Hz (s)
@@ -18,7 +18,7 @@ selected_cycle_samples = ceil(rand(trials_per_block, 1) * period_60_hz * fs);
 if mod(trials_per_block,2) == 0
     phase_vec = 2*(randperm(trials_per_block) <= trials_per_block/2)' - 1;
 else
-    error('The number of trials is not evenly divded by 2!')
+    error('make_stim_block:oddTrials', 'The number of trials is not evenly divded by 2!')
 end
 
 % Define [PRE, DUR, POST] stimulus periods
