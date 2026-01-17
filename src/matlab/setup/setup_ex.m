@@ -5,8 +5,7 @@ ex = struct( ...
     'block', struct(), ...      % per-trial metadata (transient)
     'raw', struct(), ...   % raw signals
     'cleaned', struct(), ...  % cleaned signals
-    'periods', struct(), ...    % derived metrics
-    'bootstrap', struct(), ...    % derived metrics
+    'analysis', struct(), ...    % derived metrics
     'model', struct(), ...
     'decision', struct(), ...
     'counter', struct(), ...
@@ -25,29 +24,32 @@ ex.block(1).stimulus_block = NaN;
 %% Raw data
 ex.raw(1).hydrophone = NaN; % Only keep RMS? or the mean across each block?
 ex.raw(1).electrodes = NaN; % order follows ex.info.channels.names
-ex.raw(1).time_stamp = NaN;
+ex.raw(1).time_stamp = datetime('now');
 
 %% Cleaned data
 ex.cleaned(1).electrodes = NaN;
 
-%% Model data
-ex.model(1).x_vector = [];
-ex.model(1).y_vector = [];
-ex.model(1).fit_x0 = NaN;
-ex.model(1).fit_kappa = NaN;
-ex.model(1).fit_lmbda = NaN;
-ex.model(1).fit_max_resp = NaN;
-
 %% Decision
-ex.decision.amp_done = 0;
-ex.decision.threshold_done = 0;
+ex.decision(1).amp_done = 0;
+ex.decision(1).amp_done_reason = NaN;
+ex.decision.exp_done = 0;
+ex.decision.exp_done_reason = NaN;
+ex.decision.threshold_spl = NaN;
 
 %% Counter
 ex.counter.iamp = 0;
-ex.counter(1).iblock = 0;
+ex.counter.iblock = 0;
+ex.counter.health = 0;
+
+%% Analysis
+ex.analysis(1).doub_freq_mag_mean = NaN; % save by block
+ex.analysis(1).doub_freq_mag_std= NaN;
 
 %% Health
+ex.health.stim_frequency_hz = 100; %# User needs to set this too...
+ex.health.stim_amp_spl = 140; %# User needs to set this too...
 ex.health(1).time_stamp = NaN;
-ex.health(1).status = 'good';
-ex.health(1).end_test = NaN;
+ex.health(1).doub_stim_mag = NaN;
+ex.health(1).status = NaN;
+ex.health(1).end_test = 0;
 end
