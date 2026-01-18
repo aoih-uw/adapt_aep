@@ -35,9 +35,6 @@ try
             ex.counter.iblock = ex.counter.iblock + 1; % Iterate block number
 
             % HEALTH CHECK
-            if ex.counter.iblock == 1 && ex.counter.iamp == 1 % First tested amplitude and block
-                ex.health(end).time_stamp = datetime('now');
-            end
             time_diff = datetime('now') - ex.health(end).time_stamp;
             if time_diff >= minutes(15)
                 ex = check_health(app,ex);
@@ -61,7 +58,6 @@ try
             % DATA PROCESSING
             ex = preprocess_signal(ex);
             ex = analyze_signal(ex); % Analyze electrode signal
-            ex = is_response_present(ex); % Is a response present? here ex.decision().amp_done and amp_done_reason will be assigned
 
             % UPDATE SUMMARY GUI
             try

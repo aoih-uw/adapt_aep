@@ -48,7 +48,8 @@ ex.analysis(1).doub_freq_mag_std= NaN;
 %% Health
 ex.health.stim_frequency_hz = 100; %# User needs to set this too...
 ex.health.stim_amp_spl = 140; %# User needs to set this too...
-ex.health(1).time_stamp = NaN;
+ex.health(1).time_stamp = datetime('now');
+ex.health.waveforms = NaN;
 ex.health(1).doub_stim_mag = NaN;
 ex.health(1).status = NaN;
 ex.health(1).end_test = 0;

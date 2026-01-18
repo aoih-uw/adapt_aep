@@ -1,5 +1,5 @@
 function ex = make_stim_block(ex)
-iblock = ex.counter(1).iblock +1; % for the upcoming block
+iblock = ex.counter.iblock + 1; % for the upcoming block
 
 % Load variables
 fs = ex.info.recording.sampling_rate_hz;
