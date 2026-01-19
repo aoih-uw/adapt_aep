@@ -35,6 +35,11 @@ cd adapt_aep
 2. Run adapt_aep_app.mlapp to launch the experiment GUI 
 
 ## Requirements
+The following MATLAB Toolboxes are required:
+1. DSP System Toolbox
+2. Signal Processing Toolbox
+3. Audio Toolbox
+
 This software tool currently runs on MATLAB. A complete python version may be developed in the future!
 
 ## License
