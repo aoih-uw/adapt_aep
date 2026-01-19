@@ -1,6 +1,7 @@
 function rec_data_mV = present_sound(stimulus, input_channels, output_channels, voltage_scaling_factor_V)
+% Pre-allocate for efficiency
 rec_data_mV = zeros(size(stimulus,2), ...
-    length(input_channels), size(stimulus,1)); % Pre-allocate for efficiency
+    length(input_channels), size(stimulus,1)); % # of samples x # of channels x # of trials
 
 for itrial = 1:height(stimulus)
     current_waveform = stimulus(itrial,:)';
@@ -43,3 +44,5 @@ for itrial = 1:height(stimulus)
             max(abs(rec_data_mV(:))));
     end
 end
+
+rec_data_mV = permute(rec_data_mV,[3,1,2]); % change to n_trial, n_sample, n_channel

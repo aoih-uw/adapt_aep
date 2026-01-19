@@ -13,13 +13,14 @@ ex = struct( ...
 );
 
 ex = setup_info(ex);
-ex.next_amplitude = NaN; % Will be assigned a value in select_next_GUI
 
 %% Per block metadata
 % use iblocks but you can get all data easily using all_num_blocks = [ex.block.num_blocks]  % Easy extraction
 ex.block(1).water_temp_C = NaN; % Get thermometer working
 ex.block(1).jitter = NaN;
 ex.block(1).stimulus_block = NaN;
+ex.block(1).num_rejected = NaN;
+ex.block(1).reject_rate = NaN;
 
 %% Raw data
 ex.raw(1).hydrophone = NaN; % Only keep RMS? or the mean across each block?
@@ -30,6 +31,7 @@ ex.raw(1).time_stamp = datetime('now');
 ex.cleaned(1).electrodes = NaN;
 
 %% Decision
+ex.decision(1).resp_found = 0;
 ex.decision(1).amp_done = 0;
 ex.decision(1).amp_done_reason = NaN;
 ex.decision.exp_done = 0;
@@ -53,4 +55,5 @@ ex.health.waveforms = NaN;
 ex.health(1).doub_stim_mag = NaN;
 ex.health(1).status = NaN;
 ex.health(1).end_test = 0;
+
 end

@@ -9,7 +9,7 @@ ramp_samp = round(ramp_dur_s*fs);
 
 % Check if sample numbers are reasonable
 if full_amp_samp < 1 || ramp_samp < 1
-    error('make_tone_burst:InvalidDuration', ...
+    error('make_tone_burst_template:InvalidDuration', ...
         'Tone burst sample number less than 1, check stimulus duration values')
 end
 
@@ -22,3 +22,11 @@ window = [win_up ones(1,full_amp_samp) win_down];
 time_vec = (0:length(window)-1)/fs;
 tone_burst = sin(2*pi*(stim_freq*time_vec)).*window;
 tone_burst = tone_burst(:).';   % force row vector
+
+% Logic
+% sin() produces sinusoidal oscillation between -1 and +1
+% time_vec = total duration (s)
+% 2pi = 1 full cycle, converts frequency into radians/sec
+% 2pi * stim_freq * time = phase os the sine wave, where we are in the cycle at time t
+
+% cos -pi/2, 0 = 0 to 1 amplitude

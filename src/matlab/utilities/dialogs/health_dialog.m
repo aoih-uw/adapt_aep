@@ -1,8 +1,7 @@
 function ex = health_dialog(ex)
     status = ex.health(1).status;
-    
     if strcmp(status, 'poor')
-        choice = questdlg(['Animal health status: ' status '. Continue testing?'], ...
+        choice = questdlg(['Animal health status: ' status '! Continue testing?'], ...
                          'Health Warning', ...
                          'Continue testing', 'End experiment', 'Continue testing');
         

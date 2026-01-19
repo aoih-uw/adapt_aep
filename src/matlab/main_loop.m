@@ -1,4 +1,4 @@
-function ex = main_loop_adaptive(app) %# add a main_loop_manual
+function ex = main_loop(app) %# add a main_loop_manual
 addpath(genpath("\\wsl$\ubuntu\home\aoih\adapt_aep\src\matlab"))
 
 %% function main_loop %%
@@ -27,12 +27,15 @@ try
         ex.decision(ex.counter.iamp).amp_done = 0;
         ex.counter.iblock = 0;
 
-        % CREATE BLOCK OF TRIALS
-        ex = make_stim_block(ex);
-
         while ~ex.decision(ex.counter.iamp).amp_done % While testing current stimulus amplitude
             
+            % CREATE BLOCK OF TRIALS
+            ex = make_stim_block(ex);
+
             ex.counter.iblock = ex.counter.iblock + 1; % Iterate block number
+
+            % READ THERMOMETER
+            ex = check_temperature(ex);
 
             % HEALTH CHECK
             time_diff = datetime('now') - ex.health(end).time_stamp;
@@ -50,35 +53,49 @@ try
 
             % UPDATE MONITOR GUI
             try
-                ex = update_monitor_GUI(ex,app); %# Plot average and +/- 1 std downsampled raw signals (hydrophone and channel signals) in block
+                ex = update_monitor_GUI(ex,app); %# Also add the status values here, Plot average and +/- 1 std downsampled raw signals (hydrophone and channel signals) in block
             catch
-                warning('Main GUI update failed')
+                warning('Monitor GUI update failed')
             end
 
             % DATA PROCESSING
             ex = preprocess_signal(ex);
-            ex = analyze_signal(ex); % Analyze electrode signal
+            ex = analyze_signal(ex); % Analyze electrode signal, assigned amp_done here
 
             % UPDATE SUMMARY GUI
             try
                 ex = update_summary_GUI(ex,app); %# include plot where model panel has points with # of trials scaling the point size
             catch
-                warning('Main GUI update failed')
+                warning('Summary GUI update failed')
             end
 
             % CHECK IF FINISHED TESTING THIS AMPLITUDE
-            if ex.decision(ex.counter.iamp).amp_done % When there was a significant response found
-                save_data(ex)
-                ex = select_next(ex); % decide next amplitude to test for or end experiment
+            if ex.decision(ex.counter.iamp).resp_found % When there was a significant response found
+                % Decide to move onto next amplitude or collect another
+                % block
+                ex = resp_found_dialog(ex);
+                if ex.decision(ex.counter.iamp).amp_done
+                    save_data(ex)
+                    ex = select_next_dialog(ex); % decide next amplitude to test for or end experiment
+                elseif ex.decision.exp_done == 1
+                    save_data(ex)
+                    ex = end_experiment(ex);
+                    return
+                end
             end
 
             % CHECK IF MAX TRIALS PRESENTED
             trials_presented = ex.counter.iblock*ex.info.adaptive.trials_per_block;
             if trials_presented >= ex.info.adaptive.max_trials && ex.decision(ex.counter.iamp).amp_done == 0
                 ex.decision(ex.counter.iamp).amp_done = 1;
-                ex.decision.amp_done_reason = 'Maximum trials reached';
-                fprintf('Maximum trial number reached. Select next amplitude')
-                ex = select_next(ex); %# select next must also allow option to end experiment
+                ex.decision(ex.counter.iamp).amp_done_reason = 'Maximum trials reached';
+                ex = select_next_dialog(ex); %# select next must also allow option to end experiment
+                if ex.decision.exp_done == 1
+                    ex.decision.exp_done_reason = 'Maximum trials reached. User terminated experiment';
+                    save_data(ex)
+                    ex = end_experiment(ex);
+                    return
+                end
             end
 
             % CHECK FOR PAUSE
@@ -94,8 +111,6 @@ try
             end
         end
     end
-
-    ex = end_experiment(ex); %# input ex.decision.exp_done_reason, ex.decision.threshold_spl value here (threshold = smallest dB stimulus that elicited a true response)
 
 catch ME
     fprintf('Experiment error: %s\n', ME.message)

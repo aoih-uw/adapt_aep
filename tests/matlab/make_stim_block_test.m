@@ -31,11 +31,7 @@ classdef make_stim_block_test < matlab.unittest.TestCase
             ex.info.adaptive.trials_per_block = 40;
             expected_rows = ex.info.adaptive.trials_per_block;
 
-            % Necessary for code to run
-            ex.info.recording.latency_samples = 100;
-            ex.info.stimulus.correction_factor_sf = 1;
-
-            ex = make_tone_burst(ex);
+            ex = make_tone_burst_template(ex);
             result = make_stim_block(ex);
 
             [actual_rows, ~] = size(result.block(1).stimulus_block);
@@ -49,12 +45,7 @@ classdef make_stim_block_test < matlab.unittest.TestCase
             ex = create_mock_ex();
             fs = ex.info.recording.sampling_rate_hz;
 
-            % Necessary for code to run
-            ex.info.recording.latency_samples = 100;
-            ex.info.stimulus.correction_factor_sf = 1;
-            ex.info.stimulus.frequency_hz = 200;
-
-            ex = make_tone_burst(ex);
+            ex = make_tone_burst_template(ex);
             result = make_stim_block(ex);
             stimulus = result.block(1).stimulus_block(1,:);
 
@@ -75,13 +66,7 @@ classdef make_stim_block_test < matlab.unittest.TestCase
             % scaled
             ex = create_mock_ex();
 
-            % Necessary for code to run
-            ex.info.recording.latency_samples = 100;
-            ex.info.stimulus.correction_factor_sf = .5;
-            ex.info.stimulus.frequency_hz = 200;
-            ex.info.stimulus.amplitude_spl = 130;
-
-            ex = make_tone_burst(ex);
+            ex = make_tone_burst_template(ex);
             result = make_stim_block(ex);
             stimulus = result.block(1).stimulus_block(1,:);
 
@@ -102,11 +87,7 @@ classdef make_stim_block_test < matlab.unittest.TestCase
             expected_rows = ex.info.adaptive.trials_per_block;
             fs = ex.info.recording.sampling_rate_hz;
 
-            % Necessary for code to run
-            ex.info.recording.latency_samples = 100;
-            ex.info.stimulus.correction_factor_sf = 1;
-
-            ex = make_tone_burst(ex);
+            ex = make_tone_burst_template(ex);
             result = make_stim_block(ex);
             jitter_samples = result.block(1).jitter;
 
@@ -130,11 +111,7 @@ classdef make_stim_block_test < matlab.unittest.TestCase
             ex.info.adaptive.trials_per_block = 40;
             expected_split = ex.info.adaptive.trials_per_block/2;
 
-            % Necessary for code to run
-            ex.info.recording.latency_samples = 100;
-            ex.info.stimulus.correction_factor_sf = 1;
-
-            ex = make_tone_burst(ex);
+            ex = make_tone_burst_template(ex);
             result = make_stim_block(ex);
             stimulus_block = result.block(1).stimulus_block;
             jitter_block = result.block(1).jitter;
@@ -159,11 +136,9 @@ classdef make_stim_block_test < matlab.unittest.TestCase
         function check_dur_period_start(testCase)
             % check that the dur period starts where expected
             ex = create_mock_ex();
-            ex.info.recording.latency_samples = 100;
             latency = ex.info.recording.latency_samples;
-            ex.info.stimulus.correction_factor_sf = 1;
 
-            ex = make_tone_burst(ex);
+            ex = make_tone_burst_template(ex);
             result = make_stim_block(ex);
 
             jitter = result.block(1).jitter(1);
@@ -204,7 +179,7 @@ classdef make_stim_block_test < matlab.unittest.TestCase
             ex.info.recording.latency_samples = 100;
             ex.info.stimulus.correction_factor_sf = 1;
 
-            ex = make_tone_burst(ex);
+            ex = make_tone_burst_template(ex);
 
             testCase.verifyError(@() make_stim_block(ex), 'make_stim_block:oddTrials');
         end

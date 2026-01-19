@@ -16,7 +16,7 @@ electrode_idx = find(startsWith(input_channel_names, 'Ch')); % Assign index valu
 ex.health(iblock).electrodes = zeros(n_channels, n_samples, n_trials); % Preallocate variables
 
 rec_data_mV = present_sound(stimulus_block, input_channels, output_channels, voltage_scaling_factor_V);
-electrode_data_mV  = rec_data_mV(:,electrode_idx,:)';
+electrode_data_mV  = rec_data_mV(:,:,electrode_idx)';
 
 % Preprocess signal
 
@@ -35,7 +35,7 @@ plot(app.health_ax, x_vec, polyval(p, x_vec), 'r--')
 xlabel(app.health_ax, 'Check point')
 ylabel(app.health_ax, 'Double Freq. Response Mag.')
 
-rel_strength = y_vec(end)/max(y_vec); % find the relative strenght of the last check to the highest response
+rel_strength = y_vec(end)/max(y_vec); % find the relative strength of the last check to the highest response
 
 % Decide
 if rel_strength > 0.8

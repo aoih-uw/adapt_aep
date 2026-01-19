@@ -1,4 +1,4 @@
-classdef make_tone_burst_test < matlab.unittest.TestCase
+classdef make_tone_burst_template_test < matlab.unittest.TestCase
 
     methods (TestClassSetup)
         % Shared setup for the entire test class
@@ -36,7 +36,7 @@ classdef make_tone_burst_test < matlab.unittest.TestCase
             expected_dur_ms = ex.info.stimulus.full_amplitude_duration_ms + ...
                 (ex.info.stimulus.ramp_duration_ms*2);
 
-            result = make_tone_burst(ex);
+            result = make_tone_burst_template(ex);
          
             actual_dur_ms = result.info.stimulus.total_stimulus_duration_ms;
             
@@ -53,7 +53,7 @@ classdef make_tone_burst_test < matlab.unittest.TestCase
             fs = ex.info.recording.sampling_rate_hz;
             expected_sample_length = round((ex.info.stimulus.ramp_duration_ms/1000)*fs);
 
-            result = make_tone_burst(ex);
+            result = make_tone_burst_template(ex);
             waveform = result.info.stimulus.waveform;
 
             % Check ramp-up
@@ -72,7 +72,7 @@ classdef make_tone_burst_test < matlab.unittest.TestCase
             ex = create_mock_ex();
             ex.info.stimulus.frequency_hz = 100;
 
-            result = make_tone_burst(ex);
+            result = make_tone_burst_template(ex);
             
             waveform = result.info.stimulus.waveform;
             fs = result.info.recording.sampling_rate_hz;
@@ -91,7 +91,7 @@ classdef make_tone_burst_test < matlab.unittest.TestCase
         function test_output_is_row_vector(testCase)
             % Ensure that the waveform is a row vector
             ex = create_mock_ex();
-            result = make_tone_burst(ex);
+            result = make_tone_burst_template(ex);
 
             waveform = result.info.stimulus.waveform;
             testCase.verifyEqual(size(waveform,1),1);
@@ -103,7 +103,7 @@ classdef make_tone_burst_test < matlab.unittest.TestCase
             ex.info.recording.sampling_rate_hz = 1000;
             ex.info.stimulus.frequency_hz = 30000;
 
-            testCase.verifyError(@() make_tone_burst(ex), 'make_tone_burst:NyquistViolation');
+            testCase.verifyError(@() make_tone_burst_template(ex), 'make_tone_burst_template:NyquistViolation');
         end
 
         function test_invalid_duration_error(testCase)
@@ -111,12 +111,12 @@ classdef make_tone_burst_test < matlab.unittest.TestCase
             ex = create_mock_ex();
             ex.info.stimulus.full_amplitude_duration_ms = 0;
 
-            testCase.verifyError(@() make_tone_burst(ex), 'make_tone_burst:InvalidDuration');
+            testCase.verifyError(@() make_tone_burst_template(ex), 'make_tone_burst_template:InvalidDuration');
         end
 
         function test_waveform_amplitude(testCase)
             ex = create_mock_ex();
-            result = make_tone_burst(ex);
+            result = make_tone_burst_template(ex);
 
             fs = ex.info.recording.sampling_rate_hz;
             ramp_samp = round((ex.info.stimulus.ramp_duration_ms/1000) * fs);
