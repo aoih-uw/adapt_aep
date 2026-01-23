@@ -8,7 +8,8 @@ waveform = ex.info.stimulus.waveform;
 
 latency_samples = ex.info.recording.latency_samples;
 current_amplitude = ex.info.stimulus.amplitude_spl;
-correction_factor = ex.info.stimulus.correction_factor_linear;
+correction_factor = ex.info.calibration.correction_factor_linear;
+head_room = ex.info.calibration.head_room;
 
 % Generate random phase offsets within one 60 Hz cycle
 period_60_hz = 1/60; % time it takes to complete 1 cycle of 60 Hz (s)
@@ -39,7 +40,7 @@ for itrial = 1:trials_per_block
     temp_stimulus = [jitter pre_stim dur_stim post_stim latency]*phase;
 
     % Apply amplitude scaling
-    temp_stimulus_scaled = apply_stim_amp_scaling(current_amplitude, correction_factor, temp_stimulus);
+    temp_stimulus_scaled = apply_stim_amp_scaling(current_amplitude, correction_factor, temp_stimulus, head_room);
     stimulus(itrial, 1:length(temp_stimulus_scaled)) = temp_stimulus_scaled;
     
 end
