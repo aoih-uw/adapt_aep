@@ -3,7 +3,8 @@ ex.counter.health = ex.counter.health + 1;
 stimulus_block = ex.health.waveforms;
 
 % Present sound and measure response
-voltage_scaling_factor_V = ex.info.recording.voltage_scaling_factor_V;
+electrode_voltage_scaling_factor_V = ex.info.recording.electrode_voltage_scaling_factor_V;
+hydrophone_voltage_scaling_factor_V = ex.info.recording.hydrophone_voltage_scaling_factor_V;
 output_channels = ex.info.recording.DAC_output_channels;
 input_channels = ex.info.recording.DAC_input_channels;
 input_channel_names = ex.info.recording.DAC_input_channel_names;
@@ -15,7 +16,11 @@ n_samples = length(stimulus_block(1,:)');
 electrode_idx = find(startsWith(input_channel_names, 'Ch')); % Assign index values for playrec output
 ex.health(iblock).electrodes = zeros(n_channels, n_samples, n_trials); % Preallocate variables
 
-rec_data_mV = present_sound(stimulus_block, input_channels, output_channels, voltage_scaling_factor_V);
+rec_data_mV = present_sound(stimulus, ...
+    input_channels, output_channels, ...
+    electrode_idx, hydrophone_idx, ...
+    electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V);
+
 electrode_data_mV  = rec_data_mV(:,:,electrode_idx)';
 
 % Preprocess signal

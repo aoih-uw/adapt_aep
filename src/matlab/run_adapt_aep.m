@@ -1,4 +1,4 @@
-function ex = main_loop(app) %# add a main_loop_manual
+function ex = run_adapt_aep(app)
 addpath(genpath("\\wsl$\ubuntu\home\aoih\adapt_aep\src\matlab"))
 
 %% function main_loop %%
@@ -7,18 +7,6 @@ addpath(genpath("\\wsl$\ubuntu\home\aoih\adapt_aep\src\matlab"))
 % < * ))     ,       (
 %   `*-._`._(__.--*"`.\
 
-%% SETUP
-try
-    ex = app.ex;
-    app.ex = [];  % Set to empty
-    addpath(genpath('matlab'))
-    ex = setup(ex);
-catch ME
-    fprintf('Experiment setup error: %s\n', ME.message)
-    rethrow(ME)
-end
-
-%% MAIN LOOP
 ex.counter.iamp = 0; % Amplitude counter
 try
     while ~ex.decision.exp_done % While testing current stimulus frequency

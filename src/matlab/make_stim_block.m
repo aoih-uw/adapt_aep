@@ -8,7 +8,7 @@ waveform = ex.info.stimulus.waveform;
 
 latency_samples = ex.info.recording.latency_samples;
 current_amplitude = ex.info.stimulus.amplitude_spl;
-correction_factor = ex.info.stimulus.correction_factor_sf;
+correction_factor = ex.info.stimulus.correction_factor_linear;
 
 % Generate random phase offsets within one 60 Hz cycle
 period_60_hz = 1/60; % time it takes to complete 1 cycle of 60 Hz (s)

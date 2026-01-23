@@ -10,19 +10,26 @@ function cal_data = calibration_main(main_ax,current_ax,calibration_data)
 % tones, or determine click level if we are using a click. This version has
 % been modified from an earlier, more primitve calibration program. Here
 % we use 'playrec' and an external audio interface (Fireface UCX), so that
-% Windows sound level settings, audio device detection, etc., will not
-% introduce any problems.
+% Windows sound level settings, audio device detection, etc., will not 
+% introduce any problems. 
 %
 % We also visualize the the recorded signals now, and calibrate with the
 % stimulus duration that will be appplied in the experiment.
 %
+
+
+%% Setup
+addpath(genpath("\\wsl$\ubuntu\home\aoih\adapt_aep\src\matlab"))
 fs = 44100;
-%% First, ascertain that the Fireface UCX is online.
+
+% Initialize Hardware
+% Fireface 
 if playrec('isInitialised');
     playrec('reset');
 end
 mydevs = playrec('getDevices');
 tmp = mydevs.name;
+
 % Check to make sure that Fireface is online, that we are using ASIO, and that N chans in/out is correct
 if tmp~='ASIO Fireface USB'
     if ~strfind(mydevs.name,'Fireface')
@@ -35,7 +42,7 @@ if tmp~='ASIO Fireface USB'
     end
 end
 
-%% Initialize audio hardware
+% Audio hardware
 fprintf('Initializing audio hardware...\n');
 playrec('init',fs,0,0,8,8);
 
@@ -49,7 +56,9 @@ playrec('block', test_page);
 playrec('delPage', test_page);
 fprintf('Audio hardware ready.\n');
 
-%% Generate calibration stimuli... targets are imbedded in 1-s vectors of 0s, starting at 0.1s
+
+%% Generate calibration stimuli
+% Targets are imbedded in 1-s vectors of 0s, starting at 0.1s
 if calibration_data.useclicks
     % Make a biphasic click with 500 microsecs per phase
     target(1).stim = [ones(1,ceil(fs*0.0005))*1 ones(1,ceil(fs*0.0005)).*-1];
@@ -75,41 +84,43 @@ else
     end
 end
 
-% SCALE AMPLITUDE of stimuli, depending on whether we are initializing or
-% checking the calibration
+% SCALE AMPLITUDE of stimuli, depending on whether we are initializing or checking the calibration
 for ifreq = 1:length(calibration_data.frequency_range);
     if isempty(calibration_data.correction_factors) % then  this is an initial calibration
         % We begin with an output voltage of 0.01 ... this gives us ~40 dB
         % of headroom via digital scaling (note that the FireFace output, in terms of analog
-        % output voltage, is roughly 5 times the digitally specified value. Starting at a
-        % low value of 0.01 is OK, as the FireFace UCX is extremely low noise. The output drive
-        % to the speaker is of course ultimately dependent on the power amplifier settings, which
+        % output voltage, is roughly 5 times the digitally specified value. Starting at a 
+        % low value of 0.01 is OK, as the FireFace UCX is extremely low noise. The output drive 
+        % to the speaker is of course ultimately dependent on the power amplifier settings, which 
         % should generally not be adjusted, but should also be compensated for during the calibration
-        % process.
+        % process. 
         target(ifreq).fullstim = 0.01.*target(ifreq).fullstim; % start 40 dB down from fs, but ensure that 0.01 associated voltage is waaay below the max output of the speaker
     else
-        % we started with an output of 0.01V, but we now need to apply a
+        % we started with an output of 0.01V, but we now need to apply a 
         % correction factor... correction factors are stored in dB, thus,
         % we need to determine voltage factor equivalent. For example, to
         % get a 6 dB increase in SPL, we would double the output voltage...
-        % to get a 20 dB decrease, we would divide by 10.
+        % to get a 20 dB decrease, we would divide by 10. 
         corrfact(ifreq) = 10.^(calibration_data.correction_factors(ifreq)./20);
         target(ifreq).fullstim = corrfact(ifreq).*0.01.*target(ifreq).fullstim;
     end
 end
 
+
+
+
 %% Note about hydrophone input to the FireFace...
-% As with the AEP recordings, input voltages are scaled by the FireFace. With
+% As with the AEP recordings, input voltages are scaled by the FireFace. With 
 % default settings, the scale factor is ~0.2044, i.e. to recover the voltage
 % that would be read on the oscilloscope, the FireFace signal should be multiplied
 % by 1/0.2044.
 
-% During calibration, we want to target a level of 130 dB SPL. With the hydrophone
+% During calibration, we want to target a level of 130 dB SPL. With the hydrophone 
 % amplifier output set to 100 mV/Pa, this level is attained when the oscilloscope
 % reads 316 mV peak (0.316 V) (i.e, 20*log10(3.16Pa/0.000001Pa) = 130 dB re: 1 uPa)...
-% The equivalent reading on the FireFace should be 0.316 * 0.2044 = 0.0646.
-% For an arbitrary hydrophone input value, in order to recover the level at the
-% hydrophone, in Pa, from the input value on the FireFace, we must therefore multiply the
+% The equivalent reading on the FireFace should be 0.316 * 0.2044 = 0.0646. 
+% For an arbitrary hydrophone input value, in order to recover the level at the 
+% hydrophone, in Pa, from the input value on the FireFace, we must therefore multiply the 
 % FireFace reading by 1/0.2044, then again by 10 (since we only get 0.1 V/Pa)
 %
 % We thus define a hydrophone correction factor, as follows:
@@ -123,12 +134,15 @@ switch convention
     case 'lab' % we are defining dB in terms of peak-to-peak amplitude
         HCP = (1/0.2044) * 10 * sqrt(2) * 2; % multiply acquired peak voltage by this level to get peak Pascals at the hydrophone.
     case 'peak' % we are defining dB in terms of peak amplitude... this is the convention for transients
-        HCP = (1/0.2044) * 10 * sqrt(2);
+         HCP = (1/0.2044) * 10 * sqrt(2);
     case 'SPL' % we are defining dB in terms of long-term/RMS amplitude... this is the conventional means of converting V to dB SPL
         HCP = (1/0.2044) * 10;
 end
 
 dur = ones(1,length(calibration_data.frequency_range)).*0.4;
+
+
+
 
 %% Now, present sigs and acquire data... for now, only the left speaker
 for ifreq = 1:length(calibration_data.frequency_range)
@@ -149,8 +163,8 @@ for ifreq = 1:length(calibration_data.frequency_range)
     end
     for irep = 1:nrep; %%% repeat each stimulus 10 times to get a decent estimate
         % Note - we are also going to record the output directly to get a
-        % reliable estimate of the system latency so that we can appropriately window
-        % the recording for level calculation.
+        % reliable estimate of the system latency so that we can appropriately window 
+        % the recording for level calculation. 
         %%%% ADB edit 6/23 modified to capture accelerometer data on X,Y,Z
         calpage = playrec('playrec',[target(ifreq).fullstim' target(ifreq).fulltrigstim'],[1 4],-1,[3 4 5 6 7]);
         playrec('block',calpage);
@@ -194,11 +208,11 @@ for ifreq = 1:length(calibration_data.frequency_range)
         sl1 = line([(calrec(ifreq).latsamps)/fs (calrec(ifreq).latsamps)/fs],myylim,'color','r');
         sl2 = line([(calrec(ifreq).latsamps+wintrim)/fs (calrec(ifreq).latsamps+wintrim)/fs],myylim,'color','r');
     else
-        %         calrec(ifreq).meanfilt = bandpassfilter(calrec(ifreq).mean,calibration_data.frequency_range(ifreq),calibration_data.frequency_range(ifreq),4,fs);
-        calrec(ifreq).meanfilt = bandpassfilter(calrec(ifreq).mean,calibration_data.frequency_range(ifreq),calibration_data.frequency_range(ifreq),4);
-        calrec(ifreq).meanfiltX = bandpassfilter(calrec(ifreq).meanX,calibration_data.frequency_range(ifreq),calibration_data.frequency_range(ifreq),4);
-        calrec(ifreq).meanfiltY = bandpassfilter(calrec(ifreq).meanY,calibration_data.frequency_range(ifreq),calibration_data.frequency_range(ifreq),4);
-        calrec(ifreq).meanfiltZ = bandpassfilter(calrec(ifreq).meanZ,calibration_data.frequency_range(ifreq),calibration_data.frequency_range(ifreq),4);
+%         calrec(ifreq).meanfilt = bandpass_filter(calrec(ifreq).mean,calibration_data.frequency_range(ifreq),calibration_data.frequency_range(ifreq),4,fs);
+        calrec(ifreq).meanfilt = bandpass_filter(calrec(ifreq).mean,calibration_data.frequency_range(ifreq),calibration_data.frequency_range(ifreq),4);
+        calrec(ifreq).meanfiltX = bandpass_filter(calrec(ifreq).meanX,calibration_data.frequency_range(ifreq),calibration_data.frequency_range(ifreq),4);
+        calrec(ifreq).meanfiltY = bandpass_filter(calrec(ifreq).meanY,calibration_data.frequency_range(ifreq),calibration_data.frequency_range(ifreq),4);
+        calrec(ifreq).meanfiltZ = bandpass_filter(calrec(ifreq).meanZ,calibration_data.frequency_range(ifreq),calibration_data.frequency_range(ifreq),4);
 
         %%% Pick window from which to draw sig data... use trig, and cut off ramp portions of sig
         wintrim = ceil(length(target(ifreq).stim)/winfact);
@@ -216,41 +230,41 @@ for ifreq = 1:length(calibration_data.frequency_range)
     end
     % compute RMS
     myrms(ifreq) = rms(calrec(ifreq).meanwin);
-
+    
     %%% Now apply conversion factor... which depends on which "flavor" of
     %%% dB we want to employ
     myPa(ifreq) = myrms(ifreq)*HCP;
-
-
+    
+    
     %%% FOR ACCELROMETER IT'S MORE COMPLICATED ... NEED TO COMPUTE VECTOR
     %%% SUM ACROSS ALL 3 AXES ... WHILE ACCOUNTING FOR SENSITIVITY DIFFS
-    %  <axis>= FF corr  * 1/ V per g ; % volts per g in x
+  %  <axis>= FF corr  * 1/ V per g ; % volts per g in x
     acceleration_amp_factor = 100;
     xCP = ((1/0.2044) * (1 / 0.1017)) / acceleration_amp_factor;
     yCP = ((1/0.2044) * (1 / 0.0984)) / acceleration_amp_factor;
     zCP = ((1/0.2044) * (1 / 0.1081)) / acceleration_amp_factor;
-
-
+    
+    
     xCP_2 = ((1/0.2044) * (1 / 0.01037)) / acceleration_amp_factor;
     yCP_2 = ((1/0.2044) * (1 / 0.01003)) / acceleration_amp_factor;
     zCP_2 = ((1/0.2044) * (1 / 0.01102)) / acceleration_amp_factor;
-
+    
     Accel_sum = sqrt( (calrec(ifreq).meanwinX.*xCP).^2 + (calrec(ifreq).meanwinX.*yCP).^2 + (calrec(ifreq).meanwinX.*zCP).^2);
     calrec(ifreq).Accel_sum = Accel_sum;
     Accel_sum_2 = sqrt( (calrec(ifreq).meanwinX.*xCP_2).^2 + (calrec(ifreq).meanwinX.*yCP_2).^2 + (calrec(ifreq).meanwinX.*zCP_2).^2);
     calrec(ifreq).Accel_sum_2 = Accel_sum_2;
     % express as g...
-    total_g(ifreq) = rms(Accel_sum);
+    total_g(ifreq) = rms(Accel_sum); 
     % or as meters per microsec
     total_ms2(ifreq) = rms(Accel_sum_2);
     clear Accel_sum Accel_sum_2;
-
+    
     % reference to 1 micro g
     mydB_microg(ifreq) = 20*log10(total_g(ifreq)/0.000001);
     % reference to 1 micro m / s2
     mydB_ms2(ifreq) = 20*log10(total_ms2(ifreq)/0.000001);
-
-    %
+    
+    % 
     mydB(ifreq) = 20*log10(myPa(ifreq)/0.000001);
     % update plot in GUI
     axes(main_ax);
@@ -263,13 +277,14 @@ for ifreq = 1:length(calibration_data.frequency_range)
     pause(2);
 end
 
+%% Assign values to cal_data
 if isempty(calibration_data.correction_factors)
     % Observed dB values are uncorrected
     cal_data.uncorrected_levels = mydB;
     % Add accelerometer data
     cal_data.uncorrected_levels_Accel_g = mydB_microg;
     cal_data.uncorrected_levels_Accel_ms2 = mydB_ms2;
-    % And computing correction factors is very easy ...
+    % And computing correction factors is very easy ... 
     cal_data.correction_factors = calibration_data.target_level - mydB;
     % Also save version that will not be displayed, scaling factor
     cal_data.correction_factors_sf = 10.^(cal_data.correction_factors./20);
@@ -281,7 +296,7 @@ else
     cal_data.corrected_levels_Accel_g = mydB_microg;
     cal_data.corrected_levels_Accel_ms2 = mydB_ms2;
     cal_data.meansigs_corrected = calrec;
-    % save hydrophone correction factor
+    % save hydrophone correction factor 
     cal_data.HCP = HCP;
 end
 

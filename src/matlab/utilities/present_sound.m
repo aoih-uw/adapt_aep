@@ -1,4 +1,8 @@
-function rec_data_mV = present_sound(stimulus, input_channels, output_channels, voltage_scaling_factor_V)
+function rec_data_mV = present_sound(stimulus, ...
+    input_channels, output_channels, ...
+    electrode_idx, hydrophone_idx, ...
+    electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V)
+
 % Pre-allocate for efficiency
 rec_data_mV = zeros(size(stimulus,2), ...
     length(input_channels), size(stimulus,1)); % # of samples x # of channels x # of trials
@@ -36,8 +40,13 @@ for itrial = 1:height(stimulus)
         error('Audio recording failed for stimulus %d: %s', itrial, ME.message);
     end
 
-    % Convert digital values to microvolts
-    rec_data_mV(:,:,itrial) = 1e6*(rec_data.*voltage_scaling_factor_V);
+    % Convert digital values to microvolts - ALL channels
+    rec_data_mV(:,:,itrial) = 1e6 * rec_data;
+
+    % Apply specific scaling factors
+    rec_data_mV(:,electrode_idx,itrial) = 1e6*(rec_data(:,electrode_idx).*electrode_voltage_scaling_factor_V);
+    rec_data_mV(:,hydrophone_idx,itrial) = 1e6*(rec_data(:,hydrophone_idx).*hydrophone_voltage_scaling_factor_V);
+    
     % Check for absurdly large electrode signals
     if any(abs(rec_data_mV(:)) > 1e6)
         warning('Unusually large voltage values detected in electrode signal (max: %.2f µV)', ...

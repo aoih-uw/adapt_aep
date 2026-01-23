@@ -56,4 +56,7 @@ ex.health(1).doub_stim_mag = NaN;
 ex.health(1).status = NaN;
 ex.health(1).end_test = 0;
 
+%% Create sound stimulus template
+ex = make_tone_burst_template(ex);
+ex = make_health_check_signal(ex);
 end

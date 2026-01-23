@@ -1,4 +1,4 @@
-function [N, freq_vec, fft_vals ] = calc_fft(stimulus, fs)
+function [N, freq_vec, fft_vals] = calc_fft(stimulus, fs)
 % calculate the fft and save only the 1st half of the results (i.e., the
 % positive values.)
 N = length(stimulus);

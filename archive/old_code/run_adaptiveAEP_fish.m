@@ -110,7 +110,6 @@ end
 if isempty(mythresh_samp) || isempty(mylatency_samp)
     warning('Invalid latency values detected. Using defaults.');
     mythresh_samp = 0;
-    mylatency_samp = 0;
 end
 
 app.latencyThresholdLabel.Text = string(mythresh_samp);

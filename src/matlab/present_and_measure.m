@@ -3,7 +3,8 @@ function ex = present_and_measure(ex)
 
 % Load in variables
 iblock = ex.counter.iblock;
-voltage_scaling_factor_V = ex.info.recording.voltage_scaling_factor_V; % Convert from digital units to voltage
+electrode_voltage_scaling_factor_V = ex.info.recording.electrode_voltage_scaling_factor_V;
+hydrophone_voltage_scaling_factor_V = ex.info.recording.hydrophone_voltage_scaling_factor_V;
 stimulus_block = ex.block(iblock).stimulus_block;
 
 n_channels = ex.info.channels.n_channels;
@@ -25,12 +26,19 @@ ex.raw(iblock).loopback = zeros(n_trials, n_samples);
 ex.raw(iblock).electrodes = zeros(n_trials, n_samples, n_channels);
 
 % Rip it
-rec_data_mV = present_sound(stimulus_block, ...
-    input_channels, output_channels, voltage_scaling_factor_V);
+if ex.test
+    rec_data_mV = ex.mock_data;
+else
+    rec_data_mV = present_sound(stimulus_block, ...
+        input_channels, output_channels, ...
+        electrode_idx, hydrophone_idx, ...
+        electrode_voltage_scaling_factor_V, ...
+        hydrophone_voltage_scaling_factor_V);
+end
 
 % Save values to ex
-ex.raw(iblock).hydrophone = squeeze(rec_data_mV(:,:,hydrophone_idx))';
-ex.raw(iblock).loopback  = squeeze(rec_data_mV(:,:,loopback_idx))';
+ex.raw(iblock).hydrophone = squeeze(rec_data_mV(:,:,hydrophone_idx));
+ex.raw(iblock).loopback  = squeeze(rec_data_mV(:,:,loopback_idx));
 ex.raw(iblock).electrodes  = rec_data_mV(:,:,electrode_idx); % n_trials, n_samples, n_channels
 ex.raw(iblock).time_stamp = datetime('now');
 

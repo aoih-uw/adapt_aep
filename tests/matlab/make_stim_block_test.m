@@ -71,7 +71,7 @@ classdef make_stim_block_test < matlab.unittest.TestCase
             stimulus = result.block(1).stimulus_block(1,:);
 
             expected_scaling = apply_stim_amp_scaling(ex.info.stimulus.amplitude_spl, ...
-                ex.info.stimulus.correction_factor_sf, ex.info.stimulus.waveform);
+                ex.info.stimulus.correction_factor_linear, ex.info.stimulus.waveform);
 
             expected_amplitude = rms(expected_scaling);
             actual_amplitude = rms(stimulus);
@@ -177,7 +177,7 @@ classdef make_stim_block_test < matlab.unittest.TestCase
             ex = create_mock_ex();
             ex.info.adaptive.trials_per_block = 41;
             ex.info.recording.latency_samples = 100;
-            ex.info.stimulus.correction_factor_sf = 1;
+            ex.info.stimulus.correction_factor_linear = 1;
 
             ex = make_tone_burst_template(ex);
 

@@ -25,8 +25,8 @@ noises = noises*noise_rms_target;
 
 mock_data = my_signals + noises;
 for itrial = 1:height(mock_data)
-plot(mock_data(itrial,:))
-hold on
+    plot(mock_data(itrial,:))
+    hold on
 end
 end
 

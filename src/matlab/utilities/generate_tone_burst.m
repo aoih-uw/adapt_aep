@@ -23,7 +23,7 @@ time_vec = (0:length(window)-1)/fs;
 tone_burst = sin(2*pi*(stim_freq*time_vec)).*window;
 tone_burst = tone_burst(:).';   % force row vector
 
-% Logic
+%% Logic
 % sin() produces sinusoidal oscillation between -1 and +1
 % time_vec = total duration (s)
 % 2pi = 1 full cycle, converts frequency into radians/sec

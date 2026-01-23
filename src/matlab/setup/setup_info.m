@@ -41,7 +41,7 @@ ex.info.animal = struct( ...
     'acclimation_period',    '1 day', ...
     'IACUC_protocol_ID',     'University of Washington Animal Care and Use Committee', ...
     'collection_permit',     'Washington State Scientific Collection Permit from Department of Fish and Wildlife', ...
-    'filename',              string() ... % Auto generate here
+    'filename',              NaN ...
     );
 
 % Stimulus parameters
@@ -58,9 +58,7 @@ ex.info.stimulus = struct( ...
     'speaker_model',                        'UW-30 Lubell Labs Inc., Columbus, OH, USA Serial #', ...
     'max_amplitude_limit',                  140, ...
     'speaker_orientation',                  'centered under fish', ...
-    'speaker_distance_from_head',           NaN, ... % Determine later
-    'correction_factor_sf',                 NaN, ... % output from calibration GUI will generate this
-    'calibration_file_name',                '' ... % auto generate here
+    'speaker_distance_from_head'           NaN, ... % Determine later
     );
 
 % Channel parameters
@@ -74,9 +72,8 @@ ex.info.channels = struct( ...
     );
 
 % Recording parameters
-    ex.info.recording.sampling_rate_hz = 2000;
+    ex.info.recording.sampling_rate_hz = 4000;
     ex.info.recording.ADC_bit_depth = NaN;
-    ex.info.recording.voltage_scaling_factor_V = 5.124;
     ex.info.recording.latency_samples = NaN;
     ex.info.recording.DAC_model_serial = 'USB D/A Converter, Fireface UCX, RME, Frankfurt, Germany';
     ex.info.recording.DAC_output_channels = [1 4];
@@ -87,6 +84,8 @@ ex.info.channels = struct( ...
     ex.info.recording.hydrophone_gain_mV_per_Pa = 100;
     ex.info.recording.bioamplifier_model_serial = 'BMA-400, CWE Inc. Ardmore, PA, USA';
     ex.info.recording.bioamp_gain = 10000;
+    ex.info.recording.hydrophone_voltage_scaling_factor_V = (1/0.2044);
+    ex.info.recording.electrode_voltage_scaling_factor_V = (1/0.2044)./ ex.info.recording.bioamp_gain;
     ex.info.recording.audio_amplifier = 'Power amplifier, Crown D75-A, Harman, Northridge, CA, USA';
     ex.info.recording.amplifier_gain = 'Need to measure';
 
@@ -116,5 +115,18 @@ ex.info.model = struct( ... % These values will be updated by prepare_next_ampli
     'response_fn',        @(params, x) (params(3) ./ (1 + exp(-params(2) * (x - params(1))))) .* params(4), ...
     'initial_x_vector',           NaN, ...
     'initial_y_vector',           NaN ...
+    );
+
+% Response modeling parameters
+ex.info.calibraton = struct( ... % These values will be updated by prepare_next_amplitude when new amplitude is selected
+    'hydrophone_amplitude_convention',   'SPL', ...
+    'target_amp_spl',           130, ...
+    'correction_factor_dB',     NaN, ... % output from calibration GUI will generate this
+    'correction_factor_linear',     NaN, ... % output from calibration GUI will generate this
+    'correction_tolerance_dB',     5, ... % output from calibration GUI will generate this
+    'signals',     NaN, ... % output from calibration GUI will generate this
+    'initial_calibration_complete',                    NaN, ... % auto generate here
+    'check_passed',                    NaN, ... % auto generate here
+    'file_name',    '' ... % auto generate here
     );
 

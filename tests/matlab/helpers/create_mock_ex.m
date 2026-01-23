@@ -1,7 +1,7 @@
 function ex = create_mock_ex
 addpath(genpath("\\wsl$\ubuntu\home\aoih\adapt_aep\src\matlab"))
 ex = setup_ex();
-
+ex.test = 1;
 ex.info.animal.subject_ID = 1;
 ex.info.animal.sex = 'F';
 ex.info.animal.health = 'Good';
@@ -18,4 +18,4 @@ ex.info.animal.filename = [ex.info.animal.species_name '_' ...
     ex.info.experiment.exp_date '_' ...
     ex.info.experiment.exp_time_start];
 ex.info.recording.latency_samples = 100;
-ex.info.stimulus.correction_factor_sf = 1;
+ex.info.stimulus.correction_factor_linear = 1;
