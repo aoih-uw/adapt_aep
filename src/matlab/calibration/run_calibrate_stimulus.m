@@ -11,22 +11,19 @@ function ex = run_calibrate_stimulus(app, ex)
 addpath(genpath("\\wsl$\ubuntu\home\aoih\adapt_aep\src\matlab"))
 fs = ex.info.recording.sampling_rate_hz;
 waveform = ex.info.stimulus.waveform;
+
 stimulus_freq = ex.info.stimulus.frequency_hz;
 target_level = ex.info.calibration.target_amp_spl;
-head_room = ex.info.calibration.head_room;
 correction_tolerance_dB = ex.info.calibration.correction_tolerance_dB;
 ramp_duration_ms = ex.info.stimulus.ramp_duration_ms;
-
 
 input_channels = ex.info.recording.DAC_input_channels;
 input_channel_names = ex.info.recording.DAC_input_channel_names;
 loopback_idx = find(strcmp(input_channel_names, 'Loopback'));
 hydrophone_idx = find(strcmp(input_channel_names, 'Hydrophone'));
 electrode_idx = find(strcmp(input_channel_names, 'Ch'));
-
-hydrophone_voltage_scaling_factor_V = ex.info.recording.hydrophone_voltage_scaling_factor_V;
-
 output_channels = ex.info.recording.DAC_output_channels;
+hydrophone_voltage_scaling_factor_V = ex.info.recording.hydrophone_voltage_scaling_factor_V;
 
 ex.calibration.initial_calibration_complete = 0;
 ex.calibration.check_passed = 0;
@@ -67,7 +64,8 @@ trigger_stim = repmat(trigger_stim,10,1);
 %% Scale stimuli amplitude
 % Begin with an output voltage of 0.01, equivalent to ~40 dB of headroom
 % Fireface output = 5*digital value
-calibration_stim = head_room.*calibration_stim; % start 40 dB down from fs, but ensure that 0.01 associated voltage is waaay below the max output of the speaker
+base_level = 10^((target_level-170)/20);
+calibration_stim = base_level.*calibration_stim; % start 40 dB down from fs, but ensure that 0.01 associated voltage is waaay below the max output of the speaker
 
 % Measure calibration stimuli
 [hydrophone_rms_dB, rec_data_mV, mean_hydrophone_sig] = ...
@@ -102,8 +100,9 @@ plot(app.ax_hydrophone_spectra, freq_vec,fft_vals)
 
 %% Check if stimulus amplitude is within range with correction factor
 fprintf('Correction factor = %.3f dB. Now checking correction factor effectiveness.', correction_factor_dB)
+
 % Apply new correction factor
-target_calibration_stim = ex.calibration.correction_factor_linear*calibration_stim; % calibration_stim already includes base level 130 dB (i.e., multiplication of 0.01), %# does 0.01 get incorporated in the calculation for correction factor later?
+target_calibration_stim = ex.calibration.correction_factor_linear*calibration_stim; % calibration_stim already includes headroom (i.e., multiplication of 0.01), %# does 0.01 get incorporated in the calculation for correction factor later?
 
 % Measure calibration stimuli
 [hydrophone_rms_dB, rec_data_mV, mean_hydrophone_sig] = ...
@@ -143,7 +142,6 @@ if ex.calibration.corrected_level >= target_level-correction_tolerance_dB && ...
     time_stamp = datestr(now, 'yyyymmdd_HHMMSS');
     filename = strcat(filename_root, '_calibration_',time_stamp); %# have it save to data/calibration folder
     ex.info.calibration.file_name = filename;
-
 
     calibration = ex.calibration;
     save(filename, 'calibration')

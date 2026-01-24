@@ -71,7 +71,7 @@ classdef make_stim_block_test < matlab.unittest.TestCase
             stimulus = result.block(1).stimulus_block(1,:);
 
             expected_scaling = apply_stim_amp_scaling(ex.info.stimulus.amplitude_spl, ...
-                ex.info.calibration.correction_factor_linear, ex.info.stimulus.waveform, ex.info.calibration.head_room);
+                ex.info.calibration.correction_factor_linear, ex.info.stimulus.waveform);
 
             expected_amplitude = rms(expected_scaling);
             actual_amplitude = rms(stimulus);
