@@ -18,16 +18,19 @@ try
         while ~ex.decision(ex.counter.iamp).amp_done % While testing current stimulus amplitude
             
             % CREATE BLOCK OF TRIALS
+            fprintf('Creating trial block...')
             ex = make_stim_block(ex);
 
             ex.counter.iblock = ex.counter.iblock + 1; % Iterate block number
 
             % READ THERMOMETER
+            fprintf('Checking temperature...')
             ex = check_temperature(ex);
 
             % HEALTH CHECK
             time_diff = datetime('now') - ex.health(end).time_stamp;
             if time_diff >= minutes(15)
+                fprintf('Checking animal health...')
                 ex = check_health(app,ex);
                 if ex.decision.exp_done == 1 % Did user decide to stop testing due to bad health?
                     save_data(ex)
@@ -37,8 +40,10 @@ try
             end
 
             % DATA COLLECTION
+            fprintf('Presenting stimulus...')
             ex = present_and_measure(ex); % Present stimuli and measure signals
-
+            fprintf('Responses measured...')
+            
             % UPDATE MONITOR GUI
             try
                 ex = update_monitor_GUI(ex,app); %# Also add the status values here, Plot average and +/- 1 std downsampled raw signals (hydrophone and channel signals) in block
@@ -46,9 +51,16 @@ try
                 warning('Monitor GUI update failed')
             end
 
-            % DATA PROCESSING
+            % DATA PRE-PROCESSING
+            fprintf('Pre-processing responses...')
             ex = preprocess_signal(ex);
-            ex = analyze_signal(ex); % Analyze electrode signal, assigned amp_done here
+            
+            % DATA ANALYSIS
+            trials_presented = ex.counter.iblock*ex.info.adaptive.trials_per_block;
+            if trials_presented >= ex.info.adaptive.min_trials_needed_for_analysis % Only conduct analysis once min # of trials reached
+                fprintf('Analyzing responses...')
+                ex = analyze_signal(ex); % Analyze electrode signal, assign resp_found here
+            end
 
             % UPDATE SUMMARY GUI
             try
@@ -73,7 +85,6 @@ try
             end
 
             % CHECK IF MAX TRIALS PRESENTED
-            trials_presented = ex.counter.iblock*ex.info.adaptive.trials_per_block;
             if trials_presented >= ex.info.adaptive.max_trials && ex.decision(ex.counter.iamp).amp_done == 0
                 ex.decision(ex.counter.iamp).amp_done = 1;
                 ex.decision(ex.counter.iamp).amp_done_reason = 'Maximum trials reached';

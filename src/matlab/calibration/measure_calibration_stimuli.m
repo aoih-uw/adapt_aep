@@ -2,7 +2,8 @@ function [hydrophone_rms_dB, rec_data_mV, mean_hydrophone_sig] = measure_calibra
     calibration_stim, trigger_stim, waveform, ...
     input_channels, output_channels, ...
     electrode_idx, hydrophone_idx, loopback_idx, ...
-    hydrophone_voltage_scaling_factor_V, stimulus_freq, ramp_duration_ms, fs)
+    hydrophone_voltage_scaling_factor_V, stimulus_freq, ramp_duration_ms, ...
+    hydrophone_gain_V_per_Pa, fs)
 
     stimulus = [calibration_stim' trigger_stim'];
     
@@ -23,7 +24,7 @@ function [hydrophone_rms_dB, rec_data_mV, mean_hydrophone_sig] = measure_calibra
     end_idx = latency_samples + length(waveform) - ramp_samples;
     full_amp_hydrophone_sig = filtered_mean_hydrophone_sig(start_idx:end_idx);
     
-    hydrophone_rms_pa = rms(full_amp_hydrophone_sig*10); % Multiply by 10 for 0.1V/1Pa conversion
-    hydrophone_rms_dB = 20*log10(hydrophone_rms_pa/1e-6);
+    hydrophone_rms_pa = rms(full_amp_hydrophone_sig/hydrophone_gain_V_per_Pa);
+    hydrophone_rms_dB = 20*log10(hydrophone_rms_pa/1e-6); % re: 1 microPa
 
 end

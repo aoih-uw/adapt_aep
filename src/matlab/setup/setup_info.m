@@ -76,16 +76,17 @@ ex.info.channels = struct( ...
     ex.info.recording.ADC_bit_depth = NaN;
     ex.info.recording.latency_samples = NaN;
     ex.info.recording.DAC_model_serial = 'USB D/A Converter, Fireface UCX, RME, Frankfurt, Germany';
+    ex.info.recording.DAC_conversion_factor = 1/0.2044; % Multiply by this factor to recover true voltage value 
     ex.info.recording.DAC_output_channels = [1 4];
     ex.info.recording.DAC_output_channel_names = {'UW30', 'Loopback'};
     ex.info.recording.DAC_input_channels = [3:8];
     ex.info.recording.DAC_input_channel_names = {'Hydrophone', 'Loopback', 'Ch1', 'Ch2','Ch3','Ch4'};
     ex.info.recording.hydrophone_model = 'Type 8103, Bruel & Kjaer, Nærum, Denmark, Serial #: ';
-    ex.info.recording.hydrophone_gain_mV_per_Pa = 100;
+    ex.info.recording.hydrophone_gain_V_per_Pa = 0.1; % or 100 mV/Pa
     ex.info.recording.bioamplifier_model_serial = 'BMA-400, CWE Inc. Ardmore, PA, USA';
     ex.info.recording.bioamp_gain = 10000;
-    ex.info.recording.hydrophone_voltage_scaling_factor_V = (1/0.2044);
-    ex.info.recording.electrode_voltage_scaling_factor_V = (1/0.2044)./ ex.info.recording.bioamp_gain;
+    ex.info.recording.hydrophone_voltage_scaling_factor_V = ex.info.recording.DAC_conversion_factor;
+    ex.info.recording.electrode_voltage_scaling_factor_V = ex.info.recording.DAC_conversion_factor/ ex.info.recording.bioamp_gain;
     ex.info.recording.audio_amplifier = 'Power amplifier, Crown D75-A, Harman, Northridge, CA, USA';
     ex.info.recording.amplifier_gain = 'Need to measure';
 
@@ -93,7 +94,8 @@ ex.info.channels = struct( ...
 ex.info.adaptive = struct( ...
     'response_feature',                   'double_frequency_response', ... % Make this an if statement so it will generate which frequency to look for in the response
     'target_response_frequency',           ex.info.stimulus.frequency_hz*2, ... % Auto populate
-    'trials_per_block',                    20, ...
+    'trials_per_block',                    10, ... % Must be an even number of equal number of stimulus +/- polarities in block
+    'min_trials_needed_for_analysis',      40, ...
     'max_trials',                          NaN ... % Set in GUI
     );
 

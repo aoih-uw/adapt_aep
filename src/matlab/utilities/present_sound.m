@@ -52,6 +52,7 @@ for itrial = 1:height(stimulus)
         warning('Unusually large voltage values detected in electrode signal (max: %.2f µV)', ...
             max(abs(rec_data_mV(:))));
     end
+    
 end
 
 rec_data_mV = permute(rec_data_mV,[3,1,2]); % change to n_trial, n_sample, n_channel
