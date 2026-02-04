@@ -39,6 +39,7 @@ The following MATLAB Toolboxes are required:
 1. DSP System Toolbox
 2. Signal Processing Toolbox
 3. Audio Toolbox
+4. Statistics and Machine Learning Toolbox
 
 This software tool currently runs on MATLAB. A complete python version may be developed in the future!
 
