@@ -62,13 +62,6 @@ try
                 ex = analyze_signal(ex); % Analyze electrode signal, assign resp_found here
             end
 
-            % UPDATE SUMMARY GUI
-            try
-                ex = update_summary_GUI(ex,app); %# include plot where model panel has points with # of trials scaling the point size
-            catch
-                warning('Summary GUI update failed')
-            end
-
             % CHECK IF FINISHED TESTING THIS AMPLITUDE
             if ex.decision(ex.counter.iamp).resp_found % When there was a significant response found
                 % Decide to move onto next amplitude or collect another

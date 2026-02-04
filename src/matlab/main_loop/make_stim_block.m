@@ -31,7 +31,7 @@ latency = zeros(1,latency_samples);
 max_jitter = max(selected_cycle_samples);
 max_length = max_jitter + length(pre_stim) + length(dur_stim) + length(post_stim) + length(latency);
  
-% Create block of trials
+% Create block of trials %# THINK ABOUT FREQUENCY RESOLUTION....
 stimulus = zeros(trials_per_block, max_length);
 for itrial = 1:trials_per_block
     phase = phase_vec(itrial);
@@ -47,3 +47,4 @@ end
 % Save to ex
 ex.block(iblock).jitter = selected_cycle_samples;
 ex.block(iblock).stimulus_block = stimulus;
+ex.block(iblock).phase_vec = phase_vec;

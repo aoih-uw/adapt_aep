@@ -2,9 +2,9 @@ function ex = run_calibrate_stimulus(app, ex)
 %% Information
 % Fireface Correction Factor
 % Stimulus sound pressure (Pa) -> Hydrophone measurement -> Amplifier (100 mV/Pa or 0.1 V/Pa) -> Fireface (signal*0.2044) -> Recorded voltage
-% Target = 130 dB amplitude / 3.16 Pa (20*log10(3.16Pa/0.000001Pa) = 130 dB re: 1 uPa)
+% Target = 130 dB SPL: re: 1 uPa = (20*log10(3.16Pa/0.000001Pa)
+% 3.16 Pa RMS = 3.16* sqrt(2) = 4.47 Pa peak amplitude
 % 316 mV peak (0.316 V) when hydrophone amplifier is set to 100 mV/Pa
-% (i.e, 20*log10(3.16Pa/0.000001Pa) = 130 dB re: 1 uPa)
 % The equivalent reading on the FireFace should be 0.316 * 0.2044 = 0.0646
 
 %% Define variables
@@ -104,7 +104,7 @@ plot(app.ax_hydrophone_spectra, freq_vec,fft_vals)
 fprintf('Correction factor = %.3f dB. Now checking correction factor effectiveness.', correction_factor_dB)
 
 % Apply new correction factor
-target_calibration_stim = ex.calibration.correction_factor_linear*calibration_stim; % calibration_stim already includes headroom (i.e., multiplication of 0.01), %# does 0.01 get incorporated in the calculation for correction factor later?
+target_calibration_stim = ex.calibration.correction_factor_linear*calibration_stim;
 
 % Measure calibration stimuli
 [hydrophone_rms_dB, rec_data_mV, mean_hydrophone_sig] = ...

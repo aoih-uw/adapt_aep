@@ -18,6 +18,7 @@ ex = setup_info(ex);
 % use iblocks but you can get all data easily using all_num_blocks = [ex.block.num_blocks]  % Easy extraction
 ex.block(1).water_temp_C = NaN; % Get thermometer working
 ex.block(1).jitter = NaN;
+ex.block(1).phase_vec = NaN;
 ex.block(1).stimulus_block = NaN;
 ex.block(1).num_rejected = NaN;
 ex.block(1).reject_rate = NaN;
@@ -56,7 +57,21 @@ ex.health(1).doub_stim_mag = NaN;
 ex.health(1).status = NaN;
 ex.health(1).end_test = 0;
 
+% Preprocessing
+ex.preprocess.rel_reject_threshold = [];
+ex.preprocess.total_trials_presented =  [];
+ex.preprocess.reject_rate =  [];
+ex.preprocess.kept_trials = [];
+ex.preprocess.kept_phases = [];
+ex.preprocess.kept_jitters = [];
+ex.preprocess.kept_channels = [];
+
+% Model
+ex.model.doub_freq_resp_vec_mV = [];
+ex.model.amplitude_vec = [];
+
 %% Create sound stimulus template
 ex = make_tone_burst_template(ex);
 ex = make_health_check_signal(ex);
+
 end

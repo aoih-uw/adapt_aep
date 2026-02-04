@@ -1,48 +1,13 @@
 function ex = model_response(ex)
-% original modeling code found here https://github.com/aoih-uw/fish_eeg/blob/aoi-branch-whoopsie/analysis/visualize_prelim_CI_data.ipynb
-% Get current iteration number
-iblock = [ex.block.iteration_num];
-iblock = iblock(end);
+doub_freq_resp_vec_mV = ex.model.doub_freq_resp_vec_mV;
+amplitude_vec = ex.model.amplitude_vec;
 
-response_fn = ex.info.model.response_fn;
+[amplitude_sorted, sort_idx] = sort(amplitude_vec);
+response_sorted = doub_freq_resp_vec_mV(sort_idx);
 
-% Assign model parameter guess vector
-if iblock == 1 % first block for current amplitude
-    % if this is not the 1st tested amplitude, 
-    % will use previous amplitudes final fitted parameters
-    guess = [ex.info.model.initial_x0, ... 
-             ex.info.model.initial_kappa, ...
-             ex.info.model.initial_lambda, ...
-             ex.info.model.initial_max_resp];
-else
-    guess = [ex.model(end).fit_x0, ...
-             ex.model(end).fit_kappa, ...
-             ex.model(end).fit_lmbda, ...
-             ex.model(end).fit_max_resp];
+plot(amplitude_sorted,response_sorted)
+hold on;
+
+% If have enough data points, then fit the piecewise
+if size(amplitude_sorted,2) >= 3
 end
-
-last_x_vector = ex.model(end).x_vector;
-last_y_vector = ex.model(end).y_vector;
-
-new_x = ex.info.stimulus.amplitude;
-new_y = ex.analysis(end).ci_lower;
-
-x_vector = [last_x_vector, new_x];
-y_vector = [last_y_vector, new_y];
-
-ex.model(iblock).x_vector = x_vector;
-ex.model(iblock).y_vector = y_vector;
-
-try
-    % Study lsqcurve fit!!
-    fitted_params = lsqcurvefit(response_fn, guess, x_vector, y_vector);
-catch ME
-    fprintf('Curve fitting error: %s\n', ME.message)
-    save_data(ex)
-    rethrow(ME)
-end
-
-ex.model(iblock).fit_x0 = fitted_params(1);
-ex.model(iblock).fit_kappa = fitted_params(2);
-ex.model(iblock).fit_lmbda = fitted_params(3);
-ex.model(iblock).fit_max_resp = fitted_params(4);
