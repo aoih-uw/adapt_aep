@@ -40,6 +40,7 @@ The following MATLAB Toolboxes are required:
 2. Signal Processing Toolbox
 3. Audio Toolbox
 4. Statistics and Machine Learning Toolbox
+5. Curve fitting toolbox
 
 This software tool currently runs on MATLAB. A complete python version may be developed in the future!
 
