@@ -1,5 +1,6 @@
 function ex = check_health(ex, app)
 ex.counter.health = ex.counter.health + 1;
+ihealth = ex.counter.health;
 stimulus_block = ex.health.waveforms;
 
 % Present sound and measure response
@@ -44,10 +45,14 @@ rel_strength = y_vec(end)/max(y_vec); % find the relative strength of the last c
 
 % Decide
 if rel_strength > 0.8
-    ex.health(1).status = 'good';
+    ex.health(ihealth).status = 'good';
 elseif rel_strength > 0.5
-    ex.health(1).status = 'fair';
+    ex.health(ihealth).status = 'fair';
 else
-    ex.health(1).status = 'poor';
+    ex.health(ihealth).status = 'poor';
     ex = health_dialog(ex);
 end
+
+% Save values to ex
+ex.health(ihealth).time_stamp = datetime('now');
+ex.health(ihealth).response_strength = rel_strength;

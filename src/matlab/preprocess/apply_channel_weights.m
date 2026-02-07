@@ -2,8 +2,8 @@ function ex = apply_channel_weights(ex)
 % Apply inverse variance weights to each channel
 % Downweight channels that have less consistent signal
 
-kept_trials = ex.preprocess.kept_trials;
-kept_trials_channels = ex.preprocess.kept_channels;
+kept_trials = ex.preprocess(1).kept_trials;
+kept_trials_channels = ex.preprocess(1).kept_channels;
 N_channels = ex.info.channels.n_channels;
 
 channel_vars = [];
@@ -28,4 +28,4 @@ end
 
 kept_trials_weighted = kept_trials.*channel_weight_vec;
 
-ex.preprocess.kept_trials_weighted = kept_trials_weighted;
+ex.preprocess(iamp).kept_trials_weighted = kept_trials_weighted;

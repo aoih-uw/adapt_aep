@@ -1,4 +1,4 @@
-function ex = reject_artefacts(ex)
+function ex = reject_artefacts(ex,app)
 % Reject artefacts and display rate of rejection
 % No distinction between different channels for analysis. They will all get
 % pooled together
@@ -12,7 +12,8 @@ reject_threshold_mV = ex.info.signal_quality.rejection_threshold_mV;
 reject_threshold_sd = ex.info.signal_quality.rejection_threshold_sd;
 N_channels = ex.info.channels.n_channels;
 trials_per_block = ex.info.adaptive.trials_per_block; %# In test make sure trials_per_block*iblock calculations meet expectation on total length of trials below
-total_trials_presented = iblock*trials_per_block;
+N_trials_presented = ex.block(iblock).N_trials_presented;
+current_amplitude = ex.info.stimulus.amplitude_spl;
 
 %% Get all available data
 sig_len = size(ex.raw(iblock).electrodes(1,:,1),2);
@@ -90,16 +91,19 @@ end
 
 %% Save kept trials
 kept_trials = all_trials_chan(kept_trials_idx,:);
-kept_trials_channels = all_channel_label(kept_trials_idx);
+kept_trials_channels = all_channel_label(kept_trials_idx); %kept_trials_channels the labels for the channels
 kept_jitter = all_jitter_chan(kept_trials_idx);
-reject_rate = ((total_trials_presented*N_channels)-size(kept_trials,1))/(total_trials_presented*N_channels);
+reject_rate = ((N_trials_presented*N_channels)-size(kept_trials,1))/(N_trials_presented*N_channels);
 fprintf('Artifact rejection rate: %.3f', reject_rate)
 
+% Update GUI
+app.Label_rejection_rate.Text = sprintf('%.3f', reject_rate);
+
 %% Save to ex structure
-ex.preprocess.rel_reject_threshold = [ex.preprocess.rel_reject_threshold rel_reject_threshold];
-ex.preprocess.total_trials_presented =  [ex.preprocess.total_trials_presented total_trials_presented];
-ex.preprocess.reject_rate =  [ex.preprocess.reject_rate reject_rate];
-ex.preprocess.kept_trials = kept_trials;
-ex.preprocess.kept_phases = kept_trials_phases;
-ex.preprocess.kept_jitter = kept_jitter;
-ex.preprocess.kept_channels = kept_trials_channels;
+ex.preprocess(iamp).rel_reject_threshold = [ex.preprocess(iamp).rel_reject_threshold rel_reject_threshold]; % (1 x # iterations of preprocessing) saved in structure for every iamp
+ex.preprocess(iamp).N_trials_presented =  [ex.preprocess(iamp).N_trials_presented N_trials_presented]; % (1 x # iterations of preprocessing) saved in structure for every iamp
+ex.preprocess(iamp).reject_rate =  [ex.preprocess(iamp).reject_rate reject_rate];  % (1 x # iterations of preprocessing) saved in structure for every iamp
+ex.preprocess(1).kept_trials = kept_trials; % Don't need to save every iteration's data, so just save to first 
+ex.preprocess(1).kept_phases = kept_trials_phases;
+ex.preprocess(1).kept_jitter = kept_jitter;
+ex.preprocess(1).kept_channels = kept_trials_channels;

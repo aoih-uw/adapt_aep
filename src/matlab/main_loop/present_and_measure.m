@@ -1,11 +1,15 @@
-function ex = present_and_measure(ex)
+function ex = present_and_measure(ex,app)
 % OUTPUT = ex.raw.electrodes (n_trials x n_samples x n_channels)
 
 % Load in variables
+fs = ex.info.recording.sampling_rate_hz;
+iamp = ex.counter.iamp;
 iblock = ex.counter.iblock;
 electrode_voltage_scaling_factor_V = ex.info.recording.electrode_voltage_scaling_factor_V;
 hydrophone_voltage_scaling_factor_V = ex.info.recording.hydrophone_voltage_scaling_factor_V;
 stimulus_block = ex.block(iblock).stimulus_block;
+trials_per_block = ex.info.adaptive.trials_per_block;
+N_trials_presented = iblock*trials_per_block;
 
 n_channels = ex.info.channels.n_channels;
 n_trials = height(stimulus_block);
@@ -41,5 +45,30 @@ ex.raw(iblock).hydrophone = squeeze(rec_data_mV(:,:,hydrophone_idx));
 ex.raw(iblock).loopback  = squeeze(rec_data_mV(:,:,loopback_idx));
 ex.raw(iblock).electrodes  = rec_data_mV(:,:,electrode_idx); % n_trials, n_samples, n_channels
 ex.raw(iblock).time_stamp = datetime('now');
+ex.trial_count(iamp) = N_trials_presented;
 
+%% Update GUI
+app.Label_number_trials_presented.Text = string(N_trials_presented);
+
+time_s = (0:n_samples-1) / fs;
+
+% Plot hydrophone
+cla(app.UIAxes_hydrophone);
+hold(app.UIAxes_hydrophone, 'on');
+for trial = 1:n_trials
+    plot(app.UIAxes_hydrophone, time_s, ex.raw(iblock).hydrophone(trial, :));
+end
+hold(app.UIAxes_hydrophone, 'off');
+title(app.UIAxes_hydrophone, 'Hydrophone');
+
+% Plot electrode channels
+electrode_axes = {app.UIAxes_ch1, app.UIAxes_ch2, app.UIAxes_ch3, app.UIAxes_ch4};
+
+for ch = 1:n_channels
+    cla(electrode_axes{ch});
+    hold(electrode_axes{ch}, 'on');
+    for trial = 1:n_trials
+        plot(electrode_axes{ch}, time_s, squeeze(ex.raw(iblock).electrodes(trial, :, ch)));
+    end
+    hold(electrode_axes{ch}, 'off');
 end

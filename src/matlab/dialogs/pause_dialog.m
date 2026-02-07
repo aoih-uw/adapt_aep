@@ -42,7 +42,7 @@ function [action, ex] = pause_dialog(ex)
     
     function change_callback()
         action = 'change';
-        save_data(ex);
+        ex = save_raw_data(ex);
         ex.decision(ex.counter.iamp).amp_done = 1;
         ex.decision(ex.counter.iamp).amp_done_reason = 'User override';
         ex = select_next(ex);
@@ -51,13 +51,12 @@ function [action, ex] = pause_dialog(ex)
     
     function stop_callback()
         action = 'stop';
-        save_data(ex);
+        ex = save_raw_data(ex);
         fprintf('Experiment stopped by user\n');
         ex.decision(ex.counter.iamp).amp_done = 1;
-        ex.decision.exp_done = 1;
+        ex.exp_done = 1;
         ex.decision(ex.counter.iamp).amp_done_reason = 'User override';
-        ex.decision.exp_done_reason = 'User override';
-        ex = end_experiment(ex);
+        ex = save_session_data(ex);
         delete(d);
     end
 end

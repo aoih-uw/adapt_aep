@@ -37,7 +37,7 @@ function resp_found_dialog(ex)
     
     function end_experiment()
         ex.decision(ex.counter.iamp).amp_done = 1;
-        ex.decision.exp_done_reason = 'Successfully finished testing at current amplitude, user decided to not test further amplitudes.';
+        ex.exp_done = 1;
         delete(d);
     end
 end

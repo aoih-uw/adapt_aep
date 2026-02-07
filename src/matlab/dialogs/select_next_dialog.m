@@ -39,11 +39,10 @@ uiwait(d);
     end
 
     function end_callback()
-        ex.decision.exp_done = 1;
+        ex.exp_done = 1;
         ex.decision(ex.counter.iamp).amp_done = 1;
-        ex.decision(ex.counter.iamp).exp_done_reason = 'User terminated experiment';
-        save_data(ex)
-        ex = end_experiment(ex);
+        ex = save_raw_data(ex);
+        ex = save_session_data(ex);
         delete(d);
     end
 end

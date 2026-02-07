@@ -1,5 +1,5 @@
-function ex = preprocess_signal(ex)
-ex = reject_artefacts(ex); 
+function ex = preprocess_signal(ex,app)
+ex = reject_artefacts(ex,app); 
 ex = apply_channel_weights(ex); 
 ex = filter_signals(ex);
 
