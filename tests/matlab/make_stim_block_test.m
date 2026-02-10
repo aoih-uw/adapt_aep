@@ -65,16 +65,18 @@ classdef make_stim_block_test < matlab.unittest.TestCase
             % check that the amplitude of the trial signals are properly
             % scaled
             ex = create_mock_ex();
-
             ex = make_tone_burst_template(ex);
             result = make_stim_block(ex);
+            jitter_samples = result.block(1).jitter(1);
+            period_samples = length(result.info.stimulus.waveform);
             stimulus = result.block(1).stimulus_block(1,:);
 
             expected_scaling = apply_stim_amp_scaling(ex.info.stimulus.amplitude_spl, ...
                 ex.info.calibration.correction_factor_linear, ex.info.stimulus.waveform);
 
             expected_amplitude = rms(expected_scaling);
-            actual_amplitude = rms(stimulus);
+            stimulus_dur = stimulus(jitter_samples+period_samples:(jitter_samples+period_samples*2)-1);
+            actual_amplitude = rms(stimulus_dur);
 
             testCase.verifyEqual(actual_amplitude, expected_amplitude, 'AbsTol', 0.01);
         end

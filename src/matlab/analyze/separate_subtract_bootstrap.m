@@ -3,7 +3,7 @@ function ex = separate_subtract_bootstrap(ex,app)
 % differences
 fs = ex.info.recording.sampling_rate_hz;
 kept_trials_filtered = ex.preprocess(iamp).kept_trials_filtered;
-kept_jitter = ex.preprocess(iamp)kept_jitter;
+kept_jitter = ex.preprocess(iamp).kept_jitter;
 latency_samples = ex.info.recording.latency_samples;
 period_length_samps = length(ex.info.stimulus.waveform);
 n_bootstrap = ex.info.analysis.n_bootstrap;

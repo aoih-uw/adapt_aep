@@ -8,58 +8,61 @@ function ex = reject_artefacts(ex,app)
 
 % Define variables
 iblock = ex.counter.iblock;
+iamp = ex.counter.iamp;
 reject_threshold_mV = ex.info.signal_quality.rejection_threshold_mV;
 reject_threshold_sd = ex.info.signal_quality.rejection_threshold_sd;
 N_channels = ex.info.channels.n_channels;
 trials_per_block = ex.info.adaptive.trials_per_block; %# In test make sure trials_per_block*iblock calculations meet expectation on total length of trials below
-N_trials_presented = ex.block(iblock).N_trials_presented;
+N_trials_presented = ex.trial_count(iamp);
 current_amplitude = ex.info.stimulus.amplitude_spl;
 
+% Make channel labels
+all_channel_label = [];
+for ichan = 1:N_channels
+    all_channel_label = [all_channel_label ; ones(trials_per_block*iblock,1)*ichan];
+end
+
 %% Get all available data
-sig_len = size(ex.raw(iblock).electrodes(1,:,1),2);
-all_trials = zeros(trials_per_block*iblock,sig_len,N_channels);
+% Account for different sizes
+max_samples = max(arrayfun(@(x) size(x.electrodes, 2), ex.raw));
+all_trials = NaN(trials_per_block*iblock, max_samples, N_channels);
 all_phases = zeros(trials_per_block*iblock,N_channels);
 all_jitter = zeros(trials_per_block*iblock,N_channels);
 row_idx = 1;
+
 for ii = 1:iblock
     cur_block = ex.raw(ii).electrodes;
     cur_phase = ex.block(ii).phase_vec;
     cur_jitter = ex.block(ii).jitter;
+    n_samples = size(cur_block, 2);
+    
     for ichan = 1:N_channels
         temp = cur_block(:,:,ichan);
-        all_trials(row_idx:row_idx+trials_per_block-1,:, ichan) = temp;
+        all_trials(row_idx:row_idx+trials_per_block-1, 1:n_samples, ichan) = temp;
         all_phases(row_idx:row_idx+trials_per_block-1, ichan) = cur_phase;
         all_jitter(row_idx:row_idx+trials_per_block-1, ichan) = cur_jitter;
     end
-        row_idx = row_idx+trials_per_block;
+    row_idx = row_idx + trials_per_block;
 end
 
 %% Collapse data across channels
-all_trials_chan = zeros(trials_per_block*iblock*N_channels,sig_len);
-all_phases_chan = zeros(trials_per_block*iblock*N_channels,1);
-all_jitter_chan = zeros(trials_per_block*iblock*N_channels,1);
+all_trials_chan = reshape(all_trials, [], size(all_trials,2));
+all_phases_chan = reshape(all_phases,[],1);
+all_jitter_chan = reshape(all_jitter,[],1);
 
-row_idx = 1;
-all_channel_label = [];
-for ichan = 1:N_channels
-    all_channel_label = [all_channel_label ; ichan*ones(trials_per_block*iblock,1)];
-    all_trials_chan(row_idx:row_idx+trials_per_block*iblock-1,:) = all_trials(:,:, ichan);
-    all_phases_chan(row_idx:row_idx+trials_per_block*iblock-1,:) = all_phases(:,ichan);
-    all_jitter_chan(row_idx:row_idx+trials_per_block*iblock-1,:) = all_jitter(:,ichan);
-    row_idx = row_idx+trials_per_block*iblock;
-end
+%% Calculate RMS mean and std
+all_trials_chan_rms = sqrt(mean(all_trials_chan.^2, 2,'omitnan'));
 
 %% Check for any crazy large values
-if any(all_trials_chan(:) >= reject_threshold_mV)
+if any(all_trials_chan_rms(:) >= reject_threshold_mV)
+    beep
     uiwait(warndlg('There are trials with suspiciously large mV values', 'Warning'));
 end
 
-%% Calculate RMS mean and std
-all_trials_chan_rms = rms(all_trials_chan,2);
-all_mean = mean(all_trials_chan_rms,1);
-all_std = std(all_trials_chan_rms,1);
-
-rel_reject_threshold = all_mean + reject_threshold_sd*all_std;
+% Calculate relative rejection threshold
+all_median = median(all_trials_chan_rms,1,'omitnan');
+all_mad = median(abs(all_median-all_trials_chan_rms));
+rel_reject_threshold = all_median + reject_threshold_sd * all_mad * 1.4826;
 
 kept_trials_idx = find(all_trials_chan_rms < rel_reject_threshold);
 kept_trials_phases = all_phases_chan(kept_trials_idx);
@@ -91,13 +94,13 @@ end
 
 %% Save kept trials
 kept_trials = all_trials_chan(kept_trials_idx,:);
-kept_trials_channels = all_channel_label(kept_trials_idx); %kept_trials_channels the labels for the channels
+kept_trials_channels = all_channel_label(kept_trials_idx); % Kept_trials_channels the labels for the channels
 kept_jitter = all_jitter_chan(kept_trials_idx);
 reject_rate = ((N_trials_presented*N_channels)-size(kept_trials,1))/(N_trials_presented*N_channels);
-fprintf('Artifact rejection rate: %.3f', reject_rate)
+fprintf('\nArtifact rejection rate: %.3f\n', reject_rate)
 
 % Update GUI
-app.Label_rejection_rate.Text = sprintf('%.3f', reject_rate);
+app.Label_rejection_rate.Text = sprintf('%.1f%%', reject_rate * 100);
 
 %% Save to ex structure
 ex.preprocess(iamp).rel_reject_threshold = [ex.preprocess(iamp).rel_reject_threshold rel_reject_threshold]; % (1 x # iterations of preprocessing) saved in structure for every iamp

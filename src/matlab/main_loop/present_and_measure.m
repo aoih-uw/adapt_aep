@@ -19,6 +19,8 @@ output_channels = ex.info.recording.DAC_output_channels;
 input_channels = ex.info.recording.DAC_input_channels;
 input_channel_names = ex.info.recording.DAC_input_channel_names;
 
+color_names = {'blue', 'orange', 'red', 'teal', 'green', 'yellow', 'purple', 'pink', 'brown', 'grey'};
+
 % Assign index values for playrec output
 hydrophone_idx = find(strcmp(input_channel_names, 'Hydrophone'));
 loopback_idx = find(strcmp(input_channel_names, 'Loopback'));
@@ -53,11 +55,9 @@ app.Label_number_trials_presented.Text = string(N_trials_presented);
 time_s = (0:n_samples-1) / fs;
 
 % Plot hydrophone
-cla(app.UIAxes_hydrophone);
-hold(app.UIAxes_hydrophone, 'on');
-for trial = 1:n_trials
-    plot(app.UIAxes_hydrophone, time_s, ex.raw(iblock).hydrophone(trial, :));
-end
+cla(app.UIAxes_hydrophone); % Plot random single trial since taking the mean will cancel out the stimulus...
+hold(app.UIAxes_hydrophone, 'on'); 
+plot(app.UIAxes_hydrophone, time_s, ex.raw(iblock).hydrophone(randperm(n_trials,1), :),'Color',tableau_10('purple'),'LineWidth',1.5);
 hold(app.UIAxes_hydrophone, 'off');
 title(app.UIAxes_hydrophone, 'Hydrophone');
 
@@ -67,8 +67,21 @@ electrode_axes = {app.UIAxes_ch1, app.UIAxes_ch2, app.UIAxes_ch3, app.UIAxes_ch4
 for ch = 1:n_channels
     cla(electrode_axes{ch});
     hold(electrode_axes{ch}, 'on');
-    for trial = 1:n_trials
-        plot(electrode_axes{ch}, time_s, squeeze(ex.raw(iblock).electrodes(trial, :, ch)));
-    end
+    
+    % Compute mean and std across trials
+    data_mean = mean(squeeze(ex.raw(iblock).electrodes(:, :, ch)), 1);
+    data_std = std(squeeze(ex.raw(iblock).electrodes(:, :, ch)), 0, 1);
+    
+    % Get color for this channel
+    color = tableau_10(color_names{mod(ch-1, 10) + 1});
+    
+    % Plot shaded area for +/- 1 std
+    fill(electrode_axes{ch}, [time_s, fliplr(time_s)], ...
+         [data_mean + data_std, fliplr(data_mean - data_std)], ...
+         color, 'FaceAlpha', 0.3, 'EdgeColor', 'none');
+    
+    % Plot mean
+    plot(electrode_axes{ch}, time_s, data_mean, 'Color', color, 'LineWidth', 1.5);
+    
     hold(electrode_axes{ch}, 'off');
 end

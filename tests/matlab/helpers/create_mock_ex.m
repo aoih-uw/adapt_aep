@@ -6,7 +6,7 @@ ex.info.animal.subject_ID = 1;
 ex.info.animal.sex = 'F';
 ex.info.animal.health = 'Good';
 ex.info.stimulus.frequency_hz = 100;
-ex.info.stimulus.amplitude_spl = 130;
+ex.info.stimulus.amplitude_spl = 170;
 ex.info.stimulus.type = 'Tone burst';
 ex.info.adaptive.response_feature = 'Double frequency';
 ex.info.adaptive.trials_per_block = 20;
@@ -19,3 +19,4 @@ ex.info.animal.filename = [ex.info.animal.species_name '_' ...
     ex.info.experiment.exp_time_start];
 ex.info.recording.latency_samples = 100;
 ex.info.calibration.correction_factor_linear = 1;
+ex.counter.iamp = 1;

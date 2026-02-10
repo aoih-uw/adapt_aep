@@ -20,6 +20,7 @@ ex.counter.iblock = 0;
 ex.counter.health = 0;
 
 %% Trial counter
+ex.trial_count(1) = NaN;
 ex.trial_count(1) = [];
 
 % Experiment done marker
@@ -53,21 +54,22 @@ ex.decision(1).amp_done_reason = NaN;
 % Preprocessing
 ex.preprocess(1).rel_reject_threshold = [];
 ex.preprocess(1).total_trials_presented =  0;
+ex.preprocess(1).N_trials_presented = [];
 ex.preprocess(1).reject_rate =  [];
 ex.preprocess(1).kept_trials = []; % Delete from ex when saving
 ex.preprocess(1).kept_phases = []; % Delete from ex when saving
 ex.preprocess(1).kept_jitters = []; % Delete from ex when saving
-ex.preprocess(1).kept_channels = []; % Delete from ex when saving
+ex.preprocess(1).kept_channels = NaN; % Delete from ex when saving
 
 % Model
 ex.model.doub_freq_resp_vec_mV = []; % Delete from ex when saving
 ex.model.noise_floor = []; % Delete from ex when saving
 
-ex.model.response_mean = response_means;
-ex.model.response_vars = response_vars;
+ex.model.response_mean = [];
+ex.model.response_vars = [];
 
-ex.model.noise_floor_mean = [ex.model.noise_floor_mean noise_floor_mean];
-ex.model.noise_floor_std = [ex.model.noise_floor_std noise_floor_std];
+ex.model.noise_floor_mean = [];
+ex.model.noise_floor_std = [];
 
 ex.model.amplitude_vec = [];
 ex.model.x0_fit = [];

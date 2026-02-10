@@ -45,6 +45,7 @@ for itrial = 1:trials_per_block
 end
 
 % Save to ex
+ex.counter.iblock = iblock;
 ex.block(iblock).jitter = selected_cycle_samples;
 ex.block(iblock).stimulus_block = stimulus;
 ex.block(iblock).phase_vec = phase_vec;
