@@ -56,10 +56,14 @@ ex.preprocess(1).rel_reject_threshold = [];
 ex.preprocess(1).total_trials_presented =  0;
 ex.preprocess(1).N_trials_presented = [];
 ex.preprocess(1).reject_rate =  [];
-ex.preprocess(1).kept_trials = []; % Delete from ex when saving
-ex.preprocess(1).kept_phases = []; % Delete from ex when saving
-ex.preprocess(1).kept_jitters = []; % Delete from ex when saving
-ex.preprocess(1).kept_channels = NaN; % Delete from ex when saving
+
+% Kept trials
+ex.kept.trials = [];
+ex.kept.phases = [];
+ex.kept.jitter = [];
+ex.kept.channels = [];
+ex.kept.trials_weighted = [];
+ex.kept.trials_filtered = [];
 
 % Model
 ex.model.doub_freq_resp_vec_mV = []; % Delete from ex when saving

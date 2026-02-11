@@ -73,7 +73,7 @@ classdef reject_artefacts_test < matlab.unittest.TestCase
 
             % Run script
             testCase.ex = reject_artefacts(testCase.ex,testCase.App);
-            actual_kept_trials = size(testCase.ex.preprocess(1).kept_trials,1);
+            actual_kept_trials = size(testCase.ex.kept.trials,1);
 
             testCase.verifyEqual(actual_kept_trials, expected_kept_trials);
         end
@@ -106,7 +106,7 @@ classdef reject_artefacts_test < matlab.unittest.TestCase
             % Run script and check that the phases sum to 0
             testCase.ex = reject_artefacts(testCase.ex,testCase.App);
             end
-            testCase.verifyEqual(sum(testCase.ex.preprocess(end).kept_phases), 0);
+            testCase.verifyEqual(sum(testCase.ex.kept.phases), 0);
         end
 
         function crazy_large_values_dialog_works(testCase)
@@ -142,6 +142,7 @@ classdef reject_artefacts_test < matlab.unittest.TestCase
             block_iterations = 10;
             for iamp = 1:10
                 for iblock_it = 0:block_iterations-1
+                    testCase.ex.counter.iamp = iamp;
                     testCase.ex.counter.iblock = iblock_it;
                     testCase.ex = make_stim_block(testCase.ex);
                     iblock = testCase.ex.counter.iblock;
@@ -171,54 +172,85 @@ classdef reject_artefacts_test < matlab.unittest.TestCase
 
                 % rel_reject_threshold
                 expected_size = [1 block_iterations];
-                actual_size = size(testCase.ex.preprocess(iamp).rel_reject_threshold);
+                actual_size = size([testCase.ex.preprocess(iamp).rel_reject_threshold{:}]);
                 testCase.verifyEqual(expected_size,actual_size)
 
                 % N_trials_presented
                 expected_size = [1 block_iterations];
-                actual_size = size(testCase.ex.preprocess(iamp).N_trials_presented);
+                actual_size = size([testCase.ex.preprocess(iamp).N_trials_presented{:}]);
                 testCase.verifyEqual(expected_size,actual_size)
 
                 % reject_rate
                 expected_size = [1 block_iterations];
-                actual_size = size(testCase.ex.preprocess(iamp).reject_rate);
+                actual_size = size([testCase.ex.preprocess(iamp).reject_rate{:}]);
                 testCase.verifyEqual(expected_size,actual_size)
 
                 % 'Kept' variables
-                reject_rate = testCase.ex.preprocess(1).reject_rate(end); % Get the last reject rate
+                reject_rate = testCase.ex.preprocess(iamp).reject_rate{end}; % Get the last reject rate
                 total_rows = (block_iterations*trials_per_block*N_channels);
                 expected_size = total_rows - (total_rows*reject_rate);
 
                 % kept_trials
-                actual_size = size(testCase.ex.preprocess(1).kept_trials,1);
+                actual_size = size(testCase.ex.kept.trials,1);
                 testCase.verifyEqual(expected_size,actual_size)
 
                 % kept_phases
-                actual_size = size(testCase.ex.preprocess(1).kept_phases,1);
+                actual_size = size(testCase.ex.kept.phases,1);
                 testCase.verifyEqual(expected_size,actual_size)
 
                 % kept_jitter
-                actual_size = size(testCase.ex.preprocess(1).kept_jitter,1);
+                actual_size = size(testCase.ex.kept.jitter,1);
                 testCase.verifyEqual(expected_size,actual_size)
 
                 % kept_trials_channels
-                actual_size = size(testCase.ex.preprocess(1).kept_channels,1);
+                actual_size = size(testCase.ex.kept.channels,1);
                 testCase.verifyEqual(expected_size,actual_size)
-            end
-            end
-        
 
-        function check_output_dimensions_multi_iblock_multi_iamp(testCase)
+                % Reset ex structure for new iamp
+                testCase.ex.raw = testCase.ex.raw(1);
+                testCase.ex.raw.hydrophone = NaN;
+                testCase.ex.raw.electrodes = NaN;
+                testCase.ex.raw.time_stamp = NaN;
+
+                testCase.ex.block = struct();
+                testCase.ex.block(1).water_temp_C = NaN;
+                testCase.ex.block(1).jitter = NaN;
+                testCase.ex.block(1).phase_vec = NaN;
+                testCase.ex.block(1).stimulus_block = NaN;
+            end
+        end
+
+        function GUI_properly_updated(testCase)
+            testCase.ex = make_stim_block(testCase.ex);
+            N_channels = testCase.ex.info.channels.n_channels;
+            testCase.ex.info.signal_quality.rejection_threshold_mV = 100;
             mock_data = create_mock_data(testCase.ex, 1, 0.5);
             testCase.ex.mock_data = mock_data;
             testCase.ex = present_and_measure(testCase.ex, testCase.App);
-        end
- 
+            responses = testCase.ex.raw(1).electrodes;
 
-        function GUI_properly_updated(testCase)
-            mock_data = create_mock_data(testCase.ex, signal_scaling, noise_scaling);
-            testCase.ex.mock_data = mock_data;
-            testCase.ex = present_and_measure(testCase.ex, testCase.App);
+            % Corrupt 2 trials from each channel to create a known reject rate
+            phase_vec = testCase.ex.block(1).phase_vec;
+            pos_corrupt = find(phase_vec == 1, 1, 'first');
+            neg_corrupt = find(phase_vec == -1, 1, 'first');
+            trials_to_corrupt = [pos_corrupt neg_corrupt];
+            for ichan = 1:N_channels
+                responses(trials_to_corrupt,:,ichan) = ...
+                    responses(trials_to_corrupt,:,ichan) + randn(length(trials_to_corrupt),size(responses,2))*50;
+            end
+
+            testCase.ex.raw(1).electrodes = responses;
+
+            % Run reject_artefacts
+            testCase.ex = reject_artefacts(testCase.ex, testCase.App);
+
+            % Get expected reject rate
+            expected_reject_rate = testCase.ex.preprocess(1).reject_rate{end};
+            expected_text = sprintf('%.1f%%', expected_reject_rate * 100);
+
+            % Verify GUI label was updated correctly
+            actual_text = testCase.App.Label_rejection_rate.Text;
+            testCase.verifyEqual(actual_text, expected_text);
         end
 
     end

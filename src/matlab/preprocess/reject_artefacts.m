@@ -22,6 +22,13 @@ for ichan = 1:N_channels
     all_channel_label = [all_channel_label ; ones(trials_per_block*iblock,1)*ichan];
 end
 
+% For new iamp initialize new layer in ex.preprocess
+if iamp > length(ex.preprocess)
+    ex.preprocess(iamp).rel_reject_threshold = {};
+    ex.preprocess(iamp).N_trials_presented = {};
+    ex.preprocess(iamp).reject_rate = {};
+end
+
 %% Get all available data
 % Account for different sizes
 max_samples = max(arrayfun(@(x) size(x.electrodes, 2), ex.raw));
@@ -103,10 +110,10 @@ fprintf('\nArtifact rejection rate: %.3f\n', reject_rate)
 app.Label_rejection_rate.Text = sprintf('%.1f%%', reject_rate * 100);
 
 %% Save to ex structure
-ex.preprocess(iamp).rel_reject_threshold = [ex.preprocess(iamp).rel_reject_threshold rel_reject_threshold]; % (1 x # iterations of preprocessing) saved in structure for every iamp
-ex.preprocess(iamp).N_trials_presented =  [ex.preprocess(iamp).N_trials_presented N_trials_presented]; % (1 x # iterations of preprocessing) saved in structure for every iamp
-ex.preprocess(iamp).reject_rate =  [ex.preprocess(iamp).reject_rate reject_rate];  % (1 x # iterations of preprocessing) saved in structure for every iamp
-ex.preprocess(1).kept_trials = kept_trials; % Don't need to save every iteration's data, so just save to first 
-ex.preprocess(1).kept_phases = kept_trials_phases;
-ex.preprocess(1).kept_jitter = kept_jitter;
-ex.preprocess(1).kept_channels = kept_trials_channels;
+ex.preprocess(iamp).rel_reject_threshold{end+1} = rel_reject_threshold; % (1 x # iterations of preprocessing) saved in structure for every iamp
+ex.preprocess(iamp).N_trials_presented{end+1} =  N_trials_presented ; % (1 x # iterations of preprocessing) saved in structure for every iamp
+ex.preprocess(iamp).reject_rate{end+1} = reject_rate;  % (1 x # iterations of preprocessing) saved in structure for every iamp
+ex.kept.trials = kept_trials; % Don't need to save every iteration's data, so just save to first 
+ex.kept.phases = kept_trials_phases;
+ex.kept.jitter = kept_jitter;
+ex.kept.channels = kept_trials_channels;

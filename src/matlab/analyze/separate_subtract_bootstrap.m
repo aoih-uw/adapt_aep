@@ -2,8 +2,8 @@ function ex = separate_subtract_bootstrap(ex,app)
 %% Separate STIM ON (dur_stim) and STIM OFF (pre_stim) periods and calculate
 % differences
 fs = ex.info.recording.sampling_rate_hz;
-kept_trials_filtered = ex.preprocess(iamp).kept_trials_filtered;
-kept_jitter = ex.preprocess(iamp).kept_jitter;
+kept_trials_filtered = ex.kept.trials_filtered;
+kept_jitter = ex.kept.jitter;
 latency_samples = ex.info.recording.latency_samples;
 period_length_samps = length(ex.info.stimulus.waveform);
 n_bootstrap = ex.info.analysis.n_bootstrap;
