@@ -1,4 +1,5 @@
 function ex = save_raw_data(ex)
+iblock = ex.counter.iblock;
 % Generate timestamp
 t = datetime('now', 'TimeZone', 'UTC', 'Format', 'yyyyMMdd_HHmmss');
 timestamp_str = char(t);
@@ -11,10 +12,10 @@ filename = sprintf('%s_%ddBSPL_raw_data_%s.mat', ex.info.animal.filename_root, e
 
 % Extract only required fields
 ex_save = struct();
-ex_save.block = ex.block;
-ex_save.raw = ex.raw;
 ex_save.info = ex.info;
-ex_save.health = ex.health;
+ex_save.block = ex.block(1:iblock);
+ex_save.raw = ex.raw(1:iblock);
+ex_save.health = ex.health(1:iblock);
 
 % Remove stimulus_block from all block entries
 for i = 1:length(ex_save.block)
@@ -26,17 +27,7 @@ end
 % Save
 save(filename, 'ex_save');
 
-%% Reset ex structures
-ex.raw = ex.raw(1);
-ex.raw.hydrophone = NaN;
-ex.raw.electrodes = NaN;
-ex.raw.time_stamp = NaN;
-
-ex.block = struct();
-ex.block(1).water_temp_C = NaN;
-ex.block(1).jitter = NaN;
-ex.block(1).phase_vec = NaN;
-ex.block(1).stimulus_block = NaN;
-
+% Reset block
+ex = setup_block(ex);
 
 end

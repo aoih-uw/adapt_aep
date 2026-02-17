@@ -53,7 +53,8 @@ for ii = 1:iblock
 end
 
 %% Collapse data across channels
-all_trials_chan = reshape(all_trials, [], size(all_trials,2));
+all_trials_chan = permute(all_trials, [1 3 2]); % Now: [trials × channels × timepoints]
+all_trials_chan = reshape(all_trials_chan, [], size(all_trials,2)); % Now: [(trials*channels) × timepoints]
 all_phases_chan = reshape(all_phases,[],1);
 all_jitter_chan = reshape(all_jitter,[],1);
 

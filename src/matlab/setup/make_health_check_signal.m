@@ -13,4 +13,4 @@ tone_burst = generate_tone_burst(fs, stim_freq, full_amp_dur_ms, ramp_dur_ms);
 tone_burst_scaled = apply_stim_amp_scaling(stim_amplitude, correction_factor, tone_burst);
 tone_burst_set_scaled = repmat(tone_burst_scaled, 5, 1);
 
-ex.health.waveforms = tone_burst_set_scaled;
+ex.info.health.waveforms = tone_burst_set_scaled;

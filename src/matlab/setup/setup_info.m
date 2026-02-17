@@ -95,8 +95,8 @@ ex.info.adaptive = struct( ...
     'response_feature',                   'double_frequency_response', ... % Make this an if statement so it will generate which frequency to look for in the response
     'target_response_frequency',           ex.info.stimulus.frequency_hz*2, ... % Auto populate
     'trials_per_block',                    10, ... % Must be an even number of equal number of stimulus +/- polarities in block
-    'min_trials_needed_for_analysis',      40, ...
-    'max_trials',                          NaN ... % Set in GUI
+    'min_trials_needed_for_analysis',      40, ... % 40 needed
+    'max_trials',                          300 ... % Set in GUI
     );
 
 % Signal preprocessing parameters
@@ -130,3 +130,4 @@ ex.info.calibration = struct( ... % These values will be updated by prepare_next
 % Health
 ex.info.health.stim_frequency_hz = 100;
 ex.info.health.stim_amp_spl = 120;
+ex.info.health.waveforms = NaN;
