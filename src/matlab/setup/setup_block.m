@@ -4,8 +4,6 @@ max_block = ex.info.adaptive.max_trials / ex.info.adaptive.trials_per_block;
 
 %% Trial counter
 for iblock = 1:max_block
-ex.trial_count(iblock) = 0;
-
 % use iblocks but you can get all data easily using all_num_blocks = [ex.block.num_blocks]  % Easy extraction
 ex.block(iblock).water_temp_C = NaN; % Get thermometer working
 ex.block(iblock).jitter = NaN;
@@ -22,12 +20,6 @@ ex.health(iblock).time_stamp = NaN;
 ex.health(iblock).doub_stim_mag = NaN;
 ex.health(iblock).status = NaN;
 ex.health(iblock).end_test = 0;
-
-%% Decision
-ex.decision(iblock).resp_found = 0;
-ex.decision(iblock).current_amplitude = NaN; %# have this assigned when resp_found is assigned as well in separate, subtract, bootstrap etc. etc.!
-ex.decision(iblock).amp_done = 0;
-ex.decision(iblock).amp_done_reason = NaN;
 
 % Preprocessing
 ex.preprocess(iblock).rel_reject_threshold = [];

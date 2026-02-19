@@ -1,7 +1,8 @@
 function ex = model_response(ex,app)
+iamp = ex.counter.iamp;
 doub_freq_resp_mV  = ex.model.doub_freq_resp_mV; % (trials x tested_amps)
 amplitude_vec = ex.model.amplitude_vec; % (1 x N_tested_amplitudes)
-noise_floor = ex.model.noise_floor; % (trials x tested_amps)
+noise_floor = ex.model.noise_floor{iamp}; % (trials x tested_amps)
 noise_floor = reshape(noise_floor, size(noise_floor,1)*size(noise_floor,2),1); % reshape to (trials*tested_amps x 1)
 fixed_upper_level = ex.info.stimulus.max_amplitude_limit;
 resp_found = [ex.decision.resp_found];

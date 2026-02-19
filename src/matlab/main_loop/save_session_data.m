@@ -1,4 +1,6 @@
 function ex = save_session_data(ex)
+iamp = ex.counter.iamp;
+
 % Save time information
 t = datetime('now', 'TimeZone', 'UTC', 'Format', 'yyyy-MM-dd HH:mm:ss');
 ex.info.experiment.exp_time_end = datestr(t, 'HH:MM:SS');
@@ -23,9 +25,9 @@ filename = sprintf('%s_session_data_%s.mat', ex.info.animal.filename_root, times
 ex_save = struct();
 
 % Keep specified top-level fields
-ex_save.trial_count = ex.trial_count;
+ex_save.trial_count = ex.trial_count(iamp);
 ex_save.model = ex.model;
-ex_save.decision = ex.decision;
+ex_save.decision = ex.decision(iamp);
 
 % Keep ex.info but exclude ex.info.stimulus
 ex_save.info = ex.info;

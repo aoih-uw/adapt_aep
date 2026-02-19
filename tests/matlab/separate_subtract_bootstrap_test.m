@@ -45,7 +45,7 @@ classdef separate_subtract_bootstrap_test < matlab.unittest.TestCase
         % Test methods
 
         function identify_present_response(testCase)
-            mock_data = create_mock_data(testCase.ex, 1, 0.25);
+            [testCase.ex, mock_data] = create_mock_data(testCase.ex, 1, 0.25);
             testCase.ex.mock_data = mock_data;
             testCase.ex = present_and_measure(testCase.ex, testCase.App);
             testCase.ex = reject_artefacts(testCase.ex,testCase.App);
@@ -58,49 +58,89 @@ classdef separate_subtract_bootstrap_test < matlab.unittest.TestCase
             testCase.verifyEqual(testCase.ex.decision(1).resp_found,1)
         end
 
-        function identify_response(testCase)
-            sig_int = linspace(0,0.2,15);
+        function identify_response_with_modeling(testCase)
+            sig_int = linspace(0,.1,2);
             noise_int = linspace(0.1,1,length(sig_int));
+            completed_one_round = 0;
             for i = 1:length(sig_int)
                 for ii = 1:length(noise_int)
-                    while testCase.ex.decision(1).resp_found == 0 || testCase.ex.trial_count(end) > testCase.ex.info.adaptive.max_trials
-                        mock_data = create_mock_data(testCase.ex, sig_int(i), noise_int(ii));
+                    if i == 1 && ii == 1
+                        iamp = 1;
+                    else
+                        iamp = testCase.ex.counter.iamp;
+                    end
+                    while testCase.ex.decision(iamp).resp_found == 0 && testCase.ex.trial_count(iamp) < testCase.ex.info.adaptive.max_trials
+                        if completed_one_round
+                            testCase.ex.counter.iblock = testCase.ex.counter.iblock+1;
+                        end
+
+                        [testCase.ex, mock_data] = create_mock_data(testCase.ex, sig_int(i), noise_int(ii));
                         testCase.ex.mock_data = mock_data;
                         testCase.ex = present_and_measure(testCase.ex, testCase.App);
                         testCase.ex = reject_artefacts(testCase.ex,testCase.App);
                         testCase.ex = apply_channel_weights(testCase.ex);
                         testCase.ex = filter_signals(testCase.ex);
 
-                        % Run script
-                        testCase.ex = separate_subtract_bootstrap(testCase.ex,testCase.App);
-                        fprintf('\nSignal_ratio: %1.2f\nNoise_ratio: %1.2f\nResponse found?: %1.0f\n',sig_int(i), noise_int(ii), testCase.ex.decision(1).resp_found)
+                        % Run script only if have at least 40 trials
+                        if testCase.ex.trial_count(iamp) >= testCase.ex.info.adaptive.min_trials_needed_for_analysis
+                            testCase.ex = separate_subtract_bootstrap(testCase.ex,testCase.App);
+                            fprintf('\nSignal_ratio: %1.2f\nNoise_ratio: %1.2f\nResponse found?: %1.0f\n',sig_int(i), noise_int(ii), testCase.ex.decision(1).resp_found)
 
-                        if sig_int(i) == 0
-                            testCase.verifyEqual(testCase.ex.decision(1).resp_found,0)
-                            
-                        elseif sig_int(i) == 1
-                            testCase.verifyEqual(testCase.ex.decision(1).resp_found,1)
+                            if sig_int(i) == 0
+                                testCase.verifyEqual(testCase.ex.decision(1).resp_found,0)
+
+                            elseif sig_int(i) == 1
+                                testCase.verifyEqual(testCase.ex.decision(1).resp_found,1)
+                            end
                         end
-
-                        testCase.ex.counter.iblock = testCase.ex.counter.iblock + 1;
+                        completed_one_round = 1;
                     end
-                        cur_sig(i,ii) = sig_int(i);
-                        cur_reps_needed(i,ii) = testCase.ex.counter.iblock*testCase.ex.info.adaptive.trials_per_block;
-                        cur_noise(i,ii) = noise_int(ii);
-                        resp_result(i,ii) = testCase.ex.decision(1).resp_found;
-                        % Reset block
-                        ex = setup_block(ex);
-                        testCase.ex.counter.iblock = 1; % reset for next SNR
-                        testCase.ex.counter.iamp = testCase.ex.counter.iamp+1;
+
+                    % Assign to trackers
+                    if testCase.ex.decision(iamp).resp_found == 0
+                        testCase.ex.model.doub_freq_resp_mV = [testCase.ex.model.doub_freq_resp_mV {testCase.ex.model.doub_freq_resp_mV_temp}];
+                    end
+
+                    tmp_data = testCase.ex.model.doub_freq_resp_mV{iamp};
+                    tmp_median = median(tmp_data);
+                    tmp_mad = median(abs(tmp_data-tmp_median));
+                    cur_median(i,ii) = tmp_median;
+                    cur_mad(i,ii) = tmp_mad;
+                    
+                    cur_sig(i,ii) = sig_int(i);
+                    cur_reps_needed(i,ii) = testCase.ex.trial_count(iamp) ;
+                    cur_noise(i,ii) = noise_int(ii);
+                    resp_result(i,ii) = testCase.ex.decision(end).resp_found;
+
+                    % Reset block
+                    testCase.ex = setup_block(testCase.ex);
+                    testCase.ex.counter.iblock = 0; % reset for next SNR
+                    completed_one_round = 0;
+                    testCase.ex.counter.iamp = testCase.ex.counter.iamp+1;
+                    testCase.ex = make_stim_block(testCase.ex);
                 end
             end
-            heatmap(noise_int,sig_int,resp_result);
+            figure;
+            heatmap(noise_int,sig_int,cur_reps_needed);
             xlabel('Noise level')
             ylabel('Signal level')
+            title('Trials needed to detect response')
+
+            figure;
+            heatmap(noise_int,sig_int,cur_median);
+            xlabel('Noise level')
+            ylabel('Signal level')
+            title('Median 2f amplitude')
+
+            figure;
+            heatmap(noise_int,sig_int,cur_mad);
+            xlabel('Noise level')
+            ylabel('Signal level')
+            title('Median Absolute Deviation (MAD) 2f amplitude')
         end
 
-end
-
-
     end
+
+
+end
 

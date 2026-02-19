@@ -114,7 +114,7 @@ try
             time_since_exp_start = date_time('now') - ex.info.exp_time_start;
             app.Label_time_elapsed.Text = string(time_since_exp_start, 'hh:mm:ss');
             
-            grand_total_N_trials = sum(arrayfun(@(x) x(end), ex.trial_count));
+            grand_total_N_trials = sum(arrayfun(@(x) x, ex.trial_count(1:iamp)));
             app.Label_grand_total.Text = string(grand_total_N_trials);
         end
     end

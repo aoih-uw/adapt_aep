@@ -79,13 +79,15 @@ doub_freq_resp_mV = mean(diffs(:,freq_vec_pre(1,:) >= lower_end & freq_vec_pre(1
 noise_floor = mean(fft_vals_pre(:,freq_vec_pre(1,:) >= lower_end & freq_vec_pre(1,:) <= upper_end),2); % (N_trials,1)
 
 % Split bootstrapping group in 1/2 to verify
-group_size = length(doub_freq_resp_mv)/2;
+group_length = length(doub_freq_resp_mV);
+rand_group_idx = randperm(group_length,group_length);
 idx = 1;
 reset(app.UIAxes_boot)
-for irep = 1:2
+% for irep = 1:2
     % Bootstrap!
-    cur_group = doub_freq_resp_mV(idx:idx + group_size-1);
-    fprintf('\nStarting bootstrap calculation...')
+    cur_idx = rand_group_idx(idx:idx+(group_length/2)-1);
+    cur_group = doub_freq_resp_mV(cur_idx);
+    fprintf('\nStarting bootstrap calculation %1.0f/2...', irep)
     tic()
     bootstat = bootstrp(n_bootstrap,@mean,cur_group);
     time_elapsed = toc();
@@ -99,7 +101,9 @@ for irep = 1:2
         histogram(app.UIAxes_boot, bootstat, 'FaceColor', tableau_10('yellow'));
     end
     xline(app.UIAxes_boot, 0, '--');
-    xlim(app.UIAxes_boot,[min(min(bootstat),-max(bootstat)),max(bootstat)])
+    xlim(app.UIAxes_boot, 'auto');
+    cur_xlim = xlim(app.UIAxes_boot);
+    xlim(app.UIAxes_boot, [-max(abs(cur_xlim)), max(abs(cur_xlim))]);
     title(app.UIAxes_boot, 'Bootstrap Distribution');
     xlabel(app.UIAxes_boot, 'Difference');
     grid(app.UIAxes_boot, 'on');
@@ -108,16 +112,30 @@ for irep = 1:2
     pause(0.1)
 
     %% Calculate 95% CI
-    lower_CI(irep) = prctile(bootstat, 2.5);
-    upper_CI(irep) = prctile(bootstat, 97.5);
+    boot_mean(irep) = mean(bootstat);
+    boot_std(irep) = std(bootstat);
+    lower_CI(irep) = prctile(bootstat, 0.5);
+    upper_CI(irep) = prctile(bootstat, 99.5);
     fprintf('\nCI range: [ %.3f , %.3f ]',lower_CI, upper_CI)
 
-    idx = idx + group_size;
+    idx = idx + group_length/2;
 end
+
 hold(app.UIAxes_boot, 'off');
 
-% Make decision
-if all(lower_CI > 0) % response found!
+%% Checks for false positives from random noise
+% Check CIs overlap (means distributions are reliable/not noisy)
+ci_overlap = boot_mean(1) < boot_mean(2) + boot_std(2) && ...
+    boot_mean(1) > boot_mean(2) - boot_std(2);
+
+% Sign consistency (If a response is present, the 2f amplitude should be
+% positive anyways!)
+group_sign = doub_freq_resp_mV > 0;
+percent_pos = sum(group_sign)/group_length;
+
+%% Make decision
+if all(lower_CI > 0) && percent_pos > 99 || all(lower_CI > 0) && ci_overlap && percent_pos >= 0.8
+    % response found
     ex.decision(ex.counter.iamp).resp_found = 1;
     ex.model.doub_freq_resp_mV = [ex.model.doub_freq_resp_mV {doub_freq_resp_mV}]; % (trials x stimulus amplitude)
     ex.model.noise_floor = [ex.model.noise_floor {noise_floor}]; % (trials x stimulus amplitude)
