@@ -15,6 +15,10 @@ end
 doub_freq_range_hz = ex.info.analysis.doub_freq_range_hz;
 current_amplitude = ex.info.stimulus.amplitude_spl;
 
+% Select double freq response values
+lower_end = double_freq_hz - doub_freq_range_hz;
+upper_end = double_freq_hz + doub_freq_range_hz;
+
 pre_stim_start = latency_samples + kept_jitter + 1; % Each trial has different jitter, and thus will have different starting points
 
 pre_stim = zeros(size(kept_trials_filtered,1), period_length_samps); % (N_trials x time samples)
@@ -65,11 +69,7 @@ hold(app.UIAxes_diff_fft, 'off');
 
 pause(0.1)
 
-%% Bootstrap
-% Select double freq response values
-lower_end = double_freq_hz - doub_freq_range_hz;
-upper_end = double_freq_hz + doub_freq_range_hz;
-
+%% Calculate 2f mV value
 % Collapse across columns to get average value between upper and lower limits
 % doub_freq_resp from diff
 doub_freq_resp_mV = mean(diffs(:,freq_vec_pre(1,:) >= lower_end & freq_vec_pre(1,:) <= upper_end),2); % (N_trials, 1)
@@ -78,63 +78,75 @@ doub_freq_resp_mV = mean(diffs(:,freq_vec_pre(1,:) >= lower_end & freq_vec_pre(1
 % noise measurement at the double frequency response point during pre
 noise_floor = mean(fft_vals_pre(:,freq_vec_pre(1,:) >= lower_end & freq_vec_pre(1,:) <= upper_end),2); % (N_trials,1)
 
-% Split bootstrapping group in 1/2 to verify
-group_length = length(doub_freq_resp_mV);
-rand_group_idx = randperm(group_length,group_length);
-idx = 1;
-reset(app.UIAxes_boot)
-% for irep = 1:2
-    % Bootstrap!
-    cur_idx = rand_group_idx(idx:idx+(group_length/2)-1);
-    cur_group = doub_freq_resp_mV(cur_idx);
-    fprintf('\nStarting bootstrap calculation %1.0f/2...', irep)
-    tic()
-    bootstat = bootstrp(n_bootstrap,@mean,cur_group);
-    time_elapsed = toc();
-    fprintf('\nBootstrap calculation time: %.3f', time_elapsed);
+%% Only keep the middle 50% of diffs trials for analysis
+prc_25 = prctile(doub_freq_resp_mV,25);
+prc_75 = prctile(doub_freq_resp_mV,75);
+doub_freq_resp_mV_filt = doub_freq_resp_mV(doub_freq_resp_mV>=prc_25 & doub_freq_resp_mV<=prc_75);
+diffs_filt = diffs(doub_freq_resp_mV>=prc_25 & doub_freq_resp_mV<=prc_75,:);
 
-    % Plot bootstrapped distribution on app axes
-    if irep == 1
+%% Determine if peak at 2f is meaningfully different from the other peaks in the dataset
+mean_diffs = mean(diffs_filt,1);
+[pks, locs] = findpeaks(mean_diffs);
+
+% Find location associated with 2f
+selected_freq_vec = freq_vec_pre(1,locs);
+loc_2f = selected_freq_vec >= lower_end & selected_freq_vec <= upper_end;
+
+if ~any(loc_2f)
+    lower_CI = -inf;
+else
+    % Exclude peaks near multiples of 60 Hz
+    loc_60_multiples = mod(selected_freq_vec, 60) <= doub_freq_range_hz | ...
+        mod(selected_freq_vec, 60) >= (60 - doub_freq_range_hz);
+
+    % Exclude peaks above 1000 Hz
+    loc_1000_and_above = selected_freq_vec>=1000;
+
+    % Calculate the median value of all peaks except 2f and 60 Hz multiples
+    non_2f_peaks = pks(~loc_2f & ~loc_60_multiples & ~loc_1000_and_above);
+    median_non_2f = median(non_2f_peaks);
+    mad_non_2f = median(abs(median_non_2f - non_2f_peaks)) * 1.4826;
+    doub_freq_val = mean(pks(loc_2f));
+
+    if doub_freq_val > (mad_non_2f * 5) + median_non_2f % Signal is not noisy
+        % Bootstrap!
+        fprintf('\nStarting bootstrap calculation...')
+        tic()
+        bootstat = bootstrp(n_bootstrap,@mean,doub_freq_resp_mV_filt);
+        time_elapsed = toc();
+        fprintf('\nBootstrap calculation time: %.3f', time_elapsed);
+
+        %% Calculate 95% CI
+        lower_CI = prctile(bootstat, 0.5);
+        upper_CI = prctile(bootstat, 99.5);
+
+        % Plot bootstrapped distribution on app axes
+        reset(app.UIAxes_boot)
         histogram(app.UIAxes_boot, bootstat, 'FaceColor', tableau_10('blue'));
         hold(app.UIAxes_boot, 'on');
+        xline(app.UIAxes_boot, 0, '--');
+        xline(app.UIAxes_boot, lower_CI, 'Color', tableau_10('blue'), LineWidth=1.5)
+        xline(app.UIAxes_boot, upper_CI, 'Color', tableau_10('blue'), LineWidth=1.5)
+        xlim(app.UIAxes_boot, 'auto');
+        cur_xlim = xlim(app.UIAxes_boot);
+        xlim(app.UIAxes_boot, [-max(abs(cur_xlim)), max(abs(cur_xlim))]);
+        title(app.UIAxes_boot, 'Bootstrap Distribution');
+        xlabel(app.UIAxes_boot, 'Difference');
+        grid(app.UIAxes_boot, 'on');
+        ylabel(app.UIAxes_boot, 'Frequency');
+        hold(app.UIAxes_boot, 'off');
+
+        pause(0.1)
+
+        fprintf('\nCI range: [ %.3f , %.3f ]',lower_CI, upper_CI)
     else
-        histogram(app.UIAxes_boot, bootstat, 'FaceColor', tableau_10('yellow'));
+        lower_CI = -inf;
     end
-    xline(app.UIAxes_boot, 0, '--');
-    xlim(app.UIAxes_boot, 'auto');
-    cur_xlim = xlim(app.UIAxes_boot);
-    xlim(app.UIAxes_boot, [-max(abs(cur_xlim)), max(abs(cur_xlim))]);
-    title(app.UIAxes_boot, 'Bootstrap Distribution');
-    xlabel(app.UIAxes_boot, 'Difference');
-    grid(app.UIAxes_boot, 'on');
-    ylabel(app.UIAxes_boot, 'Frequency');
-
-    pause(0.1)
-
-    %% Calculate 95% CI
-    boot_mean(irep) = mean(bootstat);
-    boot_std(irep) = std(bootstat);
-    lower_CI(irep) = prctile(bootstat, 0.5);
-    upper_CI(irep) = prctile(bootstat, 99.5);
-    fprintf('\nCI range: [ %.3f , %.3f ]',lower_CI, upper_CI)
-
-    idx = idx + group_length/2;
 end
 
-hold(app.UIAxes_boot, 'off');
-
-%% Checks for false positives from random noise
-% Check CIs overlap (means distributions are reliable/not noisy)
-ci_overlap = boot_mean(1) < boot_mean(2) + boot_std(2) && ...
-    boot_mean(1) > boot_mean(2) - boot_std(2);
-
-% Sign consistency (If a response is present, the 2f amplitude should be
-% positive anyways!)
-group_sign = doub_freq_resp_mV > 0;
-percent_pos = sum(group_sign)/group_length;
 
 %% Make decision
-if all(lower_CI > 0) && percent_pos > 99 || all(lower_CI > 0) && ci_overlap && percent_pos >= 0.8
+if all(lower_CI > 0)
     % response found
     ex.decision(ex.counter.iamp).resp_found = 1;
     ex.model.doub_freq_resp_mV = [ex.model.doub_freq_resp_mV {doub_freq_resp_mV}]; % (trials x stimulus amplitude)
