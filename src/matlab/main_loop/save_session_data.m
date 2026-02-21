@@ -28,6 +28,7 @@ ex_save = struct();
 ex_save.trial_count = ex.trial_count(iamp);
 ex_save.model = ex.model;
 ex_save.decision = ex.decision(iamp);
+ex_save.slope = ex.slope;
 
 % Keep ex.info but exclude ex.info.stimulus
 ex_save.info = ex.info;
@@ -62,5 +63,11 @@ end
 % Save the filtered ex structure
 save(filename, 'ex_save');
 fprintf('Session data saved to: %s\n', filename);
+
+ex.slope.doub_freq = [];
+ex.slope.other_freqs = [];
+ex.slope.doub_freq_std = [];
+ex.slope.other_freqs_std = [];
+ex.slope.other_freqs_stderr = [];
 
 end

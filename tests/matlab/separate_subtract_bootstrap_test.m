@@ -59,7 +59,7 @@ classdef separate_subtract_bootstrap_test < matlab.unittest.TestCase
         end
 
         function identify_response_with_modeling(testCase)
-            sig_int = linspace(0,0.2,3);
+            sig_int = linspace(0,0.1,5);
             noise_int = linspace(0.1,1,length(sig_int));
             completed_one_round = 0;
             for i = 1:length(sig_int)
@@ -118,6 +118,16 @@ classdef separate_subtract_bootstrap_test < matlab.unittest.TestCase
                     completed_one_round = 0;
                     testCase.ex.counter.iamp = testCase.ex.counter.iamp+1;
                     testCase.ex = make_stim_block(testCase.ex);
+                    
+                    testCase.ex.slope.doub_freq_mean = [];
+                    testCase.ex.slope.other_freqs_mean = [];
+                    testCase.ex.slope.doub_freq_std = [];
+                    testCase.ex.slope.doub_freq_stderr = [];
+
+                    testCase.ex.slope.other_freqs_std = [];
+                    testCase.ex.slope.other_freqs_stderr = [];
+                    testCase.ex.slope.doub_freq_fit = [];
+                    testCase.ex.slope.other_freqs_fit = [];
                 end
             end
             figure;

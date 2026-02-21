@@ -95,7 +95,7 @@ ex.info.adaptive = struct( ...
     'response_feature',                   'double_frequency_response', ... % Make this an if statement so it will generate which frequency to look for in the response
     'target_response_frequency',           ex.info.stimulus.frequency_hz*2, ... % Auto populate
     'trials_per_block',                    10, ... % Must be an even number of equal number of stimulus +/- polarities in block
-    'min_trials_needed_for_analysis',      20, ... % 20 needed
+    'min_trials_needed_for_analysis',      40, ... % 20 needed
     'max_trials',                          300 ... % Set in GUI
     );
 

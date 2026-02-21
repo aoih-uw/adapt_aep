@@ -20,6 +20,19 @@ ex.counter.health = 0;
 % Experiment done marker
 ex.exp_done = 0;
 
+% Difference Noise Estimation
+ex.noise.criteria = [];
+
+% Slope tracking
+ex.slope.doub_freq_mean = [];
+ex.slope.other_freqs_mean = [];
+ex.slope.doub_freq_std = [];
+ex.slope.doub_freq_stderr = [];
+ex.slope.other_freqs_std = [];
+ex.slope.other_freqs_stderr = [];
+ex.slope.doub_freq_fit = [];
+ex.slope.other_freqs_fit = [];
+
 % Trial counter
 for iamp = 1:100
 ex.trial_count(iamp) = 0;
