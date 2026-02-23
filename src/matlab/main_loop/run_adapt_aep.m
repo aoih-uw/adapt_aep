@@ -54,11 +54,9 @@ try
             ex = preprocess_signal(ex,app);
 
             % DATA ANALYSIS
-            trials_presented = ex.block(iblock).N_trials_presented;
-            if trials_presented >= ex.info.adaptive.min_trials_needed_for_analysis % Only conduct analysis once min # of trials reached
                 fprintf('\nAnalyzing responses...')
                 ex = separate_subtract_bootstrap(ex,app);
-            end
+
 
             % CHECK IF FINISHED TESTING THIS AMPLITUDE
             if ex.decision(ex.counter.iamp).resp_found % When there was a significant response found

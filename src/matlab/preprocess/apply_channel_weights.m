@@ -18,7 +18,7 @@ end
 inverse_vars = 1./channel_vars; % Inverse so larger variances are associated with smaller weights
 channel_weights = inverse_vars / sum(inverse_vars); % Now normalize so that all calculated inverse variances add up to 1
 
-fprintf('\nChannel weights: %.3f\n',channel_weights)
+fprintf('\nChannel weights: %s\n', num2str(channel_weights, '%.3f '));
 
 % Create weight vector to apply to `kept_trials`
 channel_weight_vec = ones(size(kept_trials_channels,1),size(kept_trials_channels,2));

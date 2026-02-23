@@ -20,8 +20,8 @@ ex.counter.health = 0;
 % Experiment done marker
 ex.exp_done = 0;
 
-% Difference Noise Estimation
-ex.noise.criteria = [];
+% Noise
+ex.noise.starting_rms = [];
 
 % Slope tracking
 ex.slope.doub_freq_mean = [];

@@ -8,7 +8,9 @@ latency_samples = ex.info.recording.latency_samples;
 period_length_samps = length(ex.info.stimulus.waveform);
 n_bootstrap = ex.info.analysis.n_bootstrap;
 cla(app.UIAxes_boot)
-non_noisy_sig = 0;
+iamp = ex.counter.iamp;
+trials_presented = ex.trial_count(iamp);
+min_trials_needed = ex.info.adaptive.min_trials_needed_for_analysis;
 
 if ex.test == 1
     double_freq_hz  = ex.info.stimulus.frequency_hz;
@@ -35,6 +37,15 @@ for itrial = 1:size(kept_trials_filtered,1) % Extract periods by trial
     dur_stim(itrial,:) = kept_trials_filtered(itrial,dur_stim_start:dur_stim_start+period_length_samps-1);
 end
 
+%% See if noise has averaged down enough to do analysis
+if trials_presented == ex.info.adaptive.trials_per_block
+    starting_rms = rms(mean(pre_stim));
+    ex.noise.starting_rms = starting_rms;
+end
+starting_rms = ex.noise.starting_rms;
+current_rms = rms(mean(pre_stim));
+rms_ratio = current_rms/starting_rms;
+
 %% Calculate ffts and subtract
 N_pre = zeros(size(pre_stim,1),1);
 N_dur = zeros(size(pre_stim,1),1);
@@ -51,25 +62,19 @@ end
 
 diffs = fft_vals_dur - fft_vals_pre;
 
-%% Calculate 2f mV value
-% Collapse across columns to get average value between upper and lower limits
-% doub_freq_resp from diff
+%% Calculate 2f mV value 
 doub_freq_resp_mV = mean(diffs(:,freq_vec_pre(1,:) >= lower_end & freq_vec_pre(1,:) <= upper_end),2); % (N_trials, 1)
+doub_freq_val = mean(doub_freq_resp_mV);
 
-%# Calculate noise floor
+%% Calculate 2f point noise floor mean (not diff)
 % noise measurement at the double frequency response point during pre
 noise_floor = mean(fft_vals_pre(:,freq_vec_pre(1,:) >= lower_end & freq_vec_pre(1,:) <= upper_end),2); % (N_trials,1)
-
-% %% Only keep the middle 50% of diffs trials for analysis
-% prc_25 = prctile(doub_freq_resp_mV,25);
-% prc_75 = prctile(doub_freq_resp_mV,75);
-% doub_freq_resp_mV_filt = doub_freq_resp_mV(doub_freq_resp_mV>=prc_25 & doub_freq_resp_mV<=prc_75);
-% diffs_filt = diffs(doub_freq_resp_mV>=prc_25 & doub_freq_resp_mV<=prc_75,:);
+noise_floor_mean = mean(noise_floor);
+noise_floor_std = std(noise_floor);
 
 %% Determine if peak at 2f is meaningfully different from the other peaks in the dataset
 mean_diffs = mean(diffs,1);
 selected_freq_vec = freq_vec_pre(1,:);
-
 doub_freq_val = mean_diffs(selected_freq_vec >= lower_end & selected_freq_vec <= upper_end);
 
 % Exclude peaks near harmonics
@@ -81,13 +86,14 @@ loc_60_multiples = mod(selected_freq_vec, 60) <= doub_freq_range_hz | ...
 
 % Calculate the median value of all peaks except 2f and 60 Hz multiples
 noise_distribution = mean_diffs(~loc_2f & ~loc_60_multiples);
-
 prctile_99 = prctile(noise_distribution,99);
+median_noise = median(noise_distribution);
+mad_noise = median(abs(median_noise-noise_distribution));
 
 %% Calculate mean and std for plotting
-f_diffs = freq_vec_pre(1,:); % Use frequency vector from first trial (all should be the same)
-m_diffs = mean_diffs; % Mean across trials
-s_diffs = std(diffs, 0, 1); % Standard deviation across trials
+f_diffs = freq_vec_pre(1,:);
+m_diffs = mean_diffs;
+s_diffs = std(diffs, 0, 1);
 
 % Plot on app axes
 reset(app.UIAxes_diff_fft);
@@ -98,15 +104,22 @@ xlim(app.UIAxes_diff_fft, [double_freq_hz-(double_freq_hz/1.1), double_freq_hz+(
 title(app.UIAxes_diff_fft, 'Difference FFT');
 grid(app.UIAxes_diff_fft, 'on');
 yline(app.UIAxes_diff_fft, 0, '--');
-xline(app.UIAxes_diff_fft,double_freq_hz,'--')
-yline(app.UIAxes_diff_fft,prctile_99,'--','Color',tableau_10('pink'),'LineWidth',1.5)
+xline(app.UIAxes_diff_fft, double_freq_hz,'--')
+yline(app.UIAxes_diff_fft, prctile_99 ,'-','Color',tableau_10('pink'),'LineWidth',1.5)
 xlabel(app.UIAxes_diff_fft,'Frequency (Hz)')
 ylabel(app.UIAxes_diff_fft,'Amplitude (mV)')
 hold(app.UIAxes_diff_fft, 'off');
 
 pause(0.1)
 
-if doub_freq_val > prctile_99 % Signal is not noisy
+% Get the max values from the current diff mean
+max_vals = maxk(mean_diffs, 5);
+% Do not get the top value in case the 2f response is that max value
+max_vals = max_vals(2:5);
+
+%% Decision Logic
+if doub_freq_val > mean(max_vals)*2  || ...
+        rms_ratio <= 0.25 && noise_floor_mean + noise_floor_std*3
     % Bootstrap!
     fprintf('\nStarting bootstrap calculation...')
     tic()
@@ -114,7 +127,7 @@ if doub_freq_val > prctile_99 % Signal is not noisy
     time_elapsed = toc();
     fprintf('\nBootstrap calculation time: %.3f', time_elapsed);
 
-    %% Calculate 95% CI
+    %% Calculate 99% CI
     lower_CI = prctile(bootstat, 0.5);
     upper_CI = prctile(bootstat, 99.5);
 

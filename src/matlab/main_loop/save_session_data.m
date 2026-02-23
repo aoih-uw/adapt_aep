@@ -64,10 +64,4 @@ end
 save(filename, 'ex_save');
 fprintf('Session data saved to: %s\n', filename);
 
-ex.slope.doub_freq = [];
-ex.slope.other_freqs = [];
-ex.slope.doub_freq_std = [];
-ex.slope.other_freqs_std = [];
-ex.slope.other_freqs_stderr = [];
-
 end
