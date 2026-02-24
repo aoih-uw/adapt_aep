@@ -95,7 +95,7 @@ ex.info.adaptive = struct( ...
     'response_feature',                   'double_frequency_response', ... % Make this an if statement so it will generate which frequency to look for in the response
     'target_response_frequency',           ex.info.stimulus.frequency_hz*2, ... % Auto populate
     'trials_per_block',                    10, ... % Must be an even number of equal number of stimulus +/- polarities in block
-    'min_trials_needed_for_analysis',      50, ... 
+    'min_trials_needed_for_analysis',      10, ... 
     'max_trials',                          300 ... % Set in GUI
     );
 
@@ -111,7 +111,9 @@ ex.info.signal_quality = struct( ...
 % Signal analysis parameters
 ex.info.analysis = struct( ... % These values will be updated by prepare_next_amplitude when new amplitude is selected
     'n_bootstrap',         1000, ... % See if I need to reduce this...
-    'doub_freq_range_hz',      1 ... % +/- 3 Hz above and below the double frequency response point
+    'doub_freq_range_hz',      1, ... % +/- 3 Hz above and below the double frequency response point
+    'mad_criteria',            4, ... % Once rms has been reduced 50% check to see if 2f diff peak is 4*mad + median above noise floor
+    'peak_mult',           5 ... % immediately confirm response if 2f diff peak is 5x the height of the largest peaks
     );
 
 % Response modeling parameters

@@ -14,7 +14,7 @@ function [ex, mock_data] = create_mock_data(ex, signal_scaling, noise_scaling)
     
     % Apply scaling
     my_signals = my_signals * signal_scaling;
-    my_noise = my_noise * noise_scaling;
+    my_noise = my_noise * noise_scaling; %% Add when i only want to adjust amplitude, multiply when i want to adjust variance
     
     mock_data = my_signals + my_noise;
     mock_data = repmat(mock_data, [1, 1, length(ex.info.recording.DAC_input_channel_names)]);

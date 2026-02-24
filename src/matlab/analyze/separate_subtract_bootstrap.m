@@ -10,7 +10,8 @@ n_bootstrap = ex.info.analysis.n_bootstrap;
 cla(app.UIAxes_boot)
 iamp = ex.counter.iamp;
 trials_presented = ex.trial_count(iamp);
-min_trials_needed = ex.info.adaptive.min_trials_needed_for_analysis;
+mad_criteria = ex.info.analysis.mad_criteria;
+peak_mult = ex.info.analysis.peak_mult;
 
 if ex.test == 1
     double_freq_hz  = ex.info.stimulus.frequency_hz;
@@ -45,6 +46,7 @@ end
 starting_rms = ex.noise.starting_rms;
 current_rms = rms(mean(pre_stim));
 rms_ratio = current_rms/starting_rms;
+fprintf('\nRMS ratio: %1.2f \nTrials in average: %1.0f',rms_ratio,trials_presented)
 
 %% Calculate ffts and subtract
 N_pre = zeros(size(pre_stim,1),1);
@@ -60,22 +62,17 @@ for itrial = 1:size(pre_stim,1)
     [N_dur(itrial), freq_vec_dur(itrial,:), fft_vals_dur(itrial,:)] = calc_fft(dur_stim(itrial,:),fs);
 end
 
+%% Get dur 2f mean value
+doub_freq_dur_mean = mean(mean(fft_vals_dur(:,freq_vec_pre(1,:) >= lower_end & freq_vec_pre(1,:) <= upper_end)));
+
+%% Subtract ON - OFF for bootstrap
 diffs = fft_vals_dur - fft_vals_pre;
-
-%% Calculate 2f mV value 
-doub_freq_resp_mV = mean(diffs(:,freq_vec_pre(1,:) >= lower_end & freq_vec_pre(1,:) <= upper_end),2); % (N_trials, 1)
-doub_freq_val = mean(doub_freq_resp_mV);
-
-%% Calculate 2f point noise floor mean (not diff)
-% noise measurement at the double frequency response point during pre
-noise_floor = mean(fft_vals_pre(:,freq_vec_pre(1,:) >= lower_end & freq_vec_pre(1,:) <= upper_end),2); % (N_trials,1)
-noise_floor_mean = mean(noise_floor);
-noise_floor_std = std(noise_floor);
+doub_freq_diff_vec = mean(diffs(:,freq_vec_pre(1,:) >= lower_end & freq_vec_pre(1,:) <= upper_end),2); % (N_trials, 1)
 
 %% Determine if peak at 2f is meaningfully different from the other peaks in the dataset
 mean_diffs = mean(diffs,1);
 selected_freq_vec = freq_vec_pre(1,:);
-doub_freq_val = mean_diffs(selected_freq_vec >= lower_end & selected_freq_vec <= upper_end);
+doub_freq_diff_mean = mean_diffs(selected_freq_vec >= lower_end & selected_freq_vec <= upper_end);
 
 % Exclude peaks near harmonics
 loc_2f = mod(selected_freq_vec, double_freq_hz) <= doub_freq_range_hz | ...
@@ -86,13 +83,14 @@ loc_60_multiples = mod(selected_freq_vec, 60) <= doub_freq_range_hz | ...
 
 % Calculate the median value of all peaks except 2f and 60 Hz multiples
 noise_distribution = mean_diffs(~loc_2f & ~loc_60_multiples);
-prctile_99 = prctile(noise_distribution,99);
-median_noise = median(noise_distribution);
-mad_noise = median(abs(median_noise-noise_distribution));
 
-%% Calculate mean and std for plotting
+noise_median = median(noise_distribution);
+noise_mad = mad(noise_distribution, 1);  
+peak_criteria = noise_median + noise_mad*mad_criteria*1.4826;
+
+%% Plotting
 f_diffs = freq_vec_pre(1,:);
-m_diffs = mean_diffs;
+m_diffs = mean(diffs);
 s_diffs = std(diffs, 0, 1);
 
 % Plot on app axes
@@ -100,30 +98,29 @@ reset(app.UIAxes_diff_fft);
 fill(app.UIAxes_diff_fft, [f_diffs fliplr(f_diffs)], [m_diffs+s_diffs fliplr(m_diffs-s_diffs)], tableau_10('blue'), 'FaceAlpha', 0.3, 'EdgeColor', 'none');
 hold(app.UIAxes_diff_fft, 'on');
 plot(app.UIAxes_diff_fft, f_diffs, m_diffs, 'Color', tableau_10('blue'), 'LineWidth', 1.5);
-xlim(app.UIAxes_diff_fft, [double_freq_hz-(double_freq_hz/1.1), double_freq_hz+(double_freq_hz/1.1)]);
+xlim(app.UIAxes_diff_fft, [(double_freq_hz-(double_freq_hz/1.1))*2, (double_freq_hz+(double_freq_hz/1.1))*2]);
 title(app.UIAxes_diff_fft, 'Difference FFT');
 grid(app.UIAxes_diff_fft, 'on');
 yline(app.UIAxes_diff_fft, 0, '--');
 xline(app.UIAxes_diff_fft, double_freq_hz,'--')
-yline(app.UIAxes_diff_fft, prctile_99 ,'-','Color',tableau_10('pink'),'LineWidth',1.5)
+yline(app.UIAxes_diff_fft, peak_criteria ,'-','Color',tableau_10('pink'),'LineWidth',1.5)
 xlabel(app.UIAxes_diff_fft,'Frequency (Hz)')
 ylabel(app.UIAxes_diff_fft,'Amplitude (mV)')
 hold(app.UIAxes_diff_fft, 'off');
 
 pause(0.1)
 
-% Get the max values from the current diff mean
+%% Get max vals
 max_vals = maxk(mean_diffs, 5);
 % Do not get the top value in case the 2f response is that max value
-max_vals = max_vals(2:5);
+max_val = mean(max_vals(2:5));
 
 %% Decision Logic
-if doub_freq_val > mean(max_vals)*2  || ...
-        rms_ratio <= 0.25 && noise_floor_mean + noise_floor_std*3
+if doub_freq_diff_mean > peak_mult*max_val || doub_freq_diff_mean > peak_criteria && rms_ratio < 0.5
     % Bootstrap!
     fprintf('\nStarting bootstrap calculation...')
     tic()
-    bootstat = bootstrp(n_bootstrap,@mean,doub_freq_resp_mV);
+    bootstat = bootstrp(n_bootstrap,@mean,doub_freq_diff_vec);
     time_elapsed = toc();
     fprintf('\nBootstrap calculation time: %.3f', time_elapsed);
 
@@ -133,7 +130,7 @@ if doub_freq_val > mean(max_vals)*2  || ...
 
     % Plot bootstrapped distribution on app axes
     reset(app.UIAxes_boot)
-    histogram(app.UIAxes_boot, bootstat, 'FaceColor', tableau_10('blue'));
+    histogram(app.UIAxes_boot, bootstat, 'FaceColor', tableau_10('pink'));
     hold(app.UIAxes_boot, 'on');
     xline(app.UIAxes_boot, 0, '--');
     xline(app.UIAxes_boot, lower_CI, 'Color', tableau_10('blue'), LineWidth=1.5)
@@ -147,28 +144,31 @@ if doub_freq_val > mean(max_vals)*2  || ...
     ylabel(app.UIAxes_boot, 'Frequency');
     hold(app.UIAxes_boot, 'off');
 
-    pause(2)
+    pause(1)
 
     fprintf('\nCI range: [ %.3f , %.3f ]',lower_CI, upper_CI)
     %% Make decision
     if lower_CI > 0
         % response found
         ex.decision(ex.counter.iamp).resp_found = 1;
-        ex.model.doub_freq_resp_mV = [ex.model.doub_freq_resp_mV {doub_freq_resp_mV}]; % (trials x stimulus amplitude)
-        ex.model.noise_floor = [ex.model.noise_floor {noise_floor}]; % (trials x stimulus amplitude)
+        ex.model.doub_freq_diff_mean = [ex.model.doub_freq_diff_mean {doub_freq_diff_mean}]; % (trials x stimulus amplitude)
+        ex.model.doub_freq_dur_mean = [ex.model.doub_freq_dur_mean {doub_freq_dur_mean}]; % (trials x stimulus amplitude)
+        ex.model.noise_floor = [ex.model.noise_floor {noise_distribution}]; % (trials x stimulus amplitude)
         ex.model.amplitude_vec = [ex.model.amplitude_vec current_amplitude]; % (1 x N_tested_amplitudes)
         fprintf('\nSignificant difference between ON and OFF responses found!\n')
     else
         ex.decision(ex.counter.iamp).resp_found = 0;
-        ex.model.doub_freq_resp_mV_temp = doub_freq_resp_mV;
-        ex.model.noise_floor_temp = noise_floor;
+        ex.model.doub_freq_diff_mean_temp = doub_freq_diff_mean;
+        ex.model.doub_freq_dur_mean_temp = doub_freq_dur_mean;
+        ex.model.noise_floor_temp = noise_distribution;
         fprintf('\nNo significant difference between ON and OFF responses\n')
     end
 else
     %% Signal too noisy
     ex.decision(ex.counter.iamp).resp_found = 0;
-    ex.model.doub_freq_resp_mV_temp = doub_freq_resp_mV;
-    ex.model.noise_floor_temp = noise_floor;
+    ex.model.doub_freq_diff_mean_temp = doub_freq_diff_mean;
+    ex.model.doub_freq_dur_mean_temp = doub_freq_dur_mean;
+    ex.model.noise_floor_temp = noise_distribution;
     fprintf('\nNo significant difference between ON and OFF responses\n')
 end
 

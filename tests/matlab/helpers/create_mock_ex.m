@@ -2,6 +2,7 @@ function ex = create_mock_ex
 addpath(genpath("\\wsl$\ubuntu\home\aoih\adapt_aep\src\matlab"))
 ex = setup_ex();
 ex.test = 1;
+ex.snr_vec = [];
 ex.info.animal.subject_ID = 1;
 ex.info.animal.sex = 'F';
 ex.info.animal.health = 'Good';
@@ -9,7 +10,6 @@ ex.info.stimulus.frequency_hz = 100;
 ex.info.stimulus.amplitude_spl = 170;
 ex.info.stimulus.type = 'Tone burst';
 ex.info.adaptive.response_feature = 'Double frequency';
-ex.info.adaptive.trials_per_block = 10;
 ex.info.adaptive.max_trials = 300;
 ex.info.animal.filename = [ex.info.animal.species_name '_' ...
     num2str(ex.info.animal.subject_ID) '_' ...

@@ -1,7 +1,6 @@
-function  monte_carlo_slope(app, slope, y_int, noise_mu, noise_sigma, fixed_upper_level)
+function  monte_carlo_slope(app, slope, y_int, noise_mu, noise_sigma, fixed_upper_level, flex_lower_level)
 % slope = "ground truth" slope, but actually is the last best fit
 
-flex_lower_level = 0:5:fixed_upper_level-5; % possible lower stim. amps. to test
 nreps = 500;
 nreps_measures = 2;
 
@@ -25,9 +24,10 @@ for irep = 1:nreps
     end
 end
 
-figure();
+fig = figure();
 rms_slope_err = rms(err_slope');
-plot(flex_lower_level, rms_slope_err,'o-');
+plot(flex_lower_level, rms_slope_err,'o-', 'LineWidth',1.5, 'Color',tableau_10('pink'));
 title('RMS Error from the Groundtruth');
 xlabel('Sampled Level (dB SPL)');
 ylabel('RMS Error (\muV)')
+uiwait(fig);

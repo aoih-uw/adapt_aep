@@ -9,9 +9,12 @@ ex.kept.trials_weighted = [];
 ex.kept.trials_filtered = [];
 
 % Model
-ex.model.doub_freq_resp_mV = []; % Delete from ex when saving
+ex.model.doub_freq_diff_mean = []; % Delete from ex when saving
+ex.model.doub_freq_dur_mean = []; % Delete from ex when saving
 ex.model.noise_floor = []; % Delete from ex when saving
-
+ex.model.doub_freq_diff_mean_temp = [];
+ex.model.doub_freq_dur_mean_temp = [];
+ex.model.noise_floor_temp = [];
 ex.model.response_mean = [];
 ex.model.response_vars = [];
 

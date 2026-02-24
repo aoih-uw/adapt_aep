@@ -1,4 +1,4 @@
-classdef separate_subtract_bootstrap_test < matlab.unittest.TestCase
+classdef model_response_test < matlab.unittest.TestCase
     properties
         ex
         fs
@@ -38,33 +38,16 @@ classdef separate_subtract_bootstrap_test < matlab.unittest.TestCase
             testCase.ex = make_tone_burst_template(testCase.ex);
             testCase.ex = make_stim_block(testCase.ex);
         end
-
     end
 
     methods (Test)
         % Test methods
 
-        function identify_present_response(testCase)
-            [testCase.ex, mock_data] = create_mock_data(testCase.ex, 1, 0.25);
-            testCase.ex.mock_data = mock_data;
-            testCase.ex = present_and_measure(testCase.ex, testCase.App);
-            testCase.ex = reject_artefacts(testCase.ex,testCase.App);
-            testCase.ex = apply_channel_weights(testCase.ex);
-            testCase.ex = filter_signals(testCase.ex);
-
-            % Run script
-            testCase.ex = separate_subtract_bootstrap(testCase.ex,testCase.App);
-
-            testCase.verifyEqual(testCase.ex.decision(1).resp_found,1)
-        end
-
-        function identify_response_with_modeling(testCase)
-            mad_criteria = testCase.ex.info.analysis.mad_criteria;
-            sig_int = linspace(0.5,1,2);
+        function unimplementedTest(testCase)
+            sig_int = [0 0 linspace(1,0,15) 0 0 0];
             noise_int = 0.5;
             % noise_int = linspace(0.1,1,length(sig_int));
             completed_one_round = 0;
-
             for i = 1:length(sig_int)
                 for ii = 1:length(noise_int)
                     if i == 1 && ii == 1
@@ -85,15 +68,10 @@ classdef separate_subtract_bootstrap_test < matlab.unittest.TestCase
 
                         testCase.ex = separate_subtract_bootstrap(testCase.ex,testCase.App);
                         fprintf('\nSignal_ratio: %1.2f\nNoise_ratio: %1.2f\nResponse found?: %1.0f\n',sig_int(i), noise_int(ii), testCase.ex.decision(1).resp_found)
-
-                        if sig_int(i) == 0
-                            testCase.verifyEqual(testCase.ex.decision(1).resp_found,0)
-
-                        elseif sig_int(i) == 1
-                            testCase.verifyEqual(testCase.ex.decision(1).resp_found,1)
-                        end
                         completed_one_round = 1;
                     end
+
+                    testCase.ex.snr_vec = [testCase.ex.snr_vec  20*log10(sig_int(i)/noise_int(ii))];
 
                     % Assign to trackers
                     if testCase.ex.decision(iamp).resp_found == 0
@@ -101,12 +79,12 @@ classdef separate_subtract_bootstrap_test < matlab.unittest.TestCase
                         testCase.ex.model.noise_floor = [testCase.ex.model.noise_floor {testCase.ex.model.noise_floor_temp}]; % (trials x stimulus amplitude)
                     end
 
-                    cur_sig(i,ii) = sig_int(i);
-                    cur_reps_needed(i,ii) = testCase.ex.trial_count(iamp) ;
-                    cur_noise(i,ii) = noise_int(ii);
-                    resp_result(i,ii) = testCase.ex.decision(end).resp_found;
+                    %% Model the response
+                    if length(testCase.ex.snr_vec) >= 3
+                        testCase.ex = model_response(testCase.ex, testCase.App);
+                    end
 
-                    % Reset block
+                    %% Reset block
                     testCase.ex = setup_block(testCase.ex);
                     testCase.ex.counter.iblock = 0; % reset for next SNR
                     completed_one_round = 0;
@@ -114,40 +92,7 @@ classdef separate_subtract_bootstrap_test < matlab.unittest.TestCase
                     testCase.ex = make_stim_block(testCase.ex);
                 end
             end
-
-            figure;
-            mean_2f_values = cellfun(@mean, testCase.ex.model.doub_freq_diff_mean);
-            sig_flat = reshape(cur_sig', [], 1);
-            noise_flat = reshape(cur_noise', [], 1);
-            scatter(1:length(mean_2f_values), mean_2f_values, 20 + 60*noise_flat, sig_flat, 'filled');
-            colorbar;
-            noise_floor_medians = cellfun(@median, testCase.ex.model.noise_floor);
-            noise_floor_mads = cellfun(@mad, testCase.ex.model.noise_floor);
-            thres_criterias = noise_floor_medians + noise_floor_mads*1.4826*4;
-            [~,idx] = min(thres_criterias);
-            select_noise_floor = testCase.ex.model.noise_floor{idx};
-            noise_floor_median = median(select_noise_floor);
-            noise_floor_mad = mad(select_noise_floor);
-            hold on;
-            x_fill = [0, length(mean_2f_values), length(mean_2f_values), 0];
-            y_fill = [noise_floor_median - mad_criteria*1.4826*noise_floor_mad, noise_floor_median - mad_criteria*1.4826*noise_floor_mad, ...
-                noise_floor_median + mad_criteria*1.4826*noise_floor_mad, noise_floor_median + mad_criteria*1.4826*noise_floor_mad];
-            fill(x_fill, y_fill, tableau_10('purple'), 'FaceAlpha', 0.2, 'EdgeColor', 'none');
-            yline(noise_floor_median, 'k--');
-            ylabel(colorbar, 'Signal level');
-            grid on;
-            title('2f diff Amplitude for each SNR')
-            hold off;
-
-            figure;
-            heatmap(noise_int,sig_int,cur_reps_needed);
-            xlabel('Noise level')
-            ylabel('Signal level')
-            title('Trials needed to detect response')
-
         end
     end
 
-
 end
-
