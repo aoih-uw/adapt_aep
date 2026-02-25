@@ -97,8 +97,9 @@ classdef separate_subtract_bootstrap_test < matlab.unittest.TestCase
 
                     % Assign to trackers
                     if testCase.ex.decision(iamp).resp_found == 0
-                        testCase.ex.model.doub_freq_diff_mean = [testCase.ex.model.doub_freq_diff_mean {testCase.ex.model.doub_freq_diff_mean_temp}];
-                        testCase.ex.model.noise_floor = [testCase.ex.model.noise_floor {testCase.ex.model.noise_floor_temp}]; % (trials x stimulus amplitude)
+                        testCase.ex.model.doub_freq_diff_vec = [testCase.ex.model.doub_freq_diff_vec {testCase.ex.model.doub_freq_diff_vec_temp}];
+                        testCase.ex.model.doub_freq_dur_vec = [testCase.ex.model.doub_freq_dur_vec {testCase.ex.model.doub_freq_dur_vec_temp}];
+                        testCase.ex.model.noise_floor = [testCase.ex.model.noise_floor {testCase.ex.model.noise_floor_temp}];
                     end
 
                     cur_sig(i,ii) = sig_int(i);
@@ -116,7 +117,7 @@ classdef separate_subtract_bootstrap_test < matlab.unittest.TestCase
             end
 
             figure;
-            mean_2f_values = cellfun(@mean, testCase.ex.model.doub_freq_diff_mean);
+            mean_2f_values = cellfun(@mean, testCase.ex.model.doub_freq_diff_vec);
             sig_flat = reshape(cur_sig', [], 1);
             noise_flat = reshape(cur_noise', [], 1);
             scatter(1:length(mean_2f_values), mean_2f_values, 20 + 60*noise_flat, sig_flat, 'filled');

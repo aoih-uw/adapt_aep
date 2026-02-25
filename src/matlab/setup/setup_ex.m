@@ -20,23 +20,10 @@ ex.counter.health = 0;
 % Experiment done marker
 ex.exp_done = 0;
 
-% Noise
-ex.noise.starting_rms = [];
-
-% Slope tracking
-ex.slope.doub_freq_mean = [];
-ex.slope.other_freqs_mean = [];
-ex.slope.doub_freq_std = [];
-ex.slope.doub_freq_stderr = [];
-ex.slope.other_freqs_std = [];
-ex.slope.other_freqs_stderr = [];
-ex.slope.doub_freq_fit = [];
-ex.slope.other_freqs_fit = [];
-
 % Trial counter
 for iamp = 1:100
 ex.trial_count(iamp) = 0;
-ex.decision(iamp).resp_found = 0;%# FIX THIS! Have this be iterated by iamp
+ex.decision(iamp).resp_found = 0; %# FIX THIS! Have this be iterated by iamp
 ex.decision(iamp).current_amplitude = NaN; %# have this assigned when resp_found is assigned as well in separate, subtract, bootstrap etc. etc.!
 ex.decision(iamp).amp_done = 0;
 ex.decision(iamp).amp_done_reason = NaN; 
@@ -46,4 +33,8 @@ end
 ex = setup_info(ex); % User input of experiment parameters
 ex = setup_block(ex); % Per amplitude meta/data
 ex = setup_analysis(ex); % Analysis deta/data
+
+%% Create sound stimulus template
+ex = make_tone_burst_template(ex);
+ex = make_health_check_signal(ex);
 end

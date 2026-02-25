@@ -24,10 +24,9 @@ for irep = 1:nreps
     end
 end
 
-fig = figure();
+cla(app.UIAxes_monte);
 rms_slope_err = rms(err_slope');
-plot(flex_lower_level, rms_slope_err,'o-', 'LineWidth',1.5, 'Color',tableau_10('pink'));
-title('RMS Error from the Groundtruth');
-xlabel('Sampled Level (dB SPL)');
-ylabel('RMS Error (\muV)')
-uiwait(fig);
+plot(app.UIAxes_monte, flex_lower_level, rms_slope_err,'o-', 'LineWidth',1.5, 'Color',tableau_10('pink'));
+title(app.UIAxes_monte, 'Best Testing Amplitude Simulation');
+xlabel(app.UIAxes_monte, 'Sampled Level (dB SPL)');
+ylabel(app.UIAxes_monte, 'RMS Error (\muV)');

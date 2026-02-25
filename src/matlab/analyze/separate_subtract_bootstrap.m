@@ -63,7 +63,7 @@ for itrial = 1:size(pre_stim,1)
 end
 
 %% Get dur 2f mean value
-doub_freq_dur_mean = mean(mean(fft_vals_dur(:,freq_vec_pre(1,:) >= lower_end & freq_vec_pre(1,:) <= upper_end)));
+doub_freq_dur_vec = mean(fft_vals_dur(:,freq_vec_pre(1,:) >= lower_end & freq_vec_pre(1,:) <= upper_end));
 
 %% Subtract ON - OFF for bootstrap
 diffs = fft_vals_dur - fft_vals_pre;
@@ -72,7 +72,7 @@ doub_freq_diff_vec = mean(diffs(:,freq_vec_pre(1,:) >= lower_end & freq_vec_pre(
 %% Determine if peak at 2f is meaningfully different from the other peaks in the dataset
 mean_diffs = mean(diffs,1);
 selected_freq_vec = freq_vec_pre(1,:);
-doub_freq_diff_mean = mean_diffs(selected_freq_vec >= lower_end & selected_freq_vec <= upper_end);
+doub_freq_diff_mean = mean(doub_freq_diff_vec);
 
 % Exclude peaks near harmonics
 loc_2f = mod(selected_freq_vec, double_freq_hz) <= doub_freq_range_hz | ...
@@ -151,23 +151,23 @@ if doub_freq_diff_mean > peak_mult*max_val || doub_freq_diff_mean > peak_criteri
     if lower_CI > 0
         % response found
         ex.decision(ex.counter.iamp).resp_found = 1;
-        ex.model.doub_freq_diff_mean = [ex.model.doub_freq_diff_mean {doub_freq_diff_mean}]; % (trials x stimulus amplitude)
-        ex.model.doub_freq_dur_mean = [ex.model.doub_freq_dur_mean {doub_freq_dur_mean}]; % (trials x stimulus amplitude)
+        ex.model.doub_freq_diff_vec = [ex.model.doub_freq_diff_vec {doub_freq_diff_vec}]; % (trials x stimulus amplitude)
+        ex.model.doub_freq_dur_vec = [ex.model.doub_freq_dur_vec {doub_freq_dur_vec}]; % (trials x stimulus amplitude)
         ex.model.noise_floor = [ex.model.noise_floor {noise_distribution}]; % (trials x stimulus amplitude)
         ex.model.amplitude_vec = [ex.model.amplitude_vec current_amplitude]; % (1 x N_tested_amplitudes)
         fprintf('\nSignificant difference between ON and OFF responses found!\n')
     else
         ex.decision(ex.counter.iamp).resp_found = 0;
-        ex.model.doub_freq_diff_mean_temp = doub_freq_diff_mean;
-        ex.model.doub_freq_dur_mean_temp = doub_freq_dur_mean;
+        ex.model.doub_freq_diff_vec_temp = doub_freq_diff_vec;
+        ex.model.doub_freq_dur_vec_temp = doub_freq_dur_vec;
         ex.model.noise_floor_temp = noise_distribution;
         fprintf('\nNo significant difference between ON and OFF responses\n')
     end
 else
     %% Signal too noisy
     ex.decision(ex.counter.iamp).resp_found = 0;
-    ex.model.doub_freq_diff_mean_temp = doub_freq_diff_mean;
-    ex.model.doub_freq_dur_mean_temp = doub_freq_dur_mean;
+    ex.model.doub_freq_diff_vec_temp = doub_freq_diff_vec;
+    ex.model.doub_freq_dur_vec_temp = doub_freq_dur_vec;
     ex.model.noise_floor_temp = noise_distribution;
     fprintf('\nNo significant difference between ON and OFF responses\n')
 end

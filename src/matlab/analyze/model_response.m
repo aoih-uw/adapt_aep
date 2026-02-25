@@ -1,6 +1,7 @@
 function ex = model_response(ex,app)
 iamp = ex.counter.iamp;
-doub_freq_diff_mean  = cell2mat(ex.model.doub_freq_diff_mean); % (trials x tested_amps)
+doub_freq_diff_mean  = cellfun(@mean,ex.model.doub_freq_diff_vec); % (trials x tested_amps)
+doub_freq_diff_std = cellfun(@std,ex.model.doub_freq_diff_vec);
 if ex.test == 1
     amplitude_vec = ex.snr_vec;
     fixed_upper_level = 20*log10(1/0.1);
@@ -16,33 +17,28 @@ resp_found = [ex.decision(1:iamp).resp_found];
 mad_criteria = ex.info.analysis.mad_criteria;
 trial_count = ex.trial_count(1:iamp);
 
-
-% Calculate noise_floor characteristics
-noise_floor_medians = cellfun(@median, noise_floor);
-noise_floor_mads = cellfun(@mad, noise_floor);
-thres_criterias = noise_floor_medians + noise_floor_mads*1.4826*mad_criteria;
-[~,idx] = min(thres_criterias);
-select_noise_floor = noise_floor{idx};
-noise_floor_median = median(select_noise_floor);
-noise_floor_mad = mad(select_noise_floor);
+[noise_floor_median, noise_floor_mad] = calculate_smallest_noise_floor(noise_floor,mad_criteria);
 
 % Sort data by tested stimulus amplitudes
 [amplitude_sorted, sort_idx] = sort(amplitude_vec);
 response_sorted = doub_freq_diff_mean(sort_idx);
 resp_found_sorted = resp_found(sort_idx);
+trial_count_sorted = trial_count(sort_idx);
 
 %% Fit model
 try
-    if ex.test == 1
-        init_guess = [0, noise_floor_median, 1];
-    else
-        init_guess = [100, noise_floor_median, 1]; % [x0 threshold, a1 noise floor, m slope]
-    end
+    init_guess = [median(amplitude_sorted), noise_floor_median, ...
+            (max(response_sorted)-min(response_sorted))/(max(amplitude_sorted)-min(amplitude_sorted))];
+    lb = [min(amplitude_sorted), 0, 0];        % x0, a1, m lower bounds
+    ub = [max(amplitude_sorted), inf, inf];     % x0, a1, m upper bounds
+    options = optimoptions('lsqcurvefit', 'MaxIterations', 1000, ...
+        'FunctionTolerance', 1e-9, 'StepTolerance', 1e-9);
+
     fprintf('\nStarting model fitting\n')
     tic()
 
     obj_fun = @(params, x) elbow_function(x, params(1), params(2), params(3));
-    params_fit = lsqcurvefit(obj_fun, init_guess, amplitude_sorted, response_sorted);
+    params_fit = lsqcurvefit(obj_fun, init_guess, amplitude_sorted, response_sorted, lb, ub, options);
 
     x0_fit = params_fit(1);
     a1_fit = params_fit(2);
@@ -63,17 +59,15 @@ try
     ex.model.m_fit = [ex.model.m_fit m_fit];
     ex.model.y_int = [ex.model.y_int y_int];
 
+    ex.model.amplitude_vec = amplitude_sorted;
+    ex.model.response_vec = response_sorted;
+    ex.model.resp_found = resp_found_sorted;
+    ex.model.trial_count = trial_count_sorted;
+    
     %% Plots
     cla(app.UIAxes_model)
 
-    % Noise floor shaded region
-    xlims = xlim(app.UIAxes_model);
-    x_fill = [xlims(1), xlims(2), xlims(2), xlims(1)];
-    y_fill = [noise_floor_median - mad_criteria*1.4826*noise_floor_mad, noise_floor_median - mad_criteria*1.4826*noise_floor_mad, ...
-        noise_floor_median + mad_criteria*1.4826*noise_floor_mad, noise_floor_median + mad_criteria*1.4826*noise_floor_mad];
-    fill(app.UIAxes_model,x_fill, y_fill, tableau_10('purple'), 'FaceAlpha', 0.2, 'EdgeColor', 'none');
-    
-    % Plot Model
+    % Model
     plot(app.UIAxes_model, x_plot, y_fit, 'Color', tableau_10('blue'), 'LineWidth', 2);
     hold(app.UIAxes_model, 'on');
 
@@ -84,13 +78,17 @@ try
         else
             color = tableau_10('red');
         end
-        plot(app.UIAxes_model, amplitude_sorted(i), response_sorted(i), 'o', 'MarkerSize', 6+trial_count(i)/max(trial_count), 'MarkerFaceColor', color, 'MarkerEdgeColor', color);
+        plot(app.UIAxes_model, amplitude_sorted(i), response_sorted(i), 'o', 'MarkerSize', 6+trial_count_sorted(i)/max(trial_count_sorted), 'MarkerFaceColor', color, 'MarkerEdgeColor', color);
     end
 
     xline(app.UIAxes_model, x0_fit, '--', 'Color', tableau_10('grey'),'LineWidth',2);
     yline(app.UIAxes_model, noise_floor_median, '--', 'Color', tableau_10('brown'), 'LineWidth', 1);
     yline(app.UIAxes_model,noise_floor_median, 'k--');
-    xlabel(app.UIAxes_model, 'Stimulus Amplitude (dB SPL)');
+    xlims = xlim(app.UIAxes_model);
+    x_fill = [xlims(1), xlims(2), xlims(2), xlims(1)];
+    y_fill = [noise_floor_median - mad_criteria*1.4826*noise_floor_mad, noise_floor_median - mad_criteria*1.4826*noise_floor_mad, ...
+        noise_floor_median + mad_criteria*1.4826*noise_floor_mad, noise_floor_median + mad_criteria*1.4826*noise_floor_mad];
+    fill(app.UIAxes_model,x_fill, y_fill, tableau_10('purple'), 'FaceAlpha', 0.2, 'EdgeColor', 'none');    xlabel(app.UIAxes_model, 'Stimulus Amplitude (dB SPL)');
     ylabel(app.UIAxes_model, '2f Amplitude (mV)');
     title(app.UIAxes_model, sprintf('Elbow Fit: x0=%.3f, a1=%.3f, m=%.3f', x0_fit, a1_fit, m_fit));
     grid(app.UIAxes_model,  'on');

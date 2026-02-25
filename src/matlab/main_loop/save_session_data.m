@@ -28,13 +28,21 @@ ex_save = struct();
 ex_save.trial_count = ex.trial_count(iamp);
 ex_save.model = ex.model;
 ex_save.decision = ex.decision(iamp);
-ex_save.slope = ex.slope;
 
 % Keep ex.info but exclude ex.info.stimulus
 ex_save.info = ex.info;
 if isfield(ex_save.info, 'stimulus')
     ex_save.info = rmfield(ex_save.info, 'stimulus');
 end
+
+ex_save.model = ex.model;
+fields_to_remove = {'doub_freq_diff_vec_temp', 'doub_freq_dur_vec_temp', 'noise_floor_temp'};
+for i = 1:length(fields_to_remove)
+    if isfield(ex_save.model, fields_to_remove{i})
+        ex_save.model = rmfield(ex_save.model, fields_to_remove{i});
+    end
+end
+
 
 % Keep ex.preprocess with the specific fields you're updating
 ex_save.preprocess = ex.preprocess;

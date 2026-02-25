@@ -44,8 +44,8 @@ classdef model_response_test < matlab.unittest.TestCase
         % Test methods
 
         function unimplementedTest(testCase)
-            sig_int = [0 0 linspace(1,0,15) 0 0 0];
-            noise_int = 0.5;
+            sig_int = [1 0.5 0.25 0.01 0.2 0.02 0 0 0 0 0 0 0];
+            noise_int = 0.75;
             % noise_int = linspace(0.1,1,length(sig_int));
             completed_one_round = 0;
             for i = 1:length(sig_int)
@@ -70,12 +70,16 @@ classdef model_response_test < matlab.unittest.TestCase
                         fprintf('\nSignal_ratio: %1.2f\nNoise_ratio: %1.2f\nResponse found?: %1.0f\n',sig_int(i), noise_int(ii), testCase.ex.decision(1).resp_found)
                         completed_one_round = 1;
                     end
-
-                    testCase.ex.snr_vec = [testCase.ex.snr_vec  20*log10(sig_int(i)/noise_int(ii))];
+                    
+                    cur_snr = 20*log10(sig_int(i)/noise_int(ii));
+                    if cur_snr == -Inf
+                        cur_snr =  datasample(-25:-15, 1);
+                    end
+                    testCase.ex.snr_vec = [testCase.ex.snr_vec  cur_snr];
 
                     % Assign to trackers
                     if testCase.ex.decision(iamp).resp_found == 0
-                        testCase.ex.model.doub_freq_diff_mean = [testCase.ex.model.doub_freq_diff_mean {testCase.ex.model.doub_freq_diff_mean_temp}];
+                        testCase.ex.model.doub_freq_diff_vec = [testCase.ex.model.doub_freq_diff_vec {testCase.ex.model.doub_freq_diff_vec_temp}];
                         testCase.ex.model.noise_floor = [testCase.ex.model.noise_floor {testCase.ex.model.noise_floor_temp}]; % (trials x stimulus amplitude)
                     end
 
