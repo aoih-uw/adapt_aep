@@ -25,8 +25,10 @@ rec_data_mV = present_sound(stimulus, ...
 electrode_data_mV  = rec_data_mV(:,:,electrode_idx)';
 
 % Preprocess signal
+ex = preprocess_signal(ex,app);
 
 % Analyze signal
+ex = separate_subtract_bootstrap(ex,app);
 
 % Determine if response strength has changed
 x_vec = 1:ex.counter.health; 

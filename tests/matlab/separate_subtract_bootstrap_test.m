@@ -60,7 +60,7 @@ classdef separate_subtract_bootstrap_test < matlab.unittest.TestCase
 
         function identify_response_with_modeling(testCase)
             mad_criteria = testCase.ex.info.analysis.mad_criteria;
-            sig_int = linspace(0.5,1,2);
+            sig_int = linspace(0,0.01,3);
             noise_int = 0.5;
             % noise_int = linspace(0.1,1,length(sig_int));
             completed_one_round = 0;

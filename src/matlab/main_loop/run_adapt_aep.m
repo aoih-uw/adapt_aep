@@ -57,7 +57,6 @@ try
                 fprintf('\nAnalyzing responses...')
                 ex = separate_subtract_bootstrap(ex,app);
 
-
             % CHECK IF FINISHED TESTING THIS AMPLITUDE
             if ex.decision(ex.counter.iamp).resp_found % When there was a significant response found
                 if iamp > 3  % Model the response once we have 3 data points
