@@ -16,6 +16,8 @@ ex.raw(iblock).electrodes = NaN; % order follows ex.info.channels.names
 ex.raw(iblock).time_stamp = NaN;
 
 %% Health
+ex.health(iblock).hydrophone = NaN;
+ex.health(iblock).electrodes = NaN;
 ex.health(iblock).time_stamp = NaN;
 ex.health(iblock).doub_stim_mag = NaN;
 ex.health(iblock).status = NaN;

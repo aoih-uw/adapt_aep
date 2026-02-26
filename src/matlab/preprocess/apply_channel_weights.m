@@ -1,10 +1,8 @@
-function ex = apply_channel_weights(ex)
+function [ex, kept_trials_weighted, channel_weights] = apply_channel_weights(ex,kept_trials,kept_trials_channels)
 % Apply inverse variance weights to each channel
 %# Check logic of this math
 % Downweight channels that have less consistent signal
 
-kept_trials = ex.kept.trials;
-kept_trials_channels = ex.kept.channels;
 N_channels = ex.info.channels.n_channels;
 
 channel_vars = [];
@@ -28,6 +26,3 @@ for ichan = 1:N_channels
 end
 
 kept_trials_weighted = kept_trials.*channel_weight_vec;
-
-ex.kept.weight_vec = channel_weights;
-ex.kept.trials_weighted = kept_trials_weighted;

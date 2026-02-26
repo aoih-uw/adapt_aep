@@ -24,9 +24,7 @@ try
 
             % CREATE BLOCK OF TRIALS
             fprintf('Creating trial block...')
-            ex = make_stim_block(ex);
-
-            ex.counter.iblock = ex.counter.iblock + 1; % Iterate block number
+            ex = stim_block_creation(ex);
 
             % READ THERMOMETER
             fprintf('\nChecking temperature...')

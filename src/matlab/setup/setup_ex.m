@@ -19,6 +19,7 @@ ex.counter.health = 0;
 
 % Experiment done marker
 ex.exp_done = 0;
+ex.test_health = 0;
 
 % Trial counter
 for iamp = 1:100

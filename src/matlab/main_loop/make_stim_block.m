@@ -1,20 +1,16 @@
-function ex = make_stim_block(ex)
-iblock = ex.counter.iblock + 1; % for the upcoming block
+function [ex, selected_cycle_samples, stimulus, phase_vec] = ...
+        make_stim_block(ex, waveform, current_amplitude, trials_per_block)
 
 % Load variables
 fs = ex.info.recording.sampling_rate_hz;
-trials_per_block = ex.info.adaptive.trials_per_block;
-waveform = ex.info.stimulus.waveform;
-
 latency_samples = ex.info.recording.latency_samples;
-current_amplitude = ex.info.stimulus.amplitude_spl;
 correction_factor = ex.info.calibration.correction_factor_linear;
 
 % Generate random phase offsets within one 60 Hz cycle
 period_60_hz = 1/60; % time it takes to complete 1 cycle of 60 Hz (s)
 selected_cycle_samples = ceil(rand(trials_per_block, 1) * period_60_hz * fs);
 
- % Create alternating phase vector
+% Create alternating phase vector
 if mod(trials_per_block,2) == 0
     phase_vec = 2*(randperm(trials_per_block) <= trials_per_block/2)' - 1;
 else
@@ -40,12 +36,5 @@ for itrial = 1:trials_per_block
 
     % Apply amplitude scaling
     temp_stimulus_scaled = apply_stim_amp_scaling(current_amplitude, correction_factor, temp_stimulus);
-    stimulus(itrial, 1:length(temp_stimulus_scaled)) = temp_stimulus_scaled;
-    
+    stimulus(itrial, 1:length(temp_stimulus_scaled)) = temp_stimulus_scaled;    
 end
-
-% Save to ex
-ex.counter.iblock = iblock;
-ex.block(iblock).jitter = selected_cycle_samples;
-ex.block(iblock).stimulus_block = stimulus;
-ex.block(iblock).phase_vec = phase_vec;

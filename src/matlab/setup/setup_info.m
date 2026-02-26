@@ -132,4 +132,6 @@ ex.info.calibration = struct( ... % These values will be updated by prepare_next
 % Health
 ex.info.health.stim_frequency_hz = 100;
 ex.info.health.stim_amp_spl = 120;
-ex.info.health.waveforms = NaN;
+ex.info.health.stimulus_block = NaN;
+ex.info.health.phase_vec = NaN;
+ex.info.health.baseline_response = NaN;

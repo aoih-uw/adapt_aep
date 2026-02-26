@@ -58,47 +58,9 @@ all_trials_chan = reshape(all_trials_chan, [], size(all_trials,2)); % Now: [(tri
 all_phases_chan = reshape(all_phases,[],1);
 all_jitter_chan = reshape(all_jitter,[],1);
 
-%% Calculate RMS mean and std
-all_trials_chan_rms = sqrt(mean(all_trials_chan.^2, 2,'omitnan'));
-
-%% Check for any crazy large values
-if any(all_trials_chan_rms(:) >= reject_threshold_mV)
-    beep
-    uiwait(warndlg('There are trials with suspiciously large mV values', 'Warning'));
-end
-
-% Calculate relative rejection threshold
-all_median = median(all_trials_chan_rms,1,'omitnan');
-all_mad = median(abs(all_median-all_trials_chan_rms));
-rel_reject_threshold = all_median + reject_threshold_sd * all_mad * 1.4826;
-
-kept_trials_idx = find(all_trials_chan_rms < rel_reject_threshold);
-kept_trials_phases = all_phases_chan(kept_trials_idx);
-
-%% Check if even # of phases are kept
-pos_phase_idx = find(kept_trials_phases == 1);
-neg_phase_idx = find(kept_trials_phases == -1);
-
-n_pos = length(pos_phase_idx);
-n_neg = length(neg_phase_idx);
-n_to_keep = min(n_pos,n_neg);
-
-if n_pos ~= n_neg
-    % Randomly select equal numbers from each phase
-    if n_pos > n_to_keep
-        pos_phase_idx = pos_phase_idx(randperm(n_pos, n_to_keep));
-    end
-    if n_neg > n_to_keep
-        neg_phase_idx = neg_phase_idx(randperm(n_neg, n_to_keep));
-    end
-    
-    % Combine and sort the balanced indices
-    balanced_idx = sort([pos_phase_idx; neg_phase_idx]);
-    
-    % Update kept trials to only include balanced phases
-    kept_trials_idx = kept_trials_idx(balanced_idx);
-    kept_trials_phases = all_phases_chan(kept_trials_idx); %# keep for tests
-end
+[kept_trials_idx, kept_trials_phases] = ...
+    reject_and_balance_trials(all_trials_chan, all_phases_chan, ...
+    reject_threshold_mV, reject_threshold_sd);
 
 %% Save kept trials
 kept_trials = all_trials_chan(kept_trials_idx,:);
