@@ -58,7 +58,7 @@ all_trials_chan = reshape(all_trials_chan, [], size(all_trials,2)); % Now: [(tri
 all_phases_chan = reshape(all_phases,[],1);
 all_jitter_chan = reshape(all_jitter,[],1);
 
-[kept_trials_idx, kept_trials_phases] = ...
+[kept_trials_idx, kept_trials_phases, rel_reject_threshold] = ...
     reject_and_balance_trials(all_trials_chan, all_phases_chan, ...
     reject_threshold_mV, reject_threshold_sd);
 
@@ -68,6 +68,10 @@ kept_trials_channels = all_channel_label(kept_trials_idx); % Kept_trials_channel
 kept_jitter = all_jitter_chan(kept_trials_idx);
 reject_rate = ((N_trials_presented*N_channels)-size(kept_trials,1))/(N_trials_presented*N_channels);
 fprintf('\nArtifact rejection rate: %.3f\n', reject_rate)
+
+if reject_rate > 0.5
+    uialert(app.UIFigure, 'More than half of the trials have been rejected.', 'Warning', 'Icon', 'warning');
+end
 
 % Update GUI
 app.Label_rejection_rate.Text = sprintf('%.1f%%', reject_rate * 100);

@@ -1,4 +1,9 @@
 classdef check_health_test < matlab.unittest.TestCase
+    properties
+        ex
+        fs
+        App
+    end
 
     methods (TestClassSetup)
         % Shared setup for the entire test class
@@ -31,16 +36,52 @@ classdef check_health_test < matlab.unittest.TestCase
             testCase.ex.info.stimulus.frequency_hz = 100;
             testCase.ex.info.stimulus.amplitude_spl = 170;
             testCase.ex = make_tone_burst_template(testCase.ex);
-            testCase.ex = make_stim_block(testCase.ex);
+            testCase.ex = stim_block_creation(testCase.ex);
         end
-        
+
     end
 
     methods (Test)
         % Test methods
+        function healthy_response(testCase)
+            health_dir = fullfile('\\wsl$\ubuntu\home\aoih\adapt_aep', 'data', 'health');
+            filename = fullfile(health_dir, [testCase.ex.info.health.filename_root '_health_baseline.mat']);
+            if isfile(filename)
+                delete(filename);
+            end
+            [testCase.ex, mock_data] = create_mock_data(testCase.ex, 1, 0.25);
+            testCase.ex.mock_data = mock_data;
+            testCase.ex = check_health(testCase.ex, testCase.App);
+            testCase.verifyEqual('good',testCase.ex.health(1).status)
+        end
 
-        function unimplementedTest(testCase)
-            testCase.verifyFail("Unimplemented test");
+        function unhealthy_response(testCase)
+            baseline_2f_mag = 1;
+            health_dir = fullfile('\\wsl$\ubuntu\home\aoih\adapt_aep', 'data', 'health');
+            filename = fullfile(health_dir, [testCase.ex.info.health.filename_root '_health_baseline.mat']);
+            if isfile(filename)
+                delete(filename);
+                save(filename, 'baseline_2f_mag')
+            end
+            [testCase.ex, mock_data] = create_mock_data(testCase.ex, 0, 0.25);
+            testCase.ex.mock_data = mock_data;
+            testCase.ex = check_health(testCase.ex, testCase.App);
+            testCase.verifyEqual('poor',testCase.ex.health(1).status)
+        end
+
+        function multiple_health_checks(testCase)
+            health_dir = fullfile('\\wsl$\ubuntu\home\aoih\adapt_aep', 'data', 'health');
+            filename = fullfile(health_dir, [testCase.ex.info.health.filename_root '_health_baseline.mat']);
+            if isfile(filename)
+                delete(filename);
+            end
+            health_sigs = linspace(1,0.5,5);
+            for itry = 1:length(health_sigs)
+                cur_health = health_sigs(itry);
+                [testCase.ex, mock_data] = create_mock_data(testCase.ex, cur_health, 0.25);
+                testCase.ex.mock_data = mock_data;
+                testCase.ex = check_health(testCase.ex, testCase.App);
+            end
         end
     end
 

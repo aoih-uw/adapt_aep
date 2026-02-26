@@ -42,11 +42,11 @@ classdef reject_artefacts_test < matlab.unittest.TestCase
     methods (Test)
         % Test methods
         function artefact_trials_correctly_removed(testCase)
-            testCase.ex = make_stim_block(testCase.ex);
+            testCase.ex = stim_block_creation(testCase.ex);
             N_channels = testCase.ex.info.channels.n_channels;
             rejection_threshold_sd = testCase.ex.info.signal_quality.rejection_threshold_sd;
             testCase.ex.info.signal_quality.rejection_threshold_mV = 100;
-            mock_data = create_mock_data(testCase.ex, 1, 0.5);
+            [ex, mock_data] = create_mock_data(testCase.ex, 1, 0.5);
             testCase.ex.mock_data = mock_data;
             testCase.ex = present_and_measure(testCase.ex, testCase.App);
             responses = testCase.ex.raw(1).electrodes;
@@ -81,12 +81,12 @@ classdef reject_artefacts_test < matlab.unittest.TestCase
         function equal_phases_kept(testCase)
             for iblock_it = 0:9
             testCase.ex.counter.iblock = iblock_it;
-            testCase.ex = make_stim_block(testCase.ex);
+            testCase.ex = stim_block_creation(testCase.ex);
             iblock = testCase.ex.counter.iblock;
             N_channels = testCase.ex.info.channels.n_channels;
             rejection_threshold_sd = testCase.ex.info.signal_quality.rejection_threshold_sd;
             testCase.ex.info.signal_quality.rejection_threshold_mV = 100;
-            mock_data = create_mock_data(testCase.ex, 1, 0.5);
+            [ex, mock_data] = create_mock_data(testCase.ex, 1, 0.5);
             testCase.ex.mock_data = mock_data;
             testCase.ex = present_and_measure(testCase.ex, testCase.App);
             responses = testCase.ex.raw(1).electrodes;
@@ -110,10 +110,10 @@ classdef reject_artefacts_test < matlab.unittest.TestCase
         end
 
         function crazy_large_values_dialog_works(testCase)
-            testCase.ex = make_stim_block(testCase.ex);
+            testCase.ex = stim_block_creation(testCase.ex);
             N_channels = testCase.ex.info.channels.n_channels;
             rejection_threshold_sd = testCase.ex.info.signal_quality.rejection_threshold_sd;
-            mock_data = create_mock_data(testCase.ex, 1, 0.5);
+            [ex, mock_data] = create_mock_data(testCase.ex, 1, 0.5);
             testCase.ex.mock_data = mock_data;
             testCase.ex = present_and_measure(testCase.ex, testCase.App);
             responses = testCase.ex.raw(1).electrodes;
@@ -144,12 +144,12 @@ classdef reject_artefacts_test < matlab.unittest.TestCase
                 for iblock_it = 0:block_iterations-1
                     testCase.ex.counter.iamp = iamp;
                     testCase.ex.counter.iblock = iblock_it;
-                    testCase.ex = make_stim_block(testCase.ex);
+                    testCase.ex = stim_block_creation(testCase.ex);
                     iblock = testCase.ex.counter.iblock;
                     N_channels = testCase.ex.info.channels.n_channels;
                     trials_per_block = testCase.ex.info.adaptive.trials_per_block;
                     testCase.ex.info.signal_quality.rejection_threshold_mV = 100;
-                    mock_data = create_mock_data(testCase.ex, 1, 0.5);
+                    [testCase.ex, mock_data] = create_mock_data(testCase.ex, 1, 0.5);
                     testCase.ex.mock_data = mock_data;
                     testCase.ex = present_and_measure(testCase.ex, testCase.App);
                     responses = testCase.ex.raw(1).electrodes;
@@ -185,10 +185,14 @@ classdef reject_artefacts_test < matlab.unittest.TestCase
                 actual_size = size([testCase.ex.preprocess(iamp).reject_rate{:}]);
                 testCase.verifyEqual(expected_size,actual_size)
 
+                % Correct rejection rate?
+                expected_reject_rate = length(trials_to_corrupt)/trials_per_block;
+                actual_reject_rate = testCase.ex.preprocess(iamp).reject_rate{end};
+                testCase.verifyEqual(expected_reject_rate,actual_reject_rate)
+                
                 % 'Kept' variables
-                reject_rate = testCase.ex.preprocess(iamp).reject_rate{end}; % Get the last reject rate
                 total_rows = (block_iterations*trials_per_block*N_channels);
-                expected_size = total_rows - (total_rows*reject_rate);
+                expected_size = total_rows - (total_rows*expected_reject_rate);
 
                 % kept_trials
                 actual_size = size(testCase.ex.kept.trials,1);
@@ -221,10 +225,10 @@ classdef reject_artefacts_test < matlab.unittest.TestCase
         end
 
         function GUI_properly_updated(testCase)
-            testCase.ex = make_stim_block(testCase.ex);
+            testCase.ex = stim_block_creation(testCase.ex);
             N_channels = testCase.ex.info.channels.n_channels;
             testCase.ex.info.signal_quality.rejection_threshold_mV = 100;
-            mock_data = create_mock_data(testCase.ex, 1, 0.5);
+            [testCase.ex, mock_data] = create_mock_data(testCase.ex, 1, 0.5);
             testCase.ex.mock_data = mock_data;
             testCase.ex = present_and_measure(testCase.ex, testCase.App);
             responses = testCase.ex.raw(1).electrodes;

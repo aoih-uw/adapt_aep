@@ -1,6 +1,5 @@
 function [ex, selected_cycle_samples, stimulus, phase_vec] = ...
         make_stim_block(ex, waveform, current_amplitude, trials_per_block)
-
 % Load variables
 fs = ex.info.recording.sampling_rate_hz;
 latency_samples = ex.info.recording.latency_samples;

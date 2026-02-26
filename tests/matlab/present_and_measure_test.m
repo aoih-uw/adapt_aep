@@ -33,8 +33,8 @@ classdef present_and_measure_test < matlab.unittest.TestCase
             noise_scaling = 0.25;
             n_channels = size(ex.info.recording.DAC_input_channel_names,2);
             ex = make_tone_burst_template(ex);
-            ex = make_stim_block(ex);
-            mock_data = create_mock_data(ex,signal_scaling,noise_scaling);
+            ex = stim_block_creation(ex);
+            [ex, mock_data] = create_mock_data(ex,signal_scaling,noise_scaling);
             ex.mock_data = mock_data;
             ex = present_and_measure(ex, testCase.App);  % Use testCase.App
             n_samples = size(ex.mock_data,2);
@@ -50,7 +50,7 @@ classdef present_and_measure_test < matlab.unittest.TestCase
             ex.info.stimulus.frequency_hz = 100;
             ex.info.stimulus.amplitude_spl = 170;
             ex = make_tone_burst_template(ex);
-            ex = make_stim_block(ex);
+            ex = stim_block_creation(ex);
             signal_scaling = 0:0.1:1;
             noise_scaling = 0.1:0.1:1;
             
@@ -60,7 +60,7 @@ classdef present_and_measure_test < matlab.unittest.TestCase
                 for inoise = 1:length(noise_scaling)
                     isnr = isnr + 1;
                     cur_noise_scaling = noise_scaling(inoise);
-                    mock_data = create_mock_data(ex,cur_signal_scaling, cur_noise_scaling);
+                    [ex, mock_data] = create_mock_data(ex,cur_signal_scaling, cur_noise_scaling);
                     ex.mock_data = mock_data;
                     ex = present_and_measure(ex, testCase.App);
                     selected_sig = ex.raw(1).electrodes(1,:,1);
@@ -92,8 +92,8 @@ classdef present_and_measure_test < matlab.unittest.TestCase
             signal_scaling = 1;
             noise_scaling = 0.25;
             ex = make_tone_burst_template(ex);
-            ex = make_stim_block(ex);
-            mock_data = create_mock_data(ex,signal_scaling,noise_scaling);
+            ex = stim_block_creation(ex);
+            [ex, mock_data] = create_mock_data(ex,signal_scaling,noise_scaling);
             ex.mock_data = mock_data;
             ex = present_and_measure(ex, testCase.App);  % Use testCase.App
             drawnow;

@@ -36,8 +36,8 @@ classdef apply_channel_weights_test < matlab.unittest.TestCase
             testCase.ex.info.stimulus.frequency_hz = 100;
             testCase.ex.info.stimulus.amplitude_spl = 170;
             testCase.ex = make_tone_burst_template(testCase.ex);
-            testCase.ex = make_stim_block(testCase.ex);
-            mock_data = create_mock_data(testCase.ex, 1, 0.5);
+            testCase.ex = stim_block_creation(testCase.ex);
+            [testCase.ex, mock_data] = create_mock_data(testCase.ex, 1, 0.5);
             testCase.ex.mock_data = mock_data;
             testCase.ex = present_and_measure(testCase.ex, testCase.App);
             testCase.ex = reject_artefacts(testCase.ex,testCase.App);
@@ -80,13 +80,15 @@ classdef apply_channel_weights_test < matlab.unittest.TestCase
 
             % Run script
             testCase.ex.kept.trials = kept_trials;
-            testCase.ex = apply_channel_weights(testCase.ex);
-            channel_weight_vec = testCase.ex.kept.weight_vec;
+            kept_trials = testCase.ex.kept.trials;
+            kept_trials_channels = testCase.ex.kept.channels;
+            [testCase.ex, kept_trials_weighted, channel_weight_vec] = ... 
+                apply_channel_weights(testCase.ex,kept_trials,kept_trials_channels);
 
             % Get variances after weighting
             for ichan = 1:N_channels
                 channel_idx = channel_vec == ichan;
-                current_sigs = testCase.ex.kept.trials_weighted(channel_idx,:);
+                current_sigs = kept_trials_weighted(channel_idx,:);
                 var_sig = var(current_sigs,0,1,'omitnan'); % First across trials
                 mean_var_sig_weighted(ichan) = mean(var_sig);
             end
@@ -100,9 +102,13 @@ classdef apply_channel_weights_test < matlab.unittest.TestCase
         end
 
         function check_output_dimensions(testCase)
+            kept_trials = testCase.ex.kept.trials;
+            kept_trials_channels = testCase.ex.kept.channels;
             expected_size = size(testCase.ex.kept.trials);
-            testCase.ex = apply_channel_weights(testCase.ex);
-            output_size = size(testCase.ex.kept.trials_weighted);
+            [testCase.ex, kept_trials_weighted, ~] = ... 
+                apply_channel_weights(testCase.ex,kept_trials,kept_trials_channels);
+
+            output_size = size(kept_trials_weighted);
             testCase.verifyEqual(output_size,expected_size)
         end
     end

@@ -36,7 +36,7 @@ classdef model_response_test < matlab.unittest.TestCase
             testCase.ex.info.stimulus.frequency_hz = 100;
             testCase.ex.info.stimulus.amplitude_spl = 170;
             testCase.ex = make_tone_burst_template(testCase.ex);
-            testCase.ex = make_stim_block(testCase.ex);
+            testCase.ex = stim_block_creation(testCase.ex);
         end
     end
 
@@ -62,9 +62,7 @@ classdef model_response_test < matlab.unittest.TestCase
                         [testCase.ex, mock_data] = create_mock_data(testCase.ex, sig_int(i), noise_int(ii));
                         testCase.ex.mock_data = mock_data;
                         testCase.ex = present_and_measure(testCase.ex, testCase.App);
-                        testCase.ex = reject_artefacts(testCase.ex,testCase.App);
-                        testCase.ex = apply_channel_weights(testCase.ex);
-                        testCase.ex = filter_signals(testCase.ex);
+                        testCase.ex = preprocess_signal(testCase.ex,testCase.App);
 
                         testCase.ex = separate_subtract_bootstrap(testCase.ex,testCase.App);
                         fprintf('\nSignal_ratio: %1.2f\nNoise_ratio: %1.2f\nResponse found?: %1.0f\n',sig_int(i), noise_int(ii), testCase.ex.decision(1).resp_found)
@@ -93,7 +91,7 @@ classdef model_response_test < matlab.unittest.TestCase
                     testCase.ex.counter.iblock = 0; % reset for next SNR
                     completed_one_round = 0;
                     testCase.ex.counter.iamp = testCase.ex.counter.iamp+1;
-                    testCase.ex = make_stim_block(testCase.ex);
+                    testCase.ex = stim_block_creation(testCase.ex);
                 end
             end
         end

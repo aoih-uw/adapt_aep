@@ -15,20 +15,24 @@ color_names = {'blue', 'orange', 'red', 'teal', 'green', 'yellow', 'purple', 'pi
     electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V] ...
         = init_present_and_measure_vars(ex, stimulus_block);
 
-% Preallocate variables
-ex.raw(iblock).hydrophone = zeros(n_trials, n_samples);
-ex.raw(iblock).loopback = zeros(n_trials, n_samples);
-ex.raw(iblock).electrodes = zeros(n_trials, n_samples, n_channels);
-
 % Rip it
 if ex.test
     rec_data_mV = ex.mock_data;
+    n_samples = size(rec_data_mV,2);
+    % Preallocate variables
+    ex.raw(iblock).hydrophone = zeros(n_trials, n_samples);
+    ex.raw(iblock).loopback = zeros(n_trials, n_samples);
+    ex.raw(iblock).electrodes = zeros(n_trials, n_samples, n_channels);
 else
     rec_data_mV = present_sound(stimulus_block, ...
         input_channels, output_channels, ...
         electrode_idx, hydrophone_idx, ...
         electrode_voltage_scaling_factor_V, ...
         hydrophone_voltage_scaling_factor_V);
+    % Preallocate variables
+    ex.raw(iblock).hydrophone = zeros(n_trials, n_samples);
+    ex.raw(iblock).loopback = zeros(n_trials, n_samples);
+    ex.raw(iblock).electrodes = zeros(n_trials, n_samples, n_channels);
 end
 
 % Save values to ex

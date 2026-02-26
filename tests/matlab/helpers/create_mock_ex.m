@@ -21,3 +21,5 @@ ex.info.recording.latency_samples = 100;
 ex.info.calibration.correction_factor_linear = 1;
 ex.info.adaptive.max_trials = 300;
 ex.counter.iamp = 1;
+ex.info.health.filename_root = 'test';
+ex = setup_stimuli(ex);

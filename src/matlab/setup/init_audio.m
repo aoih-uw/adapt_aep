@@ -1,4 +1,4 @@
-fucntion ex = init_audio(ex)
+function ex = init_audio(ex)
 
 % Audio hardware
 fprintf('Initializing audio hardware...\n');

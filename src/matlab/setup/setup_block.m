@@ -20,6 +20,7 @@ ex.health(iblock).hydrophone = NaN;
 ex.health(iblock).electrodes = NaN;
 ex.health(iblock).time_stamp = NaN;
 ex.health(iblock).doub_stim_mag = NaN;
+ex.health(iblock).rel_strength = NaN;
 ex.health(iblock).status = NaN;
 ex.health(iblock).end_test = 0;
 

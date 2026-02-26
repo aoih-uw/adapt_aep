@@ -36,12 +36,16 @@ classdef filter_signals_test < matlab.unittest.TestCase
             testCase.ex.info.stimulus.frequency_hz = 100;
             testCase.ex.info.stimulus.amplitude_spl = 170;
             testCase.ex = make_tone_burst_template(testCase.ex);
-            testCase.ex = make_stim_block(testCase.ex);
-            mock_data = create_mock_data(testCase.ex, 1, 0.5);
+            testCase.ex = stim_block_creation(testCase.ex);
+            [testCase.ex, mock_data] = create_mock_data(testCase.ex, 1, 0.5);
             testCase.ex.mock_data = mock_data;
             testCase.ex = present_and_measure(testCase.ex, testCase.App);
             testCase.ex = reject_artefacts(testCase.ex,testCase.App);
-            testCase.ex = apply_channel_weights(testCase.ex);
+            kept_trials = testCase.ex.kept.trials;
+            kept_trials_channels = testCase.ex.kept.channels;
+            [testCase.ex, kept_trials_weighted, channel_weights]  = apply_channel_weights(testCase.ex,kept_trials,kept_trials_channels);
+            testCase.ex.kept.weight_vec = channel_weights;
+            testCase.ex.kept.trials_weighted = kept_trials_weighted;
         end
 
     end
@@ -59,7 +63,7 @@ classdef filter_signals_test < matlab.unittest.TestCase
             selected_trial = kept_trials_weighted(random_trial,:);
 
             t = (0:size(selected_trial,2)-1)/testCase.fs; % t is in s so don't use samples!
-            low_freqs = [1:95];
+            low_freqs = 1:95;
             for ifreqs = 1:length(low_freqs)
                 current_freq = low_freqs(ifreqs);
                 low_freq_drift(ifreqs,:) = sin(t*2*pi*current_freq)*(randn(1)+1);
@@ -74,13 +78,16 @@ classdef filter_signals_test < matlab.unittest.TestCase
             % Calculate fft before filtering
             [~, freq_vec_pre, fft_vals_pre] = calc_fft(kept_trials_weighted(random_trial,:),testCase.fs);
 
-            testCase.ex = filter_signals(testCase.ex);
-            kept_trials_filtered = testCase.ex.kept.trials_filtered;
+            % Run script
+            pass_band_hz = testCase.ex.info.signal_quality.pass_band_hz;
+            kept_trials_weighted = testCase.ex.kept.trials_weighted;
+            [testCase.ex, kept_trials_filtered] = filter_signals(testCase.ex,testCase.fs,pass_band_hz,kept_trials_weighted);
+            testCase.ex.kept.trials_filtered = kept_trials_filtered;
             
             % Calculate fft post filtering
             [~, freq_vec_post, fft_vals_post] = calc_fft(kept_trials_filtered(random_trial,:),testCase.fs);
             
-            freq_bin_mask = freq_vec_pre < pass_band;
+            freq_bin_mask = freq_vec_pre < pass_band-25;
             pre_selected = fft_vals_pre(freq_bin_mask);
             post_selected = fft_vals_post(freq_bin_mask);
 
@@ -96,8 +103,11 @@ classdef filter_signals_test < matlab.unittest.TestCase
             expected_size = size(kept_trials_weighted);
             
             % Run script
-            testCase.ex = filter_signals(testCase.ex);
-            kept_trials_filtered = testCase.ex.kept.trials_filtered;
+            pass_band_hz = testCase.ex.info.signal_quality.pass_band_hz;
+            kept_trials_weighted = testCase.ex.kept.trials_weighted;
+            [testCase.ex, kept_trials_filtered] = filter_signals(testCase.ex,testCase.fs,pass_band_hz,kept_trials_weighted);
+            testCase.ex.kept.trials_filtered = kept_trials_filtered;
+            
             actual_size = size(kept_trials_filtered);
 
             testCase.verifyEqual(actual_size,expected_size);
