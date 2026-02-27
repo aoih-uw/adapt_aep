@@ -72,7 +72,7 @@ ex.info.channels = struct( ...
     );
 
 % Recording parameters
-    ex.info.recording.sampling_rate_hz = 500*2*5; % (highest presented stimulus)*(nyquist)*(signal quality)
+    ex.info.recording.sampling_rate_hz = 44100; % (highest presented stimulus)*(nyquist)*(signal quality)
     ex.info.recording.ADC_bit_depth = NaN;
     ex.info.recording.latency_samples = NaN;
     ex.info.recording.DAC_model_serial = 'USB D/A Converter, Fireface UCX, RME, Frankfurt, Germany';
