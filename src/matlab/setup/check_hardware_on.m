@@ -1,31 +1,85 @@
-function check_hardware_on
+function check_hardware_on()
 % A GUI to ensure that all necessary hardware used in experiment are turned
 % on and using the correct settings
 
-beep;
-f = figure('Position', [300 300 400 240], 'MenuBar', 'none', 'Name', 'Equipment Check', 'NumberTitle', 'off');
+    [y, Fs] = audioread('error.mp3');
+    sound(y, Fs)
 
-% Add caution symbol using text
-uicontrol('Style', 'text', 'Position', [20 210 360 25], 'String', '⚠ CAUTION: Check all items before proceeding:', 'FontWeight', 'bold', 'ForegroundColor', [0.8 0.4 0], 'FontSize', 12);
-uicontrol('Style', 'text', 'Position', [20 185 360 20], 'String', 'Verify equipment status:', 'FontSize', 10);
+    % --- Style constants (match adapt_aep app) ---
+    bg      = [0.8824 0.9294 0.9686];
+    navy    = [0.1686 0.2196 0.5608];
+    btnBg   = [0.9412 0.9412 0.9412];
+    btnFg   = [0 0 0];
+    warnRed = [0.85 0.2 0.2];
+    pad     = 25;
 
-checks = zeros(5,1);
-cb1 = uicontrol('Style', 'checkbox', 'Position', [20 160 360 20], 'String', 'Hydrophone amplifier is ON and set to 100 mV/Pa', 'Callback', @(~,~) setCheck(1));
-cb2 = uicontrol('Style', 'checkbox', 'Position', [20 135 360 20], 'String', 'Speaker amplifier is ON', 'Callback', @(~,~) setCheck(2));
-cb3 = uicontrol('Style', 'checkbox', 'Position', [20 110 360 20], 'String', 'Oscilloscope is ON', 'Callback', @(~,~) setCheck(3));
-cb4 = uicontrol('Style', 'checkbox', 'Position', [20 85 360 20], 'String', 'Bioamplifier lights are ON and gain is at 10,000x', 'Callback', @(~,~) setCheck(4));
-cb5 = uicontrol('Style', 'checkbox', 'Position', [20 60 360 20], 'String', 'Water pump system is ON', 'Callback', @(~,~) setCheck(5));
+    dlgW = 460; dlgH = 350;
+    btnW = 200; btnH = 40;
+    cbH  = 22; cbGap = 6;
 
-okBtn = uicontrol('Style', 'pushbutton', 'Position', [160 20 80 30], 'String', 'OK', 'Enable', 'off', 'Callback', @(~,~) close(f));
+    % Equipment checklist items
+    items = { ...
+        'Hydrophone amplifier is ON and set to 100 mV/Pa', ...
+        'Speaker amplifier is ON', ...
+        'Oscilloscope is ON', ...
+        'Bioamplifier lights are ON and gain is at 10,000x', ...
+        'Water pump system is ON', ...
+        'Nitrogen tank is ON and table is floating'};
+    nItems = numel(items);
+    checks = zeros(nItems, 1);
 
-    function setCheck(n)
-        checks(n) = ~checks(n);
+    % Create dialog
+    d = dialog('Position', [400 400 dlgW dlgH], ...
+               'Name', 'Equipment Check', ...
+               'Color', bg);
+
+    % Warning title
+    uicontrol('Parent', d, 'Style', 'text', ...
+        'Position', [pad dlgH-55 dlgW-2*pad 35], ...
+        'String', [char(9888) '  Equipment Check'], ...
+        'FontSize', 16, 'FontWeight', 'bold', ...
+        'ForegroundColor', warnRed, 'BackgroundColor', bg, ...
+        'HorizontalAlignment', 'center');
+
+    % Subtitle
+    uicontrol('Parent', d, 'Style', 'text', ...
+        'Position', [pad dlgH-85 dlgW-2*pad 22], ...
+        'String', 'Verify all equipment before proceeding:', ...
+        'FontSize', 12, ...
+        'ForegroundColor', [0 0 0], 'BackgroundColor', bg, ...
+        'HorizontalAlignment', 'center');
+
+    % Checkboxes
+    cbTop = dlgH - 115;
+    cb = gobjects(nItems, 1);
+    for i = 1:nItems
+        yPos = cbTop - (i-1) * (cbH + cbGap);
+        cb(i) = uicontrol('Parent', d, 'Style', 'checkbox', ...
+            'Position', [pad+15 yPos dlgW-2*pad-15 cbH], ...
+            'String', items{i}, ...
+            'FontSize', 11, ...
+            'ForegroundColor', [0 0 0], 'BackgroundColor', bg, ...
+            'Callback', @(~,~) update_checks());
+    end
+
+    % OK button (centered, disabled until all checked)
+    okBtn = uicontrol('Parent', d, ...
+        'Position', [(dlgW-btnW)/2 pad btnW btnH], ...
+        'String', 'OK', 'FontSize', 12, ...
+        'BackgroundColor', btnBg, 'ForegroundColor', btnFg, ...
+        'Enable', 'off', ...
+        'Callback', @(~,~) delete(d));
+
+    uiwait(d);
+
+    function update_checks()
+        for k = 1:nItems
+            checks(k) = get(cb(k), 'Value');
+        end
         if all(checks)
             set(okBtn, 'Enable', 'on');
         else
             set(okBtn, 'Enable', 'off');
         end
     end
-
-uiwait(f);
 end

@@ -27,9 +27,23 @@ trial_count_sorted = trial_count(sort_idx);
 
 %% Fit model
 try
-    init_guess = [median(amplitude_sorted), noise_floor_median, ...
-            (max(response_sorted)-min(response_sorted))/(max(amplitude_sorted)-min(amplitude_sorted))];
-    lb = [min(amplitude_sorted), 0, 0];        % x0, a1, m lower bounds
+    
+    % Better initial guesses
+    % Use a more robust slope estimate (e.g., from the upper half of data)
+    mid_idx = round(length(response_sorted)/2);
+    upper_responses = response_sorted(mid_idx:end);
+    upper_amps = amplitude_sorted(mid_idx:end);
+    init_m = max(0.001, (mean(upper_responses) - mean(response_sorted(1:mid_idx))) / ...
+        (mean(upper_amps) - mean(response_sorted(1:mid_idx))));
+
+    % Set a1 initial guess above zero
+    init_a1 = noise_floor_median;
+
+    init_guess = [median(amplitude_sorted), init_a1, init_m]; % x0, a1, m
+
+    % Raise the lower bounds slightly so the optimizer can't collapse
+    lb = [min(amplitude_sorted) - 20, -inf, 1e-6]; % force m > 0
+
     ub = [max(amplitude_sorted), inf, inf];     % x0, a1, m upper bounds
     options = optimoptions('lsqcurvefit', 'MaxIterations', 1000, ...
         'FunctionTolerance', 1e-9, 'StepTolerance', 1e-9);
@@ -49,9 +63,14 @@ try
     fprintf('\nFitted parameters: x0 = %.3f, a1 = %.3f, m = %.3f\n', x0_fit, a1_fit, m_fit)
     fprintf('\nModel fitting computation time: %.3f s\n', time_elapsed)
 
-    % Generate fitted curve
-    x_plot = linspace(min(amplitude_sorted), max(amplitude_sorted), 200);
-    y_fit = elbow_function(x_plot, x0_fit, a1_fit, m_fit);
+    % After params_fit is obtained:
+    y_predicted = elbow_function(amplitude_sorted, x0_fit, a1_fit, m_fit);
+    SS_res = sum((response_sorted - y_predicted).^2);
+    SS_tot = sum((response_sorted - mean(response_sorted)).^2);
+    R_squared = 1 - SS_res / SS_tot;
+    good_fit = R_squared > 0.5;  % adjust threshold as needed
+
+    fprintf('\n Model Fit R² = %.4f\n', R_squared);
 
     % Save values
     ex.model.x0_fit = [ex.model.x0_fit x0_fit];
@@ -59,22 +78,29 @@ try
     ex.model.m_fit = [ex.model.m_fit m_fit];
     ex.model.y_int = [ex.model.y_int y_int];
 
-    ex.model.amplitude_vec = amplitude_sorted;
-    ex.model.response_vec = response_sorted;
-    ex.model.resp_found = resp_found_sorted;
-    ex.model.trial_count = trial_count_sorted;
+    ex.model.amplitude_vec_sorted = amplitude_sorted;
+    ex.model.response_vec_sorted = response_sorted;
+    ex.model.resp_found_sorted = resp_found_sorted;
+    ex.model.trial_count_sorted = trial_count_sorted;
+    ex.model.Rsquared = R_squared;
     
     %% Plots
     cla(app.UIAxes_model)
-
-    % Model
-    plot(app.UIAxes_model, x_plot, y_fit, 'Color', tableau_10('blue'), 'LineWidth', 2);
     hold(app.UIAxes_model, 'on');
+
+    if good_fit
+        % Model
+        % Generate fitted curve
+        x_plot = linspace(min(amplitude_sorted), max(amplitude_sorted), 200);
+        y_fit = elbow_function(x_plot, x0_fit, a1_fit, m_fit);
+        plot(app.UIAxes_model, x_plot, y_fit, 'Color', tableau_10('blue'), 'LineWidth', 2);
+    end
 
     % Plot individual trial dots
     for i = 1:length(amplitude_sorted)
         if resp_found_sorted(i) == 1
             color = tableau_10('green');
+            
         else
             color = tableau_10('red');
         end
@@ -89,8 +115,12 @@ try
     y_fill = [noise_floor_median - mad_criteria*1.4826*noise_floor_mad, noise_floor_median - mad_criteria*1.4826*noise_floor_mad, ...
         noise_floor_median + mad_criteria*1.4826*noise_floor_mad, noise_floor_median + mad_criteria*1.4826*noise_floor_mad];
     fill(app.UIAxes_model,x_fill, y_fill, tableau_10('purple'), 'FaceAlpha', 0.2, 'EdgeColor', 'none');    xlabel(app.UIAxes_model, 'Stimulus Amplitude (dB SPL)');
-    ylabel(app.UIAxes_model, '2f Amplitude (mV)');
-    title(app.UIAxes_model, sprintf('Elbow Fit: x0=%.3f, a1=%.3f, m=%.3f', x0_fit, a1_fit, m_fit));
+    ylabel(app.UIAxes_model, '2f Amplitude (\muV)');
+    if good_fit
+        title(app.UIAxes_model, sprintf('Elbow Fit: x0=%.3f, a1=%.3f, m=%.3f', x0_fit, a1_fit, m_fit));
+    else
+        title(app.UIAxes_model, sprintf('Poor Model Fit'));
+    end
     grid(app.UIAxes_model,  'on');
     hold(app.UIAxes_model, 'off');
 
@@ -119,6 +149,6 @@ try
     fprintf('\nMonte Carlo computation time: %.3f s\n', time_elapsed)
 
 catch ME
-    fprintf('Message: %s\n', ME.message);
+    fprintf('\nMessage: %s\n', ME.message);
     rethrow(ME);
 end

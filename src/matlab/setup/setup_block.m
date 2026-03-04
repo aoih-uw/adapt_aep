@@ -11,18 +11,9 @@ ex.block(iblock).phase_vec = NaN;
 ex.block(iblock).stimulus_block = NaN; % Created in make_stim_block, presented via playrec
 
 %% Raw data
-ex.raw(iblock).hydrophone = NaN;
-ex.raw(iblock).electrodes = NaN; % order follows ex.info.channels.names
+ex.raw(iblock).hydrophone_mV= NaN;
+ex.raw(iblock).electrodes_microV = NaN; % order follows ex.info.channels.names
 ex.raw(iblock).time_stamp = NaN;
-
-%% Health
-ex.health(iblock).hydrophone = NaN;
-ex.health(iblock).electrodes = NaN;
-ex.health(iblock).time_stamp = NaN;
-ex.health(iblock).doub_stim_mag = NaN;
-ex.health(iblock).rel_strength = NaN;
-ex.health(iblock).status = NaN;
-ex.health(iblock).end_test = 0;
 
 % Preprocessing
 ex.preprocess(iblock).rel_reject_threshold = [];

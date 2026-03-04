@@ -7,8 +7,9 @@ all_trials_chan_rms = sqrt(mean(all_trials_chan.^2, 2, 'omitnan'));
 
 % Check for crazy large values
 if any(all_trials_chan_rms(:) >= reject_threshold_mV)
-    beep
-    uiwait(warndlg('There are trials with suspiciously large mV values', 'Warning'));
+    [y, Fs] = audioread('error.mp3');
+            sound(y, Fs)
+    fprintf('There are trials with suspiciously large mV values');
 end
 
 % Relative rejection threshold based on median + MAD

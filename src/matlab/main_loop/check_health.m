@@ -6,7 +6,6 @@ ihealth = ex.counter.health;
 stimulus_block = ex.info.health.stimulus_block;
 phase_vec = ex.info.health.phase_vec;
 fs = ex.info.recording.sampling_rate_hz;
-color_names = {'blue', 'orange', 'red', 'teal', 'green', 'yellow', 'purple', 'pink', 'brown', 'grey'};
 
 [ex, N_channels, N_trials, N_samples, output_channels, input_channels, ...
     hydrophone_idx, ~, electrode_idx, electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V] ...
@@ -17,14 +16,14 @@ if ex.test
     rec_data_mV = ex.mock_data;
     N_samples = size(rec_data_mV,2);
     % Preallocate variables
-    ex.health(ihealth).hydrophone = zeros(N_trials, N_samples);
+    ex.health(ihealth).hydrophone_mV= zeros(N_trials, N_samples);
     ex.health(ihealth).loopback = zeros(N_trials, N_samples);
-    ex.health(ihealth).electrodes = zeros(N_trials, N_samples, N_channels);
+    ex.health(ihealth).electrodes_microV= zeros(N_trials, N_samples, N_channels);
 else
     % Preallocate variables
-    ex.health(ihealth).hydrophone = zeros(N_trials, N_samples);
+    ex.health(ihealth).hydrophone_mV= zeros(N_trials, N_samples);
     ex.health(ihealth).loopback = zeros(N_trials, N_samples);
-    ex.health(ihealth).electrodes = zeros(N_trials, N_samples, N_channels);
+    ex.health(ihealth).electrodes_microV= zeros(N_trials, N_samples, N_channels);
 
     rec_data_mV = present_sound(stimulus_block, ...
         input_channels, output_channels, ...
@@ -34,45 +33,14 @@ else
 end
 
 % Save values to ex
-ex.health(ihealth).hydrophone = squeeze(rec_data_mV(:,:,hydrophone_idx));
-ex.health(ihealth).electrodes  = rec_data_mV(:,:,electrode_idx); % N_trials, N_samples, N_channels
-electrode_sigs = reshape(permute(rec_data_mV(:,:,electrode_idx), [1,3,2]), [], size(rec_data_mV,2));
+ex.health(ihealth).hydrophone_mV= squeeze(rec_data_mV(:,:,hydrophone_idx));
+ex.health(ihealth).electrodes_microV = rec_data_mV(:,:,electrode_idx).*1e3; % N_trials, N_samples, N_channels
+electrode_sigs = reshape(permute(ex.health(ihealth).electrodes_microV, [1,3,2]), [], size(rec_data_mV,2));
 phase_vec = repmat(phase_vec,N_channels,1);
-ex.health(ihealth).time_stamp = datetime('now');
+ex.health(ihealth).time_stamp = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
 
 %% Plot signals
-time_s = (0:N_samples-1) / fs;
-% Hydrophone
-cla(app.UIAxes_hydrophone); % Plot random single trial since taking the mean will cancel out the stimulus...
-hold(app.UIAxes_hydrophone, 'on'); 
-plot(app.UIAxes_hydrophone, time_s, ex.health(ihealth).hydrophone(randperm(N_trials,1), :),'Color',tableau_10('purple'),'LineWidth',1.5);
-hold(app.UIAxes_hydrophone, 'off');
-title(app.UIAxes_hydrophone, 'Hydrophone');
-
-% Plot electrode channels
-electrode_axes = {app.UIAxes_ch1, app.UIAxes_ch2, app.UIAxes_ch3, app.UIAxes_ch4};
-
-for ch = 1:N_channels
-    cla(electrode_axes{ch});
-    hold(electrode_axes{ch}, 'on');
-    
-    % Compute mean and std across trials
-    data_mean = mean(squeeze(ex.health(ihealth).electrodes(:, :, ch)), 1);
-    data_std = std(squeeze(ex.health(ihealth).electrodes(:, :, ch)), 0, 1);
-    
-    % Get color for this channel
-    color = tableau_10(color_names{mod(ch-1, 10) + 1});
-    
-    % Plot shaded area for +/- 1 std
-    fill(electrode_axes{ch}, [time_s, fliplr(time_s)], ...
-         [data_mean + data_std, fliplr(data_mean - data_std)], ...
-         color, 'FaceAlpha', 0.3, 'EdgeColor', 'none');
-    
-    % Plot mean
-    plot(electrode_axes{ch}, time_s, data_mean, 'Color', color, 'LineWidth', 1.5);
-    
-    hold(electrode_axes{ch}, 'off');
-end
+plot_to_monitor('health',ex,app,N_samples,N_trials,N_channels)
 
 %% Reject artefacts
 reject_threshold_mV = ex.info.signal_quality.rejection_threshold_mV;
@@ -96,7 +64,7 @@ if reject_rate > 0.5
     warndlg(sprintf('More than half of the health check trials have been rejected.'), 'Warning', 'Icon', 'warning');
 end
 
-fprintf('\nHealth Check artifact rejection rate: %.3f\n', reject_rate);
+fprintf('\nHealth Check artifact rejection rate: %.1f%%\n', reject_rate * 100);
 
 %% Apply channel weights
 [ex, kept_trials_weighted, ~] = apply_channel_weights(ex,kept_trials,kept_trials_channels);
@@ -132,12 +100,32 @@ if ~exist(filename, 'file')
     ex.health(ihealth).rel_strength = rel_strength;
     ex.info.health.baseline_response = baseline_2f_mag;
 
-    warndlg(sprintf('The baseline 2f magnitude for this fish is: %1.4f', doub_freq_mag), 'Warning', 'modal');
+    fprintf('\nThe baseline 2f magnitude for this fish is: %1.4f\n', doub_freq_mag)
 
 else
-    if isnan(ex.info.health.baseline_response)
-        loaded = load(filename);
-        ex.info.health.baseline_response = loaded.baseline_2f_mag;
+    if ex.counter.iamp == 0
+    [y, Fs] = audioread('step.mp3');
+            sound(y, Fs)
+    answer = input('Pre-existing baseline health file found. Use existing? (y/n): ', 's');
+    if strcmpi(answer, 'y')
+        answer = 'Use Existing';
+    else
+        answer = 'Replace with New';
+    end
+
+    if strcmp(answer, 'Replace with New')
+        baseline_2f_mag = doub_freq_mag;
+        save(filename, 'baseline_2f_mag');
+        rel_strength = 1;
+        ex.health(ihealth).rel_strength = rel_strength;
+        ex.info.health.baseline_response = baseline_2f_mag;
+        fprintf('\nNew baseline 2f magnitude saved: %1.8f %sV\n', doub_freq_mag, char(956))
+    else
+        if isnan(ex.info.health.baseline_response)
+            loaded = load(filename);
+            ex.info.health.baseline_response = loaded.baseline_2f_mag;
+        end
+    end
     end
     baseline_2f_mag = ex.info.health.baseline_response;
     ex.health(ihealth).doub_stim_mag = doub_freq_mag;
@@ -153,7 +141,6 @@ else
     hold(ax,'on')
     yline(ax,1, '--','Color',tableau_10('grey'));
     ylim(ax,[-0.2,1.2])
-
 end
 
 % Decide

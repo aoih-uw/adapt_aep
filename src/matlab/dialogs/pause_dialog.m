@@ -1,62 +1,38 @@
 function [action, ex] = pause_dialog(ex)
-    % Creates a simple dialog when pause is pressed
-    % Returns: action = 'continue', 'change', or 'stop'
-    
-    % Create dialog
-    d = dialog('Position', [300 300 500 300], 'Name', 'Experiment Paused', 'Color', 'w');
-    
-    % Add title text
-    uicontrol('Parent', d, 'Style', 'text', 'Position', [20 240 460 40], ...
-        'String', 'Paused', 'FontSize', 16, 'FontWeight', 'bold', ...
-        'BackgroundColor', 'w', 'ForegroundColor', 'k');
-    
-    % Initialize action
-    action = 'continue';
-    
-    % Continue button
-    uicontrol('Parent', d, 'Position', [50 160 400 50], ...
-        'String', 'Resume testing', 'FontSize', 12, ...
-        'BackgroundColor', [0.94 0.94 0.94], 'ForegroundColor', 'k', ...
-        'Callback', @(~,~) continue_callback());
-    
-    % Change amplitude button
-    uicontrol('Parent', d, 'Position', [50 90 400 50], ...
-        'String', 'Change amplitude', 'FontSize', 12, ...
-        'BackgroundColor', [0.94 0.94 0.94], 'ForegroundColor', 'k', ...
-        'Callback', @(~,~) change_callback());
-    
-    % Stop button
-    uicontrol('Parent', d, 'Position', [50 20 400 50], ...
-        'String', 'End experiment', 'FontSize', 12, ...
-        'BackgroundColor', [0.94 0.94 0.94], 'ForegroundColor', 'k', ...
-        'Callback', @(~,~) stop_callback());
-    
-    % Wait for dialog to close
-    uiwait(d);
-    
-    % Callback functions
-    function continue_callback()
-        action = 'continue';
-        delete(d);
+[y, Fs] = audioread('step.mp3');
+sound(y, Fs)
+fprintf('\n========================================\n');
+fprintf('  Experiment Paused\n');
+fprintf('========================================\n');
+fprintf('  [r] Resume Testing\n');
+fprintf('  [c] Change Amplitude\n');
+fprintf('  [e] End Experiment\n');
+fprintf('========================================\n');
+
+while true
+    choice = input('Enter choice (r/c/e): ', 's');
+    switch lower(choice)
+        case 'r'
+            action = 'continue';
+            return;
+        case 'c'
+            action = 'change';
+            ex = save_raw_data(ex);
+            ex.decision(ex.counter.iamp).amp_done = 1;
+            ex.decision(ex.counter.iamp).amp_done_reason = 'User override';
+            ex = select_next(ex);
+            return;
+        case 'e'
+            action = 'stop';
+            ex = save_raw_data(ex);
+            fprintf('\nExperiment stopped by user\n');
+            ex.decision(ex.counter.iamp).amp_done = 1;
+            ex.exp_done = 1;
+            ex.decision(ex.counter.iamp).amp_done_reason = 'User override';
+            ex = save_session_data(ex, app);
+            return;
+        otherwise
+            fprintf('Invalid choice. Please enter r, c, or e.\n');
     end
-    
-    function change_callback()
-        action = 'change';
-        ex = save_raw_data(ex);
-        ex.decision(ex.counter.iamp).amp_done = 1;
-        ex.decision(ex.counter.iamp).amp_done_reason = 'User override';
-        ex = select_next(ex);
-        delete(d);
-    end
-    
-    function stop_callback()
-        action = 'stop';
-        ex = save_raw_data(ex);
-        fprintf('Experiment stopped by user\n');
-        ex.decision(ex.counter.iamp).amp_done = 1;
-        ex.exp_done = 1;
-        ex.decision(ex.counter.iamp).amp_done_reason = 'User override';
-        ex = save_session_data(ex);
-        delete(d);
-    end
+end
 end
