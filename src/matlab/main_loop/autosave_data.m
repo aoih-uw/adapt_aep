@@ -1,4 +1,4 @@
-function ex = autosave_data(ex)
+function ex = autosave_data(ex,app)
     if isempty(ex.last_autosave_time)
         ex.last_autosave_time = ex.info.experiment.exp_time_start;
     end

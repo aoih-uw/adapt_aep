@@ -5,13 +5,6 @@ function [kept_trials_idx, kept_trials_phases, rel_reject_threshold] = ...
 % Calculate RMS per trial
 all_trials_chan_rms = sqrt(mean(all_trials_chan.^2, 2, 'omitnan'));
 
-% Check for crazy large values
-if any(all_trials_chan_rms(:) >= reject_threshold_mV)
-    [y, Fs] = audioread('error.mp3');
-            sound(y, Fs)
-    fprintf('There are trials with suspiciously large mV values');
-end
-
 % Relative rejection threshold based on median + MAD
 all_median = median(all_trials_chan_rms, 1, 'omitnan');
 all_mad = median(abs(all_median - all_trials_chan_rms));

@@ -19,6 +19,11 @@ trial_count = ex.trial_count(1:iamp);
 
 [noise_floor_median, noise_floor_mad] = calculate_smallest_noise_floor(noise_floor,mad_criteria);
 
+% Debug for noise_floor estimate problems
+if any(isnan(noise_floor_median)) || any(isnan(noise_floor_mad))
+    keyboard
+end
+
 % Sort data by tested stimulus amplitudes
 [amplitude_sorted, sort_idx] = sort(amplitude_vec);
 response_sorted = doub_freq_diff_mean(sort_idx);
@@ -71,28 +76,49 @@ try
     good_fit = R_squared > 0.5;  % adjust threshold as needed
 
     fprintf('\n Model Fit R² = %.4f\n', R_squared);
-
-    % Save values
-    ex.model.x0_fit = [ex.model.x0_fit x0_fit];
-    ex.model.a1_fit = [ex.model.a1_fit a1_fit];
-    ex.model.m_fit = [ex.model.m_fit m_fit];
-    ex.model.y_int = [ex.model.y_int y_int];
-
-    ex.model.amplitude_vec_sorted = amplitude_sorted;
-    ex.model.response_vec_sorted = response_sorted;
-    ex.model.resp_found_sorted = resp_found_sorted;
-    ex.model.trial_count_sorted = trial_count_sorted;
-    ex.model.Rsquared = R_squared;
     
     %% Plots
     cla(app.UIAxes_model)
     hold(app.UIAxes_model, 'on');
 
     if good_fit
-        % Model
-        % Generate fitted curve
+        % Save values
+        ex.model.x0_fit = [ex.model.x0_fit x0_fit];
+        ex.model.a1_fit = [ex.model.a1_fit a1_fit];
+        ex.model.m_fit = [ex.model.m_fit m_fit];
+        ex.model.y_int = [ex.model.y_int y_int];
+
+        ex.model.Rsquared = [ex.model.Rsquared R_squared];
+
+        ex.model.amplitude_vec_sorted = amplitude_sorted;
+        ex.model.response_vec_sorted = response_sorted;
+        ex.model.resp_found_sorted = resp_found_sorted;
+        ex.model.trial_count_sorted = trial_count_sorted;
+
+        % Plot Model
         x_plot = linspace(min(amplitude_sorted), max(amplitude_sorted), 200);
         y_fit = elbow_function(x_plot, x0_fit, a1_fit, m_fit);
+        plot(app.UIAxes_model, x_plot, y_fit, 'Color', tableau_10('blue'), 'LineWidth', 2);
+    
+    else % Calculate linear regression instead
+        params_fit = polyfit(amplitude_sorted, response_sorted, 1);
+        m_fit = params_fit(1);
+        y_int = params_fit(2);
+
+        y_predicted = polyval(params_fit, amplitude_sorted);
+        SS_res = sum((response_sorted - y_predicted).^2);
+        SS_tot = sum((response_sorted - mean(response_sorted)).^2);
+        R_squared = 1 - SS_res / SS_tot;
+        
+        ex.model.x0_fit = [ex.model.x0_fit NaN];
+        ex.model.a1_fit = [ex.model.a1_fit NaN];
+        ex.model.m_fit = [ex.model.m_fit m_fit];
+        ex.model.y_int = [ex.model.y_int y_int];
+
+        ex.model.Rsquared = [ex.model.Rsquared R_squared];
+        % Plot model
+        x_plot = linspace(min(amplitude_sorted), max(amplitude_sorted), 200);
+        y_fit = polyval(params_fit, x_plot);
         plot(app.UIAxes_model, x_plot, y_fit, 'Color', tableau_10('blue'), 'LineWidth', 2);
     end
 
@@ -107,7 +133,9 @@ try
         plot(app.UIAxes_model, amplitude_sorted(i), response_sorted(i), 'o', 'MarkerSize', 6+trial_count_sorted(i)/max(trial_count_sorted), 'MarkerFaceColor', color, 'MarkerEdgeColor', color);
     end
 
-    xline(app.UIAxes_model, x0_fit, '--', 'Color', tableau_10('grey'),'LineWidth',2);
+    if good_fit
+        xline(app.UIAxes_model, x0_fit, '--', 'Color', tableau_10('grey'),'LineWidth',2);
+    end    
     yline(app.UIAxes_model, noise_floor_median, '--', 'Color', tableau_10('brown'), 'LineWidth', 1);
     yline(app.UIAxes_model,noise_floor_median, 'k--');
     xlims = xlim(app.UIAxes_model);
@@ -119,7 +147,7 @@ try
     if good_fit
         title(app.UIAxes_model, sprintf('Elbow Fit: x0=%.3f, a1=%.3f, m=%.3f', x0_fit, a1_fit, m_fit));
     else
-        title(app.UIAxes_model, sprintf('Poor Model Fit'));
+        title(app.UIAxes_model, sprintf('Linear Fit: m=%.3f, b=%.3f (R²=%.4f)', m_fit, y_int, R_squared));
     end
     grid(app.UIAxes_model,  'on');
     hold(app.UIAxes_model, 'off');

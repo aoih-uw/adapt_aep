@@ -93,6 +93,10 @@ loc_60_multiples = mod(selected_freq_vec, 60) <= doub_freq_range_hz | ...
 % Calculate the median value of all peaks except 2f and 60 Hz multiples
 noise_distribution = mean_diffs(~loc_2f & ~loc_60_multiples);
 
+if any(isnan(noise_distribution)) || length(noise_distribution) < 10
+    keyboard
+end
+
 noise_median = median(noise_distribution);
 noise_mad = mad(noise_distribution, 1);  
 peak_criteria = noise_median + noise_mad*mad_criteria*1.4826;

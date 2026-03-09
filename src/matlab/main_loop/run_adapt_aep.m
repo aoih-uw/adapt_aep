@@ -57,7 +57,7 @@ while ~ex.exp_done % While testing current stimulus frequency
         ex = separate_subtract_bootstrap(ex,app);
 
         % AUTOSAVE
-        ex = autosave_data(ex);
+        ex = autosave_data(ex,app);
 
         % CHECK IF FINISHED TESTING THIS AMPLITUDE
         if ex.decision(ex.counter.iamp).resp_found % When there was a significant response found
