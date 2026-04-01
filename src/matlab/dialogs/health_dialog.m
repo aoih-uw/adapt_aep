@@ -13,7 +13,7 @@ function ex = health_dialog(ex)
         
         choice = input('Continue testing? (y/n): ', 's');
 
-        if ~strcmpi(choice, 'n')
+        if strcmpi(choice, 'n')
             ex.exp_done = 1;
             ex.decision(ex.counter.iamp).amp_done = 1;
             ex.decision(ex.counter.iamp).amp_done_reason = 'Poor health';

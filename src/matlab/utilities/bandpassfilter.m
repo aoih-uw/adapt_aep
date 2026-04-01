@@ -5,7 +5,7 @@ function sigout = bandpassfilter(sigin,cutofflow,cutoffhigh,order,fs)
 
 if cutofflow == cutoffhigh;
     cutofflow = cutofflow-10; cutoffhigh = cutoffhigh+10;
-elseif cutofflow < cutoffhigh
+elseif cutofflow > cutoffhigh
     error('cutofflow must be less than cutoffhigh');
 end
 

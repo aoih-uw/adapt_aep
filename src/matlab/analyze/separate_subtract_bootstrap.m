@@ -138,8 +138,8 @@ if doub_freq_diff_mean > peak_mult*max_val || doub_freq_diff_mean > peak_criteri
     histogram(app.UIAxes_boot, bootstat, 'FaceColor', tableau_10('blue'));
     hold(app.UIAxes_boot, 'on');
     xline(app.UIAxes_boot, 0, '--');
-    xline(app.UIAxes_boot, lower_CI, 'Color', tableau_10('red'), LineWidth=1.5)
-    xline(app.UIAxes_boot, upper_CI, 'Color', tableau_10('red'), LineWidth=1.5)
+    xline(app.UIAxes_boot, lower_CI, 'Color', tableau_10('red'), 'LineWidth', 1.5)
+    xline(app.UIAxes_boot, upper_CI, 'Color', tableau_10('red'), 'LineWidth', 1.5)
     xlim(app.UIAxes_boot, 'auto');
     cur_xlim = xlim(app.UIAxes_boot);
     xlim(app.UIAxes_boot, [-max(abs(cur_xlim)), max(abs(cur_xlim))]);

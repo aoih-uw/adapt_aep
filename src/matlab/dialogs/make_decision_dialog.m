@@ -8,21 +8,21 @@ function ex = make_decision_dialog(ex,app)
     fprintf('  Make Decision\n');
     fprintf('  Reason: %s\n', reason);
     fprintf('========================================\n');
-    fprintf('  [y] New Amplitude\n');
-    fprintf('  [n] End Experiment\n');
+    fprintf('  [n] New Amplitude\n');
+    fprintf('  [e] End Experiment\n');
     fprintf('========================================\n');
     
     choice = '';
-    while ~strcmpi(choice, 'y') && ~strcmpi(choice, 'n')
-        choice = input('Enter choice (y/n): ', 's');
-        if ~strcmpi(choice, 'y') && ~strcmpi(choice, 'n')
+    while ~strcmpi(choice, 'n') && ~strcmpi(choice, 'e')
+        choice = input('Enter choice (n/e): ', 's');
+        if ~strcmpi(choice, 'n') && ~strcmpi(choice, 'e')
             fprintf('Invalid input. Please try again.\n');
         end
     end
     
     ex.decision(ex.counter.iamp).amp_done = 1;
     
-    if strcmpi(choice, 'y')
+    if strcmpi(choice, 'n')
         fprintf('\nSaving current amplitude data...\n');
         ex = save_raw_data(ex);
     else

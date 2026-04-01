@@ -17,7 +17,7 @@ resp_found = [ex.decision(1:iamp).resp_found];
 mad_criteria = ex.info.analysis.mad_criteria;
 trial_count = ex.trial_count(1:iamp);
 
-[noise_floor_median, noise_floor_mad] = calculate_smallest_noise_floor(noise_floor,mad_criteria);
+[noise_floor_median, noise_floor_mad] = calculate_smallest_noise_floor(noise_floor, mad_criteria);
 
 % Debug for noise_floor estimate problems
 if any(isnan(noise_floor_median)) || any(isnan(noise_floor_mad))

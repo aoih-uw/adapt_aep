@@ -15,11 +15,11 @@ end
 
 % Check to make sure that Fireface is online
 if ~strcmp(my_devices.name, 'ASIO Fireface USB') % check that this is the only device initizlised
-    if ~strfind(my_devices.name, 'Fireface')
+    if isempty(strfind(my_devices.name, 'Fireface'))
         errordlg('The Fireface is not recognized. Is it plugged in? Is it on?');
         error('The Fireface is not recognized. Check to make sure that it is plugged in and turned on');
     end
-    if ~strfind(my_devices.name, 'ASIO')
+    if isempty(strfind(my_devices.name, 'ASIO'))
         errordlg('The Fireface is recognized, but it appears an older version of PlayRec was called.');
         error('The Fireface is recognized, but it appears an older version of PlayRec was called.');
     end

@@ -115,7 +115,7 @@ while ~ex.exp_done % While testing current stimulus frequency
         if app.PauseFlag
             [y, Fs] = audioread('step.mp3');
             sound(y, Fs)
-            [action, ex] = pause_dialog(ex);
+            [action, ex] = pause_dialog(ex,app);
             app.PauseFlag = false;  % Reset pause flag
             if strcmp(action, 'stop')
                 return

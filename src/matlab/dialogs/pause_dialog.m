@@ -1,4 +1,4 @@
-function [action, ex] = pause_dialog(ex)
+function [action, ex] = pause_dialog(ex,app)
 [y, Fs] = audioread('step.mp3');
 sound(y, Fs)
 fprintf('\n========================================\n');
