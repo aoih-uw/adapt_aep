@@ -44,7 +44,7 @@ classdef model_response_test < matlab.unittest.TestCase
         % Test methods
 
         function unimplementedTest(testCase)
-            sig_int = [1 0.5 0.25 0.01 0.2 0.02 0 0 0 0 0 0 0];
+            sig_int = [1 0.5 0.6 0.8 0.2 0.02 0 0 0 0 0 0 0];
             noise_int = 0.75;
             % noise_int = linspace(0.1,1,length(sig_int));
             completed_one_round = 0;
