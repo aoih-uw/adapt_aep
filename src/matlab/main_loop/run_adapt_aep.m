@@ -66,6 +66,8 @@ while ~ex.exp_done % While testing current stimulus frequency
             ex = model_response(ex,app);
             % Tell user that a response was found
             ex.decision(ex.counter.iamp).amp_done_reason = 'Response detected';
+            fprintf('\nSaving current amplitude data...\n');
+            ex = save_raw_data(ex);
             ex = make_decision_dialog(ex,app);
 
             % Finish experiment
@@ -82,7 +84,9 @@ while ~ex.exp_done % While testing current stimulus frequency
 
 
         % CHECK IF MAX TRIALS PRESENTED
-        if ex.trial_count(ex.counter.iamp) >= ex.info.adaptive.max_trials && ex.decision(ex.counter.iamp).amp_done == 0
+        if ex.trial_count(ex.counter.iamp) >= ex.info.adaptive.max_trials ...
+                && ex.decision(ex.counter.iamp).amp_done == 0 ...
+                && ex.decision(ex.counter.iamp).resp_found == 0
             [y, Fs] = audioread('no_resp.mp3');
             sound(y, Fs)
 
@@ -97,6 +101,8 @@ while ~ex.exp_done % While testing current stimulus frequency
             ex = model_response(ex,app);
 
             % Select next amplitude to test
+            fprintf('\nSaving current amplitude data...\n');
+            ex = save_raw_data(ex);
             ex = make_decision_dialog(ex,app);
 
             % Finish experiment

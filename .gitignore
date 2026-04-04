@@ -1,3 +1,7 @@
+# Windows Zone Identifier files
+*:Zone.Identifier
+Thumbs.db
+
 # MATLAB Specific
 *.asv
 *.mat

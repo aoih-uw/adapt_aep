@@ -23,12 +23,9 @@ function ex = make_decision_dialog(ex,app)
     ex.decision(ex.counter.iamp).amp_done = 1;
     
     if strcmpi(choice, 'n')
-        fprintf('\nSaving current amplitude data...\n');
-        ex = save_raw_data(ex);
     else
         ex.exp_done = 1;
-        fprintf('\nSaving session and current amplitude data...\n');
-        ex = save_raw_data(ex);
+        fprintf('\nSaving session data...\n');
         ex = save_session_data(ex, app);
     end
 end

@@ -2,7 +2,6 @@ function ex = present_and_measure(ex,app)
 % OUTPUT = ex.raw.electrodes_microV(N_trials x N_samples x N_channels)
 
 % Load in variables
-fs = ex.info.recording.sampling_rate_hz;
 iamp = ex.counter.iamp;
 iblock = ex.counter.iblock;
 stimulus_block = ex.block(iblock).stimulus_block;
@@ -59,6 +58,8 @@ ex.raw(iblock).loopback  = squeeze(rec_data_mV(:,:,loopback_idx));
 ex.raw(iblock).electrodes_microV  = rec_data_mV(:,:,electrode_idx).*1e3; % N_trials, N_samples, N_channels
 ex.raw(iblock).time_stamp = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
 ex.trial_count(iamp) = N_trials_presented;
+
+
 
 %% Update GUI
 app.Label_number_trials_presented.Text = string(N_trials_presented);

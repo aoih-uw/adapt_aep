@@ -61,6 +61,8 @@ kept_trials_channels = all_channel_label(kept_trials_idx); % Kept_trials_channel
 reject_rate = ((N_trials*N_channels)-size(kept_trials,1))/(N_trials*N_channels);
 
 if reject_rate > 0.5
+    [y, Fs] = audioread('error.mp3');
+    sound(y, Fs)
     warndlg(sprintf('More than half of the health check trials have been rejected.'), 'Warning', 'Icon', 'warning');
 end
 
@@ -88,6 +90,15 @@ upper_end = double_freq_hz + doub_freq_range_hz;
 mean_response = mean(kept_trials_filtered,1);
 [~, freq_vec, fft_vec] = calc_fft(mean_response,fs);
 doub_freq_mag = mean(fft_vec(:,freq_vec>= lower_end & freq_vec <= upper_end));
+
+while any(isempty(doub_freq_mag)) || any(isnan(doub_freq_mag))
+    warning('Did not find eligble frequencies for 2f magnitude calculation. Going to increase range by 1 Hz')
+    doub_freq_range_hz = doub_freq_range_hz + 1;
+    ex.info.analysis.doub_freq_range_hz  = doub_freq_range_hz;
+    lower_end = double_freq_hz - doub_freq_range_hz;
+    upper_end = double_freq_hz + doub_freq_range_hz;
+    doub_freq_mag = mean(fft_vec(:,freq_vec>= lower_end & freq_vec <= upper_end));
+end
 
 % Check to see if we have already measured a baseline_response for this
 % animal
@@ -152,3 +163,10 @@ else
     ex.health(ihealth).status = 'poor';
     ex = health_dialog(ex);
 end
+
+% Check for NaNs
+cellfun(@(v,t) check_for_nans(v,t), ...
+    {ex.health(ihealth).doub_stim_mag, ex.health(ihealth).rel_strength, ...
+    ex.info.health.baseline_response}, ...
+    {'variable','variable','variable'}, ...
+    'UniformOutput',false);

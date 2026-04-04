@@ -20,7 +20,7 @@ while true
             ex = save_raw_data(ex);
             ex.decision(ex.counter.iamp).amp_done = 1;
             ex.decision(ex.counter.iamp).amp_done_reason = 'User override';
-            ex = select_next(ex);
+            ex = select_next_dialog(ex);
             return;
         case 'e'
             action = 'stop';

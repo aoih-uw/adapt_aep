@@ -1,5 +1,6 @@
 function [ex, selected_cycle_samples, stimulus, phase_vec] = ...
         make_stim_block(ex, waveform, current_amplitude, trials_per_block)
+
 % Load variables
 fs = ex.info.recording.sampling_rate_hz;
 latency_samples = ex.info.recording.latency_samples;
@@ -7,7 +8,7 @@ correction_factor = ex.info.calibration.correction_factor_linear;
 
 % Generate random phase offsets within one 60 Hz cycle
 period_60_hz = 1/60; % time it takes to complete 1 cycle of 60 Hz (s)
-selected_cycle_samples = ceil(rand(trials_per_block, 1) * period_60_hz * fs); % ceil makes this a full sample?
+selected_cycle_samples = ceil(rand(trials_per_block, 1) * period_60_hz * fs);
 
 % Create alternating phase vector
 if mod(trials_per_block,2) == 0
@@ -26,7 +27,7 @@ latency = zeros(1,latency_samples);
 max_jitter = max(selected_cycle_samples);
 max_length = max_jitter + length(pre_stim) + length(dur_stim) + length(post_stim) + length(latency);
  
-% Create block of trials %# THINK ABOUT FREQUENCY RESOLUTION....
+% Create block of trials
 stimulus = zeros(trials_per_block, max_length);
 for itrial = 1:trials_per_block
     phase = phase_vec(itrial);
@@ -34,12 +35,6 @@ for itrial = 1:trials_per_block
     temp_stimulus = [jitter pre_stim dur_stim post_stim latency]*phase;
 
     % Apply amplitude scaling
-    % Double check that we have a correction_factor and that it is not too
-    % large
-    if any(isnan(correction_factor)) || any(isempty(correction_factor)) || ...
-            correction_factor == 0
-        keyboard
-    end
     temp_stimulus_scaled = apply_stim_amp_scaling(current_amplitude, correction_factor, temp_stimulus);
     stimulus(itrial, 1:length(temp_stimulus_scaled)) = temp_stimulus_scaled;    
 end
