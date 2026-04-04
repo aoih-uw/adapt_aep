@@ -19,13 +19,15 @@ ex.model.noise_floor = [];
 ex.model.noise_floor_temp = [];
 
 ex.model.amplitude_vec = [];
-ex.model.response_vec = [];
-ex.model.resp_found = [];
-ex.model.trial_count = [];
+
+ex.model.amplitude_vec_sorted = [];
+ex.model.response_vec_sorted = [];
+ex.model.resp_found_sorted = [];
+ex.model.trial_count_sorted = [];
 
 ex.model.x0_fit = [];
 ex.model.a1_fit = [];
 ex.model.m_fit = [];
 ex.model.y_int = [];
-
+ex.model.Rsquared = [];
 

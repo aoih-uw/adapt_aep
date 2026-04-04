@@ -1,33 +1,38 @@
-function ex = save_session_data(ex)
+function ex = save_session_data(ex, app, is_autosave)
+if nargin < 3, is_autosave = false; end
 iamp = ex.counter.iamp;
 
-% Save time information
-t = datetime('now', 'TimeZone', 'UTC', 'Format', 'yyyy-MM-dd HH:mm:ss');
-ex.info.experiment.exp_time_end = datestr(t, 'HH:MM:SS');
+% Generate timestamp
+ex.info.experiment.exp_time_end = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
+ex.info.experiment.exp_duration = char(ex.info.experiment.exp_time_end - ex.info.experiment.exp_time_start);
+timestamp_str = char(ex.info.experiment.exp_time_end);
 
-exp_time_start = duration(ex.info.experiment.exp_time_start, 'InputFormat', 'hh:mm:ss');
-exp_time_end = duration(ex.info.experiment.exp_time_end, 'InputFormat', 'hh:mm:ss');
-ex.info.experiment.exp_duration = char(exp_time_end - exp_time_start);
+% Find folder
+folder = get_subject_folder(ex);
 
-% Pop-up asking for final notes about experiment (moved before saving)
-answer = inputdlg('Enter notes about the experiment:', 'Experiment Notes', [10 80]);
-if ~isempty(answer)
-    ex.info.experiment.notes = answer{1};
-else
-    ex.info.experiment.notes = '';
+if ~is_autosave % This is the final save for this session
+    % Pop-up asking for final notes about experiment (moved before saving)
+    [y, Fs] = audioread('step.mp3');
+    sound(y, Fs)
+    answer = inputdlg('Enter notes about the experiment:', 'Experiment Notes', [10 80]);
+    if ~isempty(answer)
+        ex.info.experiment.notes = answer{1};
+    else
+        ex.info.experiment.notes = '';
+    end
 end
 
-% Create filename
-timestamp_str = datestr(now, 'yyyymmdd_HHMMSS');
-filename = sprintf('%s_session_data_%s.mat', ex.info.animal.filename_root, timestamp_str);
+if is_autosave
+    filename = sprintf('%s_session_data_AUTOSAVE_%s.mat', ex.info.animal.filename_root, timestamp_str);
+else
+    filename = sprintf('%s_session_data_%s.mat', ex.info.animal.filename_root, timestamp_str);
+end
 
 % Create a copy of ex to modify for saving
 ex_save = struct();
 
 % Keep specified top-level fields
-ex_save.trial_count = ex.trial_count(iamp);
-ex_save.model = ex.model;
-ex_save.decision = ex.decision(iamp);
+ex_save.total_trial_count = sum(ex.trial_count(1:iamp));
 
 % Keep ex.info but exclude ex.info.stimulus
 ex_save.info = ex.info;
@@ -35,41 +40,30 @@ if isfield(ex_save.info, 'stimulus')
     ex_save.info = rmfield(ex_save.info, 'stimulus');
 end
 
+% Remove fields from ex_save.model
 ex_save.model = ex.model;
-fields_to_remove = {'doub_freq_diff_vec_temp', 'doub_freq_dur_vec_temp', 'noise_floor_temp'};
+fields_to_remove = {'doub_freq_diff_vec_temp', 'doub_freq_dur_vec_temp', 'noise_floor_temp', 'doub_freq_resp_vec_mV', 'noise_floor'};
 for i = 1:length(fields_to_remove)
     if isfield(ex_save.model, fields_to_remove{i})
         ex_save.model = rmfield(ex_save.model, fields_to_remove{i});
     end
 end
 
-
 % Keep ex.preprocess with the specific fields you're updating
 ex_save.preprocess = ex.preprocess;
-
-% Remove the fields that shouldn't be included from preprocess(1)
-if length(ex_save.preprocess) >= 1
-    if isfield(ex_save.preprocess(1), 'kept_phases')
-        ex_save.preprocess(1) = rmfield(ex_save.preprocess(1), 'kept_phases');
+fields_to_remove_preprocess = {'kept_phases', 'kept_jitter', 'kept_channels'};
+for i = 1:length(fields_to_remove_preprocess)
+    if isfield(ex_save.preprocess, fields_to_remove_preprocess{i})
+        ex_save.preprocess = rmfield(ex_save.preprocess, fields_to_remove_preprocess{i});
     end
-    if isfield(ex_save.preprocess(1), 'kept_jitter')
-        ex_save.preprocess(1) = rmfield(ex_save.preprocess(1), 'kept_jitter');
-    end
-    if isfield(ex_save.preprocess(1), 'kept_channels')
-        ex_save.preprocess(1) = rmfield(ex_save.preprocess(1), 'kept_channels');
-    end
-end
-
-% Remove fields from ex_save.model
-if isfield(ex_save.model, 'doub_freq_resp_vec_mV')
-    ex_save.model = rmfield(ex_save.model, 'doub_freq_resp_vec_mV');
-end
-if isfield(ex_save.model, 'noise_floor')
-    ex_save.model = rmfield(ex_save.model, 'noise_floor');
 end
 
 % Save the filtered ex structure
-save(filename, 'ex_save');
-fprintf('Session data saved to: %s\n', filename);
+save(fullfile(folder, filename), 'ex_save');
 
+% Delete autosaves and save figures
+if ~is_autosave
+    save_session_figures(ex,folder,app)
+    delete_autosaves(folder, ex.info.animal.filename_root);
+end
 end

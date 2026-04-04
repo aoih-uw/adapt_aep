@@ -31,14 +31,14 @@ end
 
 %% Get all available data
 % Account for different sizes
-max_samples = max(arrayfun(@(x) size(x.electrodes, 2), ex.raw));
+max_samples = max(arrayfun(@(x) size(x.electrodes_microV, 2), ex.raw));
 all_trials = NaN(trials_per_block*iblock, max_samples, N_channels);
 all_phases = zeros(trials_per_block*iblock,N_channels);
 all_jitter = zeros(trials_per_block*iblock,N_channels);
 row_idx = 1;
 
 for ii = 1:iblock
-    cur_block = ex.raw(ii).electrodes;
+    cur_block = ex.raw(ii).electrodes_microV;
     cur_phase = ex.block(ii).phase_vec;
     cur_jitter = ex.block(ii).jitter;
     n_samples = size(cur_block, 2);
@@ -67,7 +67,7 @@ kept_trials = all_trials_chan(kept_trials_idx,:);
 kept_trials_channels = all_channel_label(kept_trials_idx); % Kept_trials_channels the labels for the channels
 kept_jitter = all_jitter_chan(kept_trials_idx);
 reject_rate = ((N_trials_presented*N_channels)-size(kept_trials,1))/(N_trials_presented*N_channels);
-fprintf('\nArtifact rejection rate: %.3f\n', reject_rate)
+fprintf('\nArtifact rejection rate: %.1f%%\n', reject_rate * 100);
 
 if reject_rate > 0.5
     uialert(app.UIFigure, 'More than half of the trials have been rejected.', 'Warning', 'Icon', 'warning');

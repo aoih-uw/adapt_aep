@@ -1,4 +1,5 @@
 function ex = make_health_check_signal(ex)
+ex.counter.health = 0;
 fs = ex.info.recording.sampling_rate_hz;
 stim_freq = ex.info.health.stim_frequency_hz;
 full_amp_dur_ms = ex.info.stimulus.full_amplitude_duration_ms;

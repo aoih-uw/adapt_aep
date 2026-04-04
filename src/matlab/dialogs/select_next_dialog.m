@@ -1,48 +1,42 @@
 function ex = select_next_dialog(ex)
-% Select which stimulus amplitude to test next or end experiment
-% Create dialog
-d = dialog('Position', [400 400 400 250], 'Name', 'Set Amplitude', 'Color', 'w');
+% SELECT_NEXT_DIALOG  Prompt user to select the next stimulus amplitude.
+%
+% SYNTAX
+%   ex = select_next_dialog(ex)
+%
+% DESCRIPTION
+%   Presents a command-line prompt and validates numeric scalar input.
+%   Loops until a valid dB SPL value is entered, then stores it in ex.
+%
+% INPUTS
+%   ex  - struct  Experiment struct
+%
+% OUTPUTS
+%   ex  - struct  Experiment struct with updated amplitude field
+%
+% MODIFIED FIELDS
+%   ex.info.stimulus.amplitude_spl  - Stimulus amplitude in dB SPL
+%
+% CALLED BY
+%   run_adapt_aep, pause_dialog
+%
+% SEE ALSO
+%   make_decision_dialog, pause_dialog
 
-% Title text
-uicontrol('Parent', d, 'Style', 'text', 'Position', [20 190 360 40], ...
-    'String', 'Enter new stimulus amplitude (dB SPL):', ...
-    'FontSize', 12, 'FontWeight', 'bold', ...
-    'BackgroundColor', 'w', 'ForegroundColor', 'k');
+[y, Fs] = audioread('step.mp3');
+sound(y, Fs)
 
-% Input box
-txt = uicontrol('Parent', d, 'Style', 'edit', 'Position', [100 140 200 40], ...
-    'FontSize', 14, 'BackgroundColor', 'w', 'ForegroundColor', 'k');
+fprintf('\n========================================\n');
+fprintf('  Set Stimulus Amplitude\n');
+fprintf('========================================\n');
 
-% Submit button
-uicontrol('Parent', d, 'Position', [100 80 200 40], ...
-    'String', 'Submit', 'FontSize', 12, ...
-    'BackgroundColor', [0.94 0.94 0.94], 'ForegroundColor', 'k', ...
-    'Callback', @(~,~) submit_callback());
-
-% End Experiment button
-uicontrol('Parent', d, 'Position', [100 30 200 40], ...
-    'String', 'End Experiment', 'FontSize', 12, ...
-    'BackgroundColor', [0.94 0.94 0.94], 'ForegroundColor', 'k', ...
-    'Callback', @(~,~) end_callback());
-
-% Wait for dialog
-uiwait(d);
-
-    function submit_callback()
-        val = str2double(get(txt, 'String'));
-        if ~isnan(val) && isscalar(val)
-            ex.info.stimulus.amplitude_spl = val;
-            delete(d);
-        else
-            errordlg('Please enter a valid number', 'Invalid Input');
-        end
+while true
+    val = input('Enter amplitude (dB SPL): ');
+    if ~isempty(val) && isnumeric(val) && isscalar(val) && ~isnan(val)
+        ex.info.stimulus.amplitude_spl = val;
+        break;
+    else
+        fprintf('Invalid input. Please enter a valid number.\n');
     end
-
-    function end_callback()
-        ex.exp_done = 1;
-        ex.decision(ex.counter.iamp).amp_done = 1;
-        ex = save_raw_data(ex);
-        ex = save_session_data(ex);
-        delete(d);
-    end
+end
 end

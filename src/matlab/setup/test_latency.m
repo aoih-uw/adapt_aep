@@ -11,7 +11,7 @@ test_signal = [zeros(1, fs) 1 1 1 -1 -1 -1 zeros(1, fs)]';
 
 test_page = playrec('playrec',test_signal, 4, -1, 4);
 playrec('block',test_page) % blocks all other functionality until recording is done
-test_rec = double(playrec('getRec'),test_page); % Retrieve recorded data and convert into double precision
+test_rec = double(playrec('getRec',test_page)); % Retrieve recorded data and convert into double precision
 playrec('delPage',test_page); % delete data to free memory
 
 my_threshold_sample = find(abs(test_rec(:,1)) > 0.05, 1, 'first'); % find the first sample in channel 1 where absolute value exceeds 0.05 V

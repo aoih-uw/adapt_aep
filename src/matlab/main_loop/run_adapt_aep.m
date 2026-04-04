@@ -1,123 +1,154 @@
 function ex = run_adapt_aep(app)
-addpath(genpath("\\wsl$\ubuntu\home\aoih\adapt_aep\src\matlab"))
 
 %% function main_loop %%
 
-%   .-*'`    `*-.._.-'/
-% < * ))     ,       (
-%   `*-._`._(__.--*"`.\
+fprintf('   .-*''`    `*-.._.-''/\n')
+fprintf(' < * ))     ,       (\n')
+fprintf('   `*-._`._(__.--*"`.\\\n')
 
-ex.counter.iamp = 0; % Amplitude counter
-ex.info.exp_time_start = date_time('now');
+ex = app.ex;
+ex.info.experiment.exp_time_start = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
+ex = select_next_dialog(ex);
 
-try
-    while ~ex.exp_done % While testing current stimulus frequency
-        ex.counter.iamp = ex.counter.iamp + 1;
-        ex.decision(ex.counter.iamp).resp_found = 0;
-        ex.decision(ex.counter.iamp).amp_done = 0;
-        ex.counter.iblock = 0;
+% try
+while ~ex.exp_done % While testing current stimulus frequency
+    ex.counter.iamp = ex.counter.iamp + 1;
+    ex.decision(ex.counter.iamp).resp_found = 0;
+    ex.decision(ex.counter.iamp).amp_done = 0;
+    ex.counter.iblock = 0;
 
-        % UPDATE GUI
-        app.Label_current_amp.Text = string(ex.info.stimulus.amplitude_spl);
+    % UPDATE GUI
+    app.Label_current_amp.Text = string(ex.info.stimulus.amplitude_spl);
 
-        while ~ex.decision(ex.counter.iamp).amp_done % While testing current stimulus amplitude
+    while ~ex.decision(ex.counter.iamp).amp_done % While testing current stimulus amplitude
 
-            % CREATE BLOCK OF TRIALS
-            fprintf('Creating trial block...')
-            ex = stim_block_creation(ex);
+        % CREATE BLOCK OF TRIALS
+        fprintf('\nCreating trial block...\n')
+        ex = stim_block_creation(ex);
 
-            % READ THERMOMETER
-            fprintf('\nChecking temperature...')
-            ex = check_temperature(ex);
+        % READ THERMOMETER
+        fprintf('\nChecking temperature...\n')
+        % ex = check_temperature(ex);
 
-            % HEALTH CHECK
-            time_diff = datetime('now') - ex.health(end).time_stamp;
-            if time_diff >= minutes(15)
-                fprintf('\nChecking animal health...')
-                ex = check_health(app,ex);
-                if ex.exp_done == 1 % Did user decide to stop testing due to bad health?
-                    ex = save_raw_data(ex);
-                    ex = save_session_data(ex);
-                    return
-                end
+        % HEALTH CHECK
+        time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.health(ex.counter.health).time_stamp;
+        if time_diff >= minutes(15)
+            fprintf('\nChecking animal health...\n')
+            ex = check_health(ex,app);
+            if ex.exp_done == 1 % Did user decide to stop testing due to bad health?
+                ex = save_raw_data(ex);
+                ex = save_session_data(ex, app);
+                return
+            end
+        end
+
+        % DATA COLLECTION
+        fprintf('\nPresenting stimulus...\n')
+        ex = present_and_measure(ex,app); % Present stimuli and measure signals
+
+        fprintf('\nResponses measured...\n')
+
+        % DATA PRE-PROCESSING
+        fprintf('\nPre-processing responses...\n')
+        ex = preprocess_signal(ex,app);
+
+        % DATA ANALYSIS
+        fprintf('\nAnalyzing responses...\n')
+        ex = separate_subtract_bootstrap(ex,app);
+
+        % AUTOSAVE
+        ex = autosave_data(ex,app);
+
+        % CHECK IF FINISHED TESTING THIS AMPLITUDE
+        if ex.decision(ex.counter.iamp).resp_found % When there was a significant response found
+            [y, Fs] = audioread('resp_found.mp3');
+            sound(y, Fs)
+            ex = model_response(ex,app);
+            % Tell user that a response was found
+            ex.decision(ex.counter.iamp).amp_done_reason = 'Response detected';
+            fprintf('\nSaving current amplitude data...\n');
+            ex = save_raw_data(ex);
+            ex = make_decision_dialog(ex,app);
+
+            % Finish experiment
+            if ex.exp_done
+                return
             end
 
-            % DATA COLLECTION
-            fprintf('\nPresenting stimulus...')
-            ex = present_and_measure(ex,app); % Present stimuli and measure signals
-            fprintf('\nResponses measured...')
-
-            % DATA PRE-PROCESSING
-            fprintf('\nPre-processing responses...')
-            ex = preprocess_signal(ex,app);
-
-            % DATA ANALYSIS
-                fprintf('\nAnalyzing responses...')
-                ex = separate_subtract_bootstrap(ex,app);
-
-            % CHECK IF FINISHED TESTING THIS AMPLITUDE
-            if ex.decision(ex.counter.iamp).resp_found % When there was a significant response found
-                if iamp > 3  % Model the response once we have 3 data points
-                    ex = model_response(ex,app);
-                end
-                % Tell user that a response was found
-                ex = resp_found_dialog(ex);
-                if ex.decision(ex.counter.iamp).amp_done
-                    ex = save_raw_data(ex);
-                    ex = select_next_dialog(ex); % decide next amplitude to test for or end experiment
-                elseif ex.exp_done == 1
-                    ex = save_raw_data(ex);
-                    ex = save_session_data(ex);
-                    return
-                end
-            end
-
-            % CHECK IF MAX TRIALS PRESENTED
-            if trials_presented >= ex.info.adaptive.max_trials && ex.decision(ex.counter.iamp).amp_done == 0
-                ex.decision(ex.counter.iamp).amp_done = 1;
-                ex.decision(ex.counter.iamp).amp_done_reason = 'Maximum trials reached';
-
-                % Add collected temporary data officially to the model
-                ex.model.doub_freq_resp_mV = [ex.model.doub_freq_resp_mV {ex.model.doub_freq_resp_mV_temp}];
-                ex.model.noise_floor = [ex.model.noise_floor {ex.model.noise_floor_temp}];
-                ex.model.amplitude_vec = [ex.model.amplitude_vec ex.info.stimulus.amplitude_spl];
-                ex = model_response(ex,app);
-
-                % Select next amplitude to test
+            % Test next amplitude
+            if ex.decision(ex.counter.iamp).amp_done
                 ex = select_next_dialog(ex);
+            end
+           
+        end
 
-                if ex.exp_done == 1 % If user decided to end experiment
-                    ex = save_raw_data(ex);
-                    ex = save_session_data(ex);
-                    return
-                end
+
+        % CHECK IF MAX TRIALS PRESENTED
+        if ex.trial_count(ex.counter.iamp) >= ex.info.adaptive.max_trials ...
+                && ex.decision(ex.counter.iamp).amp_done == 0 ...
+                && ex.decision(ex.counter.iamp).resp_found == 0
+            [y, Fs] = audioread('no_resp.mp3');
+            sound(y, Fs)
+
+            ex.decision(ex.counter.iamp).amp_done = 1;
+            ex.decision(ex.counter.iamp).amp_done_reason = 'Maximum trials reached';
+
+            % Add collected temporary data officially to the model
+            ex.model.doub_freq_diff_vec = [ex.model.doub_freq_diff_vec {ex.model.doub_freq_diff_vec_temp}]; % (trials x stimulus amplitude)
+            ex.model.doub_freq_dur_vec = [ex.model.doub_freq_dur_vec {ex.model.doub_freq_dur_vec_temp}]; % (trials x stimulus amplitude)
+            ex.model.noise_floor = [ex.model.noise_floor {ex.model.noise_floor_temp}]; % (trials x stimulus amplitude)
+            ex.model.amplitude_vec = [ex.model.amplitude_vec ex.info.stimulus.amplitude_spl]; % (1 x N_tested_amplitudes)
+            ex = model_response(ex,app);
+
+            % Select next amplitude to test
+            fprintf('\nSaving current amplitude data...\n');
+            ex = save_raw_data(ex);
+            ex = make_decision_dialog(ex,app);
+
+            % Finish experiment
+            if ex.exp_done
+                return
             end
 
-            % CHECK FOR PAUSE
-            if app.PauseFlag
-                [action, ex] = pause_dialog(ex);
-                app.PauseFlag = false;  % Reset pause flag
-                if strcmp(action, 'stop')
-                    return
-                elseif strcmp(action, 'change')
-                    continue
-                end
-                % If 'continue', proceed normally
+            % Test next amplitude
+            if ex.decision(ex.counter.iamp).amp_done
+                ex = select_next_dialog(ex);
             end
-
-            % UPDATE GUI
-            time_since_exp_start = date_time('now') - ex.info.exp_time_start;
-            app.Label_time_elapsed.Text = string(time_since_exp_start, 'hh:mm:ss');
             
-            grand_total_N_trials = sum(arrayfun(@(x) x, ex.trial_count(1:iamp)));
-            app.Label_grand_total.Text = string(grand_total_N_trials);
+        end
+
+        % CHECK FOR PAUSE
+        if app.PauseFlag
+            [y, Fs] = audioread('step.mp3');
+            sound(y, Fs)
+            [action, ex] = pause_dialog(ex,app);
+            app.PauseFlag = false;  % Reset pause flag
+            if strcmp(action, 'stop')
+                return
+            elseif strcmp(action, 'change')
+                continue
+            end
+            % If 'continue', proceed normally
+        end
+
+        % See if we wanted to end the experiment yet
+        if ex.exp_done
+            fprintf('\nSaving session and current amplitude data...\n');
+            ex = save_raw_data(ex);
+            ex = save_session_data(ex, app);
+            return
         end
     end
-
-catch ME
-    fprintf('Experiment error: %s\n', ME.message)
-    ex = save_raw_data(ex);
-    ex = save_session_data(ex);
-    rethrow(ME)
 end
+end
+
+
+% catch ME
+% [y, Fs] = audioread('error.mp3');
+% sound(y, Fs)
+%     fprintf('\nExperiment error: %s\n', ME.message)
+%     ex = save_raw_data(ex);
+%     ex = save_session_data(ex, app);
+%     rethrow(ME)
+% end
 

@@ -8,7 +8,6 @@ function ex = run_calibrate_stimulus(app, ex)
 % The equivalent reading on the FireFace should be 0.316 * 0.2044 = 0.0646
 
 %% Define variables
-addpath(genpath("\\wsl$\ubuntu\home\aoih\adapt_aep\src\matlab"))
 fs = ex.info.recording.sampling_rate_hz;
 waveform = ex.info.stimulus.waveform;
 
@@ -21,46 +20,27 @@ input_channels = ex.info.recording.DAC_input_channels;
 input_channel_names = ex.info.recording.DAC_input_channel_names;
 loopback_idx = find(strcmp(input_channel_names, 'Loopback'));
 hydrophone_idx = find(strcmp(input_channel_names, 'Hydrophone'));
-electrode_idx = find(strcmp(input_channel_names, 'Ch'));
+electrode_idx = find(strncmp(input_channel_names, 'Ch',2));
 output_channels = ex.info.recording.DAC_output_channels;
 hydrophone_voltage_scaling_factor_V = ex.info.recording.hydrophone_voltage_scaling_factor_V;
-hydrophone_gain_V_per_Pa = ex.info.recording.hydrophone_gain_V_per_Pa;
+electrode_voltage_scaling_factor_V = ex.info.recording.electrode_voltage_scaling_factor_V;
+hydrophone_gain_mV_per_Pa = ex.info.recording.hydrophone_gain_mV_per_Pa;
 
-ex.calibration.initial_calibration_complete = 0;
-ex.calibration.check_passed = 0;
+ex.info.calibration.initial_calibration_complete = 0;
+ex.info.calibration.check_passed = 0;
 
-%% Initialize hardware
-try
-    fprintf('Initializing hardware')
-    % D/A converter
-    ex = init_dac(ex);
-    ex = test_latency(ex);
-    % Audio hardware
-    ex = init_audio(ex);
-    % Check that other hardware is on and uses the right settings
-    check_hardware_on   
-catch ME
-    % Display what went wrong
-    fprintf(2, 'ERROR during hardware initialization: %s\n', ME.message);
-    fprintf(2, 'Error occurred in: %s (line %d)\n', ME.stack(1).name, ME.stack(1).line);
-    % Re-throw the error so the calling function knows it failed
-    rethrow(ME);
-end
-
-fprintf('Starting calibration...')
+fprintf('\nStarting calibration...\n')
 
 %% Create stimuli
 % Create calibration stimulus (Send to speaker)
 pre_pause = zeros(1,fs*0.1); % 100 ms pause vector
 post_pause = zeros(1,fs*0.5); % 500 ms pause vector
 calibration_stim = [pre_pause waveform post_pause];
-calibration_stim = repmat(calibration_stim,10,1);
 
 % Create trigger stimulus (Send to loopback, allows measurment of system latency)
 waveform_with_trig = waveform; % Force first sample to 1 as trigger
 waveform_with_trig(1) = 1;
 trigger_stim = [pre_pause waveform_with_trig post_pause];
-trigger_stim = repmat(trigger_stim,10,1);
 
 %% Scale stimuli amplitude
 % Begin with an output voltage of 0.01, equivalent to ~40 dB of headroom
@@ -71,19 +51,20 @@ calibration_stim = base_level.*calibration_stim; % start 40 dB down from fs, but
 % Measure calibration stimuli
 [hydrophone_rms_dB, rec_data_mV, mean_hydrophone_sig] = ...
 measure_calibration_stimuli( ...
-    calibration_stim, trigger_stim, waveform, ...
+    calibration_stim, trigger_stim, waveform,...
     input_channels, output_channels, ...
     electrode_idx, hydrophone_idx, loopback_idx, ...
-    hydrophone_voltage_scaling_factor_V, stimulus_freq, ramp_duration_ms, ...
-    hydrophone_gain_V_per_Pa, fs);
+    hydrophone_voltage_scaling_factor_V, electrode_voltage_scaling_factor_V, ...
+    stimulus_freq, ramp_duration_ms, ...
+    hydrophone_gain_mV_per_Pa, fs);
 
 %% Save values
-ex.calibration.initial_calibration_complete = 1;
-ex.calibration.uncorrected_levels = hydrophone_rms_dB;
+ex.info.calibration.initial_calibration_complete = 1;
+ex.info.calibration.uncorrected_levels = hydrophone_rms_dB;
 correction_factor_dB = target_level-hydrophone_rms_dB;
-ex.calibration.correction_factor_dB = correction_factor_dB;
-ex.calibration.correction_factor_linear = 10.^(correction_factor_dB/20);
-ex.calibration.signals = rec_data_mV;
+ex.info.calibration.correction_factor_dB = correction_factor_dB;
+ex.info.calibration.correction_factor_linear = 10.^(correction_factor_dB/20);
+ex.info.calibration.signals = rec_data_mV;
 
 %% Update GUI PLots
 % Update labels
@@ -98,13 +79,15 @@ plot(app.ax_hydrophone, time_vector, mean_hydrophone_sig)
 % Frequency domain
 [~, freq_vec, fft_vals] = calc_fft(mean_hydrophone_sig,fs);
 plot(app.ax_hydrophone_spectra, freq_vec,fft_vals)
+xlim(app.ax_hydrophone_spectra, [0, 1000])
 
+drawnow;
 
 %% Check if stimulus amplitude is within range with correction factor
-fprintf('Correction factor = %.3f dB. Now checking correction factor effectiveness.', correction_factor_dB)
+fprintf('\nCorrection factor = %.3f dB. Now checking correction factor effectiveness.\n', correction_factor_dB)
 
 % Apply new correction factor
-target_calibration_stim = ex.calibration.correction_factor_linear*calibration_stim;
+target_calibration_stim = ex.info.calibration.correction_factor_linear*calibration_stim;
 
 % Measure calibration stimuli
 [hydrophone_rms_dB, rec_data_mV, mean_hydrophone_sig] = ...
@@ -112,11 +95,12 @@ measure_calibration_stimuli( ...
     target_calibration_stim, trigger_stim, waveform, ...
     input_channels, output_channels, ...
     electrode_idx, hydrophone_idx, loopback_idx, ...
-    hydrophone_voltage_scaling_factor_V, stimulus_freq, ramp_duration_ms, ...
-    hydrophone_gain_V_per_Pa, fs);
+    hydrophone_voltage_scaling_factor_V, electrode_voltage_scaling_factor_V, ...
+    stimulus_freq, ramp_duration_ms, ...
+    hydrophone_gain_mV_per_Pa, fs);
 
 %% Save values
-ex.calibration.corrected_level = hydrophone_rms_dB;
+ex.info.calibration.corrected_level = hydrophone_rms_dB;
 
 %% Update GUI
 % Update labels
@@ -131,26 +115,28 @@ plot(app.ax_hydrophone, time_vector, mean_hydrophone_sig)
 [~, freq_vec, fft_vals] = calc_fft(mean_hydrophone_sig,fs);
 plot(app.ax_hydrophone_spectra, freq_vec,fft_vals)
 
+drawnow;
+
 %% Decide if calibration factor is sufficient
-if ex.calibration.corrected_level >= target_level-correction_tolerance_dB && ...
-        ex.calibration.corrected_level <= target_level+correction_tolerance_dB % If correction factor worked
+if ex.info.calibration.corrected_level >= target_level-correction_tolerance_dB && ...
+        ex.info.calibration.corrected_level <= target_level+correction_tolerance_dB % If correction factor worked
     
-    ex.calibration.check_passed = 1;
-    fprintf('Target level = %.1f +/- %.1f \nCorrected level = %.1f. Effective calibration factor identified. Calibration complete.\n', ...
+    ex.info.calibration.check_passed = 1;
+    fprintf('\nTarget level = %.1f +/- %.1f \nCorrected level = %.3f \nEffective calibration factor identified. Calibration complete.\n', ...
         target_level, correction_tolerance_dB, hydrophone_rms_dB)
     
     % Save calibration file
-    ex.calibration.signals = rec_data_mV;    
-    filename_root = app.ex.info.animal.filename_root;
+    ex.info.calibration.signals = rec_data_mV;    
+    filename_root = ex.info.animal.filename_root;
+    [~, filename_root] = fileparts(filename_root); % extract just the base name
     time_stamp = datestr(now, 'yyyymmdd_HHMMSS');
-    filename = strcat(filename_root, '_calibration_',time_stamp); %# have it save to data/calibration folder
-    ex.info.calibration.file_name = filename;
+    filename = fullfile('..', '..', 'data', 'calibration', strcat(filename_root, '_calibration_', time_stamp));
 
-    calibration = ex.calibration;
+    calibration = ex.info.calibration;
     save(filename, 'calibration')
 
 else
-    fprintf(['Target level = %.1f +/- %.1f \nCorrected level = %.1f. Correction factor ineffective.' ...
+    fprintf(['\nTarget level = %.1f +/- %.1f \nCorrected level = %.1f\n Correction factor ineffective.' ...
         'Investigate tank acoustic environment further before reattempting calibration\n'], ...
         target_level, correction_tolerance_dB, hydrophone_rms_dB)
 end

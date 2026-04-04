@@ -1,5 +1,6 @@
 function [ex, selected_cycle_samples, stimulus, phase_vec] = ...
         make_stim_block(ex, waveform, current_amplitude, trials_per_block)
+
 % Load variables
 fs = ex.info.recording.sampling_rate_hz;
 latency_samples = ex.info.recording.latency_samples;
@@ -26,7 +27,7 @@ latency = zeros(1,latency_samples);
 max_jitter = max(selected_cycle_samples);
 max_length = max_jitter + length(pre_stim) + length(dur_stim) + length(post_stim) + length(latency);
  
-% Create block of trials %# THINK ABOUT FREQUENCY RESOLUTION....
+% Create block of trials
 stimulus = zeros(trials_per_block, max_length);
 for itrial = 1:trials_per_block
     phase = phase_vec(itrial);
