@@ -1,5 +1,5 @@
 function ex = setup_analysis(ex)
-
+%% Setup analysis level fields to ex, kept and model 
 % Kept trials
 ex.kept.trials = [];
 ex.kept.phases = [];
@@ -8,26 +8,21 @@ ex.kept.channels = [];
 ex.kept.trials_weighted = [];
 ex.kept.trials_filtered = [];
 
-% Model
-ex.model.doub_freq_diff_vec= [];
-ex.model.doub_freq_dur_vec= [];
+% FFT structure
+ex.fft.diffs = [];
+ex.fft.stim_ON = [];
+ex.fft.stim_OFF = [];
+ex.fft.freq_vec = [];
+ex.fft.stim_ON_2f_vec = [];
+ex.fft.stim_OFF_2f_vec = [];
+ex.fft.diff_2f_vec = [];
 
-ex.model.doub_freq_diff_temp = [];
-ex.model.doub_freq_dur_temp = []; 
+% Bootstrap Test
+for iboot = 1:100
+ex.boot(iboot).gate_type = [];
+ex.boot(iboot).bootstat = [];
+ex.boot(iboot).lower_CI = [];
+ex.boot(iboot).upper_CI = [];
+end
 
-ex.model.noise_floor = []; 
-ex.model.noise_floor_temp = [];
-
-ex.model.amplitude_vec = [];
-
-ex.model.amplitude_vec_sorted = [];
-ex.model.response_vec_sorted = [];
-ex.model.resp_found_sorted = [];
-ex.model.trial_count_sorted = [];
-
-ex.model.x0_fit = [];
-ex.model.a1_fit = [];
-ex.model.m_fit = [];
-ex.model.y_int = [];
-ex.model.Rsquared = [];
 

@@ -1,4 +1,4 @@
-function [ex, kept_trials_filtered] = filter_signals(ex,fs,pass_band_hz,kept_trials_weighted)
+function [ex, kept_trials_filtered] = highpass_filter_signals(ex,fs,pass_band_hz,kept_trials_weighted)
 % High pass filter to get rid of low frequency drift
 % Higher frequencies don't matter for double frequency response based
 % response determination methods

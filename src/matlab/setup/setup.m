@@ -10,4 +10,4 @@ ex = test_latency(ex);
 ex = init_audio(ex);
 
 % Check that other hardware is on and uses the right settings
-check_hardware_on
+% check_hardware_on

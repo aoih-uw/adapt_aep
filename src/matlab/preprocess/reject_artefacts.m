@@ -77,9 +77,8 @@ end
 app.Label_rejection_rate.Text = sprintf('%.1f%%', reject_rate * 100);
 
 %% Save to ex structure
-ex.preprocess(iamp).rel_reject_threshold{end+1} = rel_reject_threshold; % (1 x # iterations of preprocessing) saved in structure for every iamp
-ex.preprocess(iamp).N_trials_presented{end+1} =  N_trials_presented ; % (1 x # iterations of preprocessing) saved in structure for every iamp
-ex.preprocess(iamp).reject_rate{end+1} = reject_rate;  % (1 x # iterations of preprocessing) saved in structure for every iamp
+ex.preprocess(iblock).rel_reject_threshold = rel_reject_threshold; % (1 x # iterations of preprocessing) saved in structure for every iamp
+ex.preprocess(iblock).reject_rate = reject_rate;  % (1 x # iterations of preprocessing) saved in structure for every iamp
 ex.kept.trials = kept_trials; % Don't need to save every iteration's data, so just save to first 
 ex.kept.phases = kept_trials_phases;
 ex.kept.jitter = kept_jitter;

@@ -21,7 +21,8 @@ function ex = make_decision_dialog(ex,app)
     end
     
     ex.decision(ex.counter.iamp).amp_done = 1;
-    
+    ex.decision(ex.counter.iamp).current_amplitude = ex.info.stimulus.amplitude_spl;
+
     if strcmpi(choice, 'n')
     else
         ex.exp_done = 1;

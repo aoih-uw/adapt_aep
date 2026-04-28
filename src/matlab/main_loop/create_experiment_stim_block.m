@@ -1,4 +1,4 @@
-function ex = stim_block_creation(ex)
+function ex = create_experiment_stim_block(ex)
 iblock = ex.counter.iblock + 1; % for the upcoming block
 ex.counter.iblock = iblock;
 

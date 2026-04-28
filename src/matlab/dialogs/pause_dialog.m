@@ -19,6 +19,7 @@ while true
             action = 'change';
             ex = save_raw_data(ex);
             ex.decision(ex.counter.iamp).amp_done = 1;
+            ex.decision(ex.counter.iamp).current_amplitude = ex.info.stimulus.amplitude_spl;
             ex.decision(ex.counter.iamp).amp_done_reason = 'User override';
             ex = select_next_dialog(ex);
             return;
@@ -27,6 +28,7 @@ while true
             ex = save_raw_data(ex);
             fprintf('\nExperiment stopped by user\n');
             ex.decision(ex.counter.iamp).amp_done = 1;
+            ex.decision(ex.counter.iamp).current_amplitude = ex.info.stimulus.amplitude_spl;
             ex.exp_done = 1;
             ex.decision(ex.counter.iamp).amp_done_reason = 'User override';
             ex = save_session_data(ex, app);

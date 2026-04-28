@@ -9,7 +9,7 @@ fs = ex.info.recording.sampling_rate_hz;
 
 [ex, N_channels, N_trials, N_samples, output_channels, input_channels, ...
     hydrophone_idx, ~, electrode_idx, electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V] ...
-    = init_present_and_measure_vars(ex, stimulus_block);
+    = init_present_sound_variables(ex, stimulus_block);
 
 % Rip it
 if ex.test
@@ -73,7 +73,7 @@ fprintf('\nHealth Check artifact rejection rate: %.1f%%\n', reject_rate * 100);
 
 %% Filter signals
 pass_band_hz = ex.info.signal_quality.pass_band_hz;
-[ex, kept_trials_filtered] = filter_signals(ex,fs,pass_band_hz,kept_trials_weighted);
+[ex, kept_trials_filtered] = highpass_filter_signals(ex,fs,pass_band_hz,kept_trials_weighted);
 
 %% Calculate magnitude at 2f
 if ex.test == 1
@@ -83,22 +83,12 @@ else
 end
 doub_freq_range_hz = ex.info.analysis.doub_freq_range_hz;
 
-% Select double freq response values
-lower_end = double_freq_hz - doub_freq_range_hz;
-upper_end = double_freq_hz + doub_freq_range_hz;
 
 mean_response = mean(kept_trials_filtered,1);
 [~, freq_vec, fft_vec] = calc_fft(mean_response,fs);
-doub_freq_mag = mean(fft_vec(:,freq_vec>= lower_end & freq_vec <= upper_end));
 
-while any(isempty(doub_freq_mag)) || any(isnan(doub_freq_mag))
-    warning('Did not find eligble frequencies for 2f magnitude calculation. Going to increase range by 1 Hz')
-    doub_freq_range_hz = doub_freq_range_hz + 1;
-    ex.info.analysis.doub_freq_range_hz  = doub_freq_range_hz;
-    lower_end = double_freq_hz - doub_freq_range_hz;
-    upper_end = double_freq_hz + doub_freq_range_hz;
-    doub_freq_mag = mean(fft_vec(:,freq_vec>= lower_end & freq_vec <= upper_end));
-end
+[~, doub_freq_mag] = ...
+    find_fft_bins(double_freq_hz, doub_freq_range_hz, fft_vec, freq_vec);
 
 % Check to see if we have already measured a baseline_response for this
 % animal
@@ -138,6 +128,7 @@ else
         end
     end
     end
+end
     baseline_2f_mag = ex.info.health.baseline_response;
     ex.health(ihealth).doub_stim_mag = doub_freq_mag;
     rel_strength = doub_freq_mag/baseline_2f_mag;
@@ -152,7 +143,7 @@ else
     hold(ax,'on')
     yline(ax,1, '--','Color',tableau_10('grey'));
     ylim(ax,[-0.2,1.2])
-end
+
 
 % Decide
 if rel_strength > 0.8

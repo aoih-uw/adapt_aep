@@ -1,5 +1,4 @@
 function ex = run_adapt_aep(app)
-
 %% function main_loop %%
 
 fprintf('   .-*''`    `*-.._.-''/\n')
@@ -16,6 +15,7 @@ while ~ex.exp_done % While testing current stimulus frequency
     ex.decision(ex.counter.iamp).resp_found = 0;
     ex.decision(ex.counter.iamp).amp_done = 0;
     ex.counter.iblock = 0;
+    ex.counter.iboot = 0;
 
     % UPDATE GUI
     app.Label_current_amp.Text = string(ex.info.stimulus.amplitude_spl);
@@ -24,7 +24,7 @@ while ~ex.exp_done % While testing current stimulus frequency
 
         % CREATE BLOCK OF TRIALS
         fprintf('\nCreating trial block...\n')
-        ex = stim_block_creation(ex);
+        ex = create_experiment_stim_block(ex);
 
         % READ THERMOMETER
         fprintf('\nChecking temperature...\n')
@@ -44,7 +44,7 @@ while ~ex.exp_done % While testing current stimulus frequency
 
         % DATA COLLECTION
         fprintf('\nPresenting stimulus...\n')
-        ex = present_and_measure(ex,app); % Present stimuli and measure signals
+        ex = setup_experiment_present_sound(ex,app); % Present stimuli and measure signals
 
         fprintf('\nResponses measured...\n')
 
@@ -82,7 +82,6 @@ while ~ex.exp_done % While testing current stimulus frequency
            
         end
 
-
         % CHECK IF MAX TRIALS PRESENTED
         if ex.trial_count(ex.counter.iamp) >= ex.info.adaptive.max_trials ...
                 && ex.decision(ex.counter.iamp).amp_done == 0 ...
@@ -91,13 +90,8 @@ while ~ex.exp_done % While testing current stimulus frequency
             sound(y, Fs)
 
             ex.decision(ex.counter.iamp).amp_done = 1;
+            ex.decision(ex.counter.iamp).current_amplitude = ex.info.stimulus.amplitude_spl;
             ex.decision(ex.counter.iamp).amp_done_reason = 'Maximum trials reached';
-
-            % Add collected temporary data officially to the model
-            ex.model.doub_freq_diff_vec = [ex.model.doub_freq_diff_vec {ex.model.doub_freq_diff_vec_temp}]; % (trials x stimulus amplitude)
-            ex.model.doub_freq_dur_vec = [ex.model.doub_freq_dur_vec {ex.model.doub_freq_dur_vec_temp}]; % (trials x stimulus amplitude)
-            ex.model.noise_floor = [ex.model.noise_floor {ex.model.noise_floor_temp}]; % (trials x stimulus amplitude)
-            ex.model.amplitude_vec = [ex.model.amplitude_vec ex.info.stimulus.amplitude_spl]; % (1 x N_tested_amplitudes)
             ex = model_response(ex,app);
 
             % Select next amplitude to test
@@ -114,7 +108,6 @@ while ~ex.exp_done % While testing current stimulus frequency
             if ex.decision(ex.counter.iamp).amp_done
                 ex = select_next_dialog(ex);
             end
-            
         end
 
         % CHECK FOR PAUSE

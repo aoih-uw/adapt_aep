@@ -32,7 +32,7 @@ classdef present_and_measure_test < matlab.unittest.TestCase
             signal_scaling = 1;
             noise_scaling = 0.25;
             n_channels = size(ex.info.recording.DAC_input_channel_names,2);
-            ex = make_tone_burst_template(ex);
+            ex = make_experiment_tone_burst(ex);
             ex = stim_block_creation(ex);
             [ex, mock_data] = create_mock_data(ex,signal_scaling,noise_scaling);
             ex.mock_data = mock_data;
@@ -49,7 +49,7 @@ classdef present_and_measure_test < matlab.unittest.TestCase
             fs = ex.info.recording.sampling_rate_hz;
             ex.info.stimulus.frequency_hz = 100;
             ex.info.stimulus.amplitude_spl = 170;
-            ex = make_tone_burst_template(ex);
+            ex = make_experiment_tone_burst(ex);
             ex = stim_block_creation(ex);
             signal_scaling = 0:0.1:1;
             noise_scaling = 0.1:0.1:1;
@@ -91,7 +91,7 @@ classdef present_and_measure_test < matlab.unittest.TestCase
             ex = create_mock_ex();
             signal_scaling = 1;
             noise_scaling = 0.25;
-            ex = make_tone_burst_template(ex);
+            ex = make_experiment_tone_burst(ex);
             ex = stim_block_creation(ex);
             [ex, mock_data] = create_mock_data(ex,signal_scaling,noise_scaling);
             ex.mock_data = mock_data;

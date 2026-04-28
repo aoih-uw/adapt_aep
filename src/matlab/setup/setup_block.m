@@ -1,4 +1,6 @@
 function ex = setup_block(ex)
+%% Setup block-level layers to ex
+
 %% Per block metadata
 max_block = ex.info.adaptive.max_trials / ex.info.adaptive.trials_per_block;
 
@@ -17,8 +19,6 @@ ex.raw(iblock).time_stamp = NaN;
 
 % Preprocessing
 ex.preprocess(iblock).rel_reject_threshold = [];
-ex.preprocess(iblock).total_trials_presented =  0;
-ex.preprocess(iblock).N_trials_presented = [];
 ex.preprocess(iblock).reject_rate =  [];
 
 end

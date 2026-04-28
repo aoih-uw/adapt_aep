@@ -5,6 +5,12 @@ Thumbs.db
 # MATLAB Specific
 *.asv
 *.mat
+*.fig
+
+# Images
+.png
+.jpg
+.jpeg
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

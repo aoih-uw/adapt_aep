@@ -1,15 +1,16 @@
-function tone_burst = generate_tone_burst(fs, stim_freq, full_amp_dur_ms, ramp_dur_ms)
+function tone_burst = generate_tone_burst(fs, stim_freq, full_amp_stim_ON_ms, ramp_stim_ON_ms)
+%% Here the actual tone burst is created
 ms_to_s = 1000; % conversion factor
 
 % Samples
-full_amp_dur_s = full_amp_dur_ms/ms_to_s;
-full_amp_samp = round(full_amp_dur_s*fs);
-ramp_dur_s = ramp_dur_ms/ms_to_s;
-ramp_samp = round(ramp_dur_s*fs);
+full_amp_stim_ON_s = full_amp_stim_ON_ms/ms_to_s;
+full_amp_samp = round(full_amp_stim_ON_s*fs);
+ramp_stim_ON_s = ramp_stim_ON_ms/ms_to_s;
+ramp_samp = round(ramp_stim_ON_s*fs);
 
 % Check if sample numbers are reasonable
 if full_amp_samp < 1 || ramp_samp < 1
-    error('make_tone_burst_template:InvalidDuration', ...
+    error('make_experiment_tone_burst:InvalidDuration', ...
         'Tone burst sample number less than 1, check stimulus duration values')
 end
 

@@ -29,7 +29,7 @@ classdef reject_artefacts_test < matlab.unittest.TestCase
             testCase.fs = testCase.ex.info.recording.sampling_rate_hz;
             testCase.ex.info.stimulus.frequency_hz = 100;
             testCase.ex.info.stimulus.amplitude_spl = 170;
-            testCase.ex = make_tone_burst_template(testCase.ex);
+            testCase.ex = make_experiment_tone_burst(testCase.ex);
         end
 
         function launchApp(testCase)

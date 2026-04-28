@@ -32,31 +32,18 @@ end
 ex_save = struct();
 
 % Keep specified top-level fields
+ex.save.stimulus_frequency = ex.info.stimulus.frequency_hz;
 ex_save.total_trial_count = sum(ex.trial_count(1:iamp));
 
 % Keep ex.info but exclude ex.info.stimulus
 ex_save.info = ex.info;
-if isfield(ex_save.info, 'stimulus')
-    ex_save.info = rmfield(ex_save.info, 'stimulus');
-end
+ex_save.info = rmfield(ex_save.info.stimulus, 'amplitude_spl');
 
-% Remove fields from ex_save.model
+% Save decision
+ex_save.decision
+
+% Save model info from ex_save.model
 ex_save.model = ex.model;
-fields_to_remove = {'doub_freq_diff_vec_temp', 'doub_freq_dur_vec_temp', 'noise_floor_temp', 'doub_freq_resp_vec_mV', 'noise_floor'};
-for i = 1:length(fields_to_remove)
-    if isfield(ex_save.model, fields_to_remove{i})
-        ex_save.model = rmfield(ex_save.model, fields_to_remove{i});
-    end
-end
-
-% Keep ex.preprocess with the specific fields you're updating
-ex_save.preprocess = ex.preprocess;
-fields_to_remove_preprocess = {'kept_phases', 'kept_jitter', 'kept_channels'};
-for i = 1:length(fields_to_remove_preprocess)
-    if isfield(ex_save.preprocess, fields_to_remove_preprocess{i})
-        ex_save.preprocess = rmfield(ex_save.preprocess, fields_to_remove_preprocess{i});
-    end
-end
 
 % Save the filtered ex structure
 save(fullfile(folder, filename), 'ex_save');

@@ -3,8 +3,9 @@ function rec_data_mV = present_sound(stimulus, ...
     electrode_idx, hydrophone_idx, ...
     electrode_voltage_scaling_factor_V, ...
     hydrophone_voltage_scaling_factor_V)
+%% Here we actually present and measure sounds
 
-% Pre-allocate for efficiency
+%% Pre-allocate for efficiency
 rec_data_mV = zeros(size(stimulus,2), ...
     length(input_channels), size(stimulus,1)); % # of samples x # of channels x # of trials
 
@@ -18,9 +19,9 @@ for itrial = 1:height(stimulus)
     if itrial == height(stimulus), fprintf('\n  Finished\n'); end
 
     % Get current trial
-    if size(stimulus,3) > 1
+    if size(stimulus,3) > 1 % We have signals to present on more than one channel
         current_waveform = squeeze(stimulus(itrial,:,:));
-    else
+    else % Only one channel we have signals to present
         current_waveform = stimulus(itrial,:)';
         current_waveform = [current_waveform current_waveform]; % Give a signal to loopback too!
     end
@@ -58,7 +59,7 @@ for itrial = 1:height(stimulus)
     % Convert digital values to millivolts - ALL channels
     rec_data_mV(:,:,itrial) = rec_data;
 
-    % Apply specific scaling factors
+    % Apply specific scaling factors and convert to mV
     rec_data_mV(:,electrode_idx,itrial) = 1e3.*(rec_data(:,electrode_idx).*electrode_voltage_scaling_factor_V);
     rec_data_mV(:,hydrophone_idx,itrial) = 1e3.*(rec_data(:,hydrophone_idx).*hydrophone_voltage_scaling_factor_V);
     

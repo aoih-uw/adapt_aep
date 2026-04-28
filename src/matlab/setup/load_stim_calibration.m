@@ -1,7 +1,7 @@
 function ex = load_stim_calibration(ex)
 
 % Initialize calibration_data if not already loaded
-if isempty(ex.calibration)
+if isnan(ex.info.calibration.correction_factor_linear)
     try
         % Build the calibration directory path
         filename_root = ex.info.animal.filename_root;

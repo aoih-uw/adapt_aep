@@ -16,6 +16,7 @@ function ex = health_dialog(ex)
         if strcmpi(choice, 'n')
             ex.exp_done = 1;
             ex.decision(ex.counter.iamp).amp_done = 1;
+            ex.decision(ex.counter.iamp).current_amplitude = ex.info.stimulus.amplitude_spl;
             ex.decision(ex.counter.iamp).amp_done_reason = 'Poor health';
         end
     end

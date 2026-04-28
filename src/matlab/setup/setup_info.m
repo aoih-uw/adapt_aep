@@ -54,7 +54,7 @@ ex.info.stimulus = struct( ...
     'polarity',                             'alternating', ...
     'waveform',                             NaN, ...
     'ramp_type',                            'cosine', ...
-    'full_amplitude_duration_ms',           75, ... %# check if these are good parameters for the duration (ms) Nieder et al. 2023, check the spectra of this to make sure it is not too broadband
+    'full_amplitude_duration_ms',           10, ... %# check if these are good parameters for the duration (ms) Nieder et al. 2023, check the spectra of this to make sure it is not too broadband
     'ramp_duration_ms',                     50, ... 
     'speaker_model',                        'UW-30 Lubell Labs Inc., Columbus, OH, USA Serial #', ...
     'max_amplitude_limit',                  140, ...
@@ -77,7 +77,7 @@ ex.info.channels = struct( ...
     ex.info.recording.ADC_bit_depth = NaN;
     ex.info.recording.latency_samples = NaN;
     ex.info.recording.DAC_model_serial = 'USB D/A Converter, Fireface UCX, RME, Frankfurt, Germany';
-    ex.info.recording.DAC_conversion_factor = 1/0.2044; % Multiply by this factor to recover true voltage value 
+    ex.info.recording.DAC_conversion_factor = 1/0.2044; % Multiply by this factor to recover true Volt value
     ex.info.recording.DAC_output_channels = [1 4];
     ex.info.recording.DAC_output_channel_names = {'UW30', 'Loopback'};
     ex.info.recording.DAC_input_channels = [3:8];
@@ -96,7 +96,7 @@ ex.info.adaptive = struct( ...
     'response_feature',                   'double_frequency_response', ... % Make this an if statement so it will generate which frequency to look for in the response
     'target_response_frequency',           ex.info.stimulus.frequency_hz*2, ... % Auto populate
     'trials_per_block',                    10, ... % Must be an even number of equal number of stimulus +/- polarities in block
-    'min_trials_needed_for_analysis',      10, ... 
+    'min_trials_for_analysis',             30, ... 
     'max_trials',                          300 ... % Set in GUI
     );
 
@@ -111,7 +111,7 @@ ex.info.signal_quality = struct( ...
 
 % Signal analysis parameters
 ex.info.analysis = struct( ... % These values will be updated by prepare_next_amplitude when new amplitude is selected
-    'n_bootstrap',         1000, ... % See if I need to reduce this...
+    'n_bootstrap',         2500, ... % See if I need to reduce this...
     'doub_freq_range_hz',      2, ... % +/- 3 Hz above and below the double frequency response point
     'mad_criteria',            3, ... % Once rms has been reduced 50% check to see if 2f diff peak is 4*mad + median above noise floor
     'peak_mult',           5 ... % immediately confirm response if 2f diff peak is 5x the height of the largest peaks
@@ -130,9 +130,25 @@ ex.info.calibration = struct( ... % These values will be updated by prepare_next
     );
 
 % Health
+ex.info.health.waveform = NaN;
+ex.info.health.make_health_sig = 0;
 ex.info.health.stim_frequency_hz = 100;
 ex.info.health.stim_amp_spl = 120;
 ex.info.health.stimulus_block = NaN;
 ex.info.health.phase_vec = NaN;
 ex.info.health.baseline_response = NaN;
 ex.info.health.filename_root = NaN;
+
+% Health Calibration related
+
+ex.info.health.calibration.check_passed = NaN;
+ex.info.health.calibration.initial_calibration_complete = NaN;
+ex.info.health.calibration.uncorrected_levels = NaN;
+ex.info.health.calibration.correction_factor_dB = NaN;
+ex.info.health.calibration.correction_factor_linear = NaN;
+ex.info.health.calibration.signals = NaN;
+ex.info.health.calibration.corrected_level = NaN;
+ex.info.health.calibration.time_vector = NaN;
+ex.info.health.calibration.time_sig = NaN;
+ex.info.health.calibration.freq_vec = NaN;
+ex.info.health.calibration.fft_vals = NaN;

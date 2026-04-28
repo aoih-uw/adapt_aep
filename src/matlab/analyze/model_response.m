@@ -1,7 +1,6 @@
 function ex = model_response(ex,app)
 iamp = ex.counter.iamp;
-doub_freq_diff_mean  = cellfun(@mean,ex.model.doub_freq_diff_vec); % (trials x tested_amps)
-doub_freq_diff_std = cellfun(@std,ex.model.doub_freq_diff_vec);
+doub_freq_stim_ON_mean  = cellfun(@mean,ex.model.doub_freq_stim_ON_vec); % (trials x tested_amps)
 if ex.test == 1
     amplitude_vec = ex.snr_vec;
     fixed_upper_level = 20*log10(1/0.1);
@@ -17,52 +16,57 @@ resp_found = [ex.decision(1:iamp).resp_found];
 mad_criteria = ex.info.analysis.mad_criteria;
 trial_count = ex.trial_count(1:iamp);
 
-[noise_floor_median, noise_floor_mad] = calculate_smallest_noise_floor(noise_floor, mad_criteria);
+all_noise_floor = horzcat(noise_floor{:}); % Get all noise floor measures across tested ampltudes
+noise_floor_median = median(all_noise_floor);
+noise_floor_mad = median(abs(noise_floor_median-all_noise_floor))*1.4826;
 
-% Debug for noise_floor estimate problems
-if any(isnan(noise_floor_median)) || any(isnan(noise_floor_mad))
-    keyboard
-end
+% Check for nans
+check_for_nans(noise_floor_median,'variable')
+check_for_nans(noise_floor_mad,'variable')
 
 % Sort data by tested stimulus amplitudes
 [amplitude_sorted, sort_idx] = sort(amplitude_vec);
-response_sorted = doub_freq_diff_mean(sort_idx);
+response_sorted = doub_freq_stim_ON_mean(sort_idx);
 resp_found_sorted = resp_found(sort_idx);
 trial_count_sorted = trial_count(sort_idx);
 
+% Save values to ex
+ex.model.amplitude_vec_sorted = amplitude_sorted;
+ex.model.response_vec_sorted = response_sorted;
+ex.model.resp_found_sorted = resp_found_sorted;
+ex.model.trial_count_sorted = trial_count_sorted;
+
 %% Fit model
 try
-    
     % Better initial guesses
     % Use a more robust slope estimate (e.g., from the upper half of data)
     mid_idx = round(length(response_sorted)/2);
     upper_responses = response_sorted(mid_idx:end);
     upper_amps = amplitude_sorted(mid_idx:end);
     init_m = max(0.001, (mean(upper_responses) - mean(response_sorted(1:mid_idx))) / ...
-        (mean(upper_amps) - mean(response_sorted(1:mid_idx))));
+        (mean(upper_amps) - mean(amplitude_sorted(1:mid_idx))));
 
     % Set a1 initial guess above zero
-    init_a1 = noise_floor_median;
+    a1_fit = noise_floor_median;
 
-    init_guess = [median(amplitude_sorted), init_a1, init_m]; % x0, a1, m
+    init_guess = [median(amplitude_sorted), init_m]; % x0, m ; a1 is fixed
 
-    % Raise the lower bounds slightly so the optimizer can't collapse
-    lb = [min(amplitude_sorted) - 20, -inf, 1e-6]; % force m > 0
+    % Set bounds for the optimizer
+    lb = [min(amplitude_sorted) - 20, 1e-6]; % force m > 0, and allow x0 to go slightly below the minimum observed amplitue
 
-    ub = [max(amplitude_sorted), inf, inf];     % x0, a1, m upper bounds
+    ub = [max(amplitude_sorted), inf];     % x0, a1, m upper bounds
     options = optimoptions('lsqcurvefit', 'MaxIterations', 1000, ...
-        'FunctionTolerance', 1e-9, 'StepTolerance', 1e-9);
+        'FunctionTolerance', 1e-9, 'StepTolerance', 1e-9); % Tolerance = stopping criteria for optimizer, stop when change in the cost functions is smaller than 1e-9
 
     fprintf('\nStarting model fitting\n')
     tic()
 
-    obj_fun = @(params, x) elbow_function(x, params(1), params(2), params(3));
+    obj_fun = @(params, x) elbow_function(x, params(1), a1_fit, params(2));
     params_fit = lsqcurvefit(obj_fun, init_guess, amplitude_sorted, response_sorted, lb, ub, options);
 
     x0_fit = params_fit(1);
-    a1_fit = params_fit(2);
-    m_fit = params_fit(3);
-    y_int = a1_fit - (m_fit*x0_fit);
+    m_fit = params_fit(2);
+    y_int = a1_fit - (m_fit*x0_fit); % Rearrangement of y = mx+b
 
     time_elapsed = toc();
     fprintf('\nFitted parameters: x0 = %.3f, a1 = %.3f, m = %.3f\n', x0_fit, a1_fit, m_fit)
@@ -70,9 +74,9 @@ try
 
     % After params_fit is obtained:
     y_predicted = elbow_function(amplitude_sorted, x0_fit, a1_fit, m_fit);
-    SS_res = sum((response_sorted - y_predicted).^2);
-    SS_tot = sum((response_sorted - mean(response_sorted)).^2);
-    R_squared = 1 - SS_res / SS_tot;
+    SS_res = sum((response_sorted - y_predicted).^2); % Sum of squared residuals, calculate the actual value and the model's predicted value to see how much the model is wrong
+    SS_tot = sum((response_sorted - mean(response_sorted)).^2); % Total sum of squares, a measure of the total variance in the data
+    R_squared = 1 - SS_res / SS_tot; 
     good_fit = R_squared > 0.5;  % adjust threshold as needed
 
     fprintf('\n Model Fit R² = %.4f\n', R_squared);
@@ -101,11 +105,11 @@ try
         plot(app.UIAxes_model, x_plot, y_fit, 'Color', tableau_10('blue'), 'LineWidth', 2);
     
     else % Calculate linear regression instead
-        params_fit = polyfit(amplitude_sorted, response_sorted, 1);
+        params_fit = polyfit(amplitude_sorted, response_sorted, 1); % Fit a one degree (i.e., line) polynomial to the data
         m_fit = params_fit(1);
         y_int = params_fit(2);
 
-        y_predicted = polyval(params_fit, amplitude_sorted);
+        y_predicted = polyval(params_fit, amplitude_sorted); % polyval outputs Y values according to the input x values and the parameters
         SS_res = sum((response_sorted - y_predicted).^2);
         SS_tot = sum((response_sorted - mean(response_sorted)).^2);
         R_squared = 1 - SS_res / SS_tot;
@@ -136,8 +140,7 @@ try
     if good_fit
         xline(app.UIAxes_model, x0_fit, '--', 'Color', tableau_10('grey'),'LineWidth',2);
     end    
-    yline(app.UIAxes_model, noise_floor_median, '--', 'Color', tableau_10('brown'), 'LineWidth', 1);
-    yline(app.UIAxes_model,noise_floor_median, 'k--');
+    yline(app.UIAxes_model,noise_floor_median, 'k-','LineWidth',2);
     xlims = xlim(app.UIAxes_model);
     x_fill = [xlims(1), xlims(2), xlims(2), xlims(1)];
     y_fill = [noise_floor_median - mad_criteria*1.4826*noise_floor_mad, noise_floor_median - mad_criteria*1.4826*noise_floor_mad, ...
@@ -167,6 +170,8 @@ try
     ylabel(app.UIAxes_slope_est, 'm');
     title(app.UIAxes_slope_est, 'Slope Estimate');
     grid(app.UIAxes_slope_est, 'on');
+
+    drawnow
 
     %% Suggest next best amplitude to test
     fprintf('\nStarting Monte Carlo simulation')

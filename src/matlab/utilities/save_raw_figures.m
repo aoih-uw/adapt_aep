@@ -5,9 +5,9 @@ if ex.test == 1
 else
     double_freq_hz  = ex.info.stimulus.frequency_hz*2;
 end
-diffs_fft = ex.plot.diffs_fft;
-durs_fft = ex.plot.durs_fft;
-freq_vec = ex.plot.freq_vec;
+diffs_fft = ex.fft.diffs;
+stim_ON_fft = ex.fft.stim_ON;
+freq_vec = ex.fft.freq_vec;
 num_trials = size(diffs_fft,1);
 
 figures_folder = fullfile(folder, 'figures');
@@ -35,8 +35,8 @@ close(f1);
 
 % Mean STIM ON FFT
 f2 = figure('Visible', 'off');
-mean_fft = mean(durs_fft,1);
-std_fft = std(durs_fft,0,1);
+mean_fft = mean(stim_ON_fft,1);
+std_fft = std(stim_ON_fft,0,1);
 
 fill([freq_vec fliplr(freq_vec)], [mean_fft+std_fft fliplr(mean_fft-std_fft)], tableau_10('blue'), 'FaceAlpha', 0.3, 'EdgeColor', 'none');
 hold on;
@@ -56,6 +56,7 @@ close(f2);
 % Noise floor distribution
 f3 = figure('Visible', 'off');
 noise_floor = ex.model.noise_floor{iamp};
+noise_floor = mean(noise_floor,1);
 histogram(noise_floor, 'FaceColor', tableau_10('blue'));
 xlim([min(noise_floor), max(noise_floor)]);
 title('Noise Floor Distribution');

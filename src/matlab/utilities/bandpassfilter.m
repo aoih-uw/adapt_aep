@@ -3,15 +3,20 @@ function sigout = bandpassfilter(sigin,cutofflow,cutoffhigh,order,fs)
 %
 % This is a simple bandpass filter. Inputs are self-explanatory.
 
-if cutofflow == cutoffhigh;
-    cutofflow = cutofflow-10; cutoffhigh = cutoffhigh+10;
-elseif cutofflow > cutoffhigh
+if cutofflow > cutoffhigh
     error('cutofflow must be less than cutoffhigh');
 end
 
-% set up filter; We are going to assume that the samprate is 44100...
+% set up filter; 
 d = designfilt('bandpassfir', 'FilterOrder', order, ...
              'CutoffFrequency1', cutofflow, 'CutoffFrequency2', cutoffhigh,...
              'SampleRate', fs); 
          
-sigout = filtfilt(d,sigin);
+sigout = filtfilt(d,sigin); 
+
+%% About filtfilt
+% Filters the signal twice, once forward, once backward and combines the
+% results. The result has these characteristics:
+% Zero phase distortion
+% A filter transfer function equal to the squared magnitude of the original filter transfer function
+% A filter order that is double the order of the filter specified by b and a

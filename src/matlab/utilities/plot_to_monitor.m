@@ -52,6 +52,11 @@ for ch = 1:N_channels
     hold(electrode_axes{ch}, 'off');
 end
 
+% Set y lim
+data_mean_all = mean(electrode_data(:, plot_idx, :), 1);
+pad = range(data_mean_all(:)) * 0.2;
+ylim(electrode_axes{1}, [min(data_mean_all(:)) - pad, max(data_mean_all(:)) + pad]);
+
 linkaxes([electrode_axes{:}], 'xy');
 
 drawnow
