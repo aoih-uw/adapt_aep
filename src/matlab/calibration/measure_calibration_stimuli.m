@@ -34,7 +34,6 @@ start_idx = latency_samples + ramp_samples + 1;
 end_idx = start_idx + length(waveform) - ramp_samples*2 - 1; % ramp_samples*2 already included in length(waveform)
 full_amp_hydrophone_sig = filtered_mean_hydrophone_sig(start_idx:end_idx);
 
-hydrophone_rms_pa = rms(full_amp_hydrophone_sig/hydrophone_gain_mV_per_Pa);
-hydrophone_rms_dB = 20*log10(hydrophone_rms_pa/1e-6); % re: 1 microPa
+[~ , hydrophone_rms_dB] = convert_mV_to_dB_spl(full_amp_hydrophone_sig,hydrophone_gain_mV_per_Pa);
 
 end

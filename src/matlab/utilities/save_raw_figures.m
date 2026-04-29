@@ -56,7 +56,6 @@ close(f2);
 % Noise floor distribution
 f3 = figure('Visible', 'off');
 noise_floor = ex.model.noise_floor{iamp};
-noise_floor = mean(noise_floor,1);
 histogram(noise_floor, 'FaceColor', tableau_10('blue'));
 xlim([min(noise_floor), max(noise_floor)]);
 title('Noise Floor Distribution');

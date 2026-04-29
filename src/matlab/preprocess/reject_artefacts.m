@@ -9,7 +9,7 @@ function ex = reject_artefacts(ex,app)
 % Define variables
 iblock = ex.counter.iblock;
 iamp = ex.counter.iamp;
-reject_threshold_mV = ex.info.signal_quality.rejection_threshold_mV;
+rejection_threshold_microV = ex.info.signal_quality.rejection_threshold_microV;
 reject_threshold_sd = ex.info.signal_quality.rejection_threshold_sd;
 N_channels = ex.info.channels.n_channels;
 trials_per_block = ex.info.adaptive.trials_per_block; %# In test make sure trials_per_block*iblock calculations meet expectation on total length of trials below
@@ -20,13 +20,6 @@ current_amplitude = ex.info.stimulus.amplitude_spl;
 all_channel_label = [];
 for ichan = 1:N_channels
     all_channel_label = [all_channel_label ; ones(trials_per_block*iblock,1)*ichan];
-end
-
-% For new iamp initialize new layer in ex.preprocess
-if iamp > length(ex.preprocess)
-    ex.preprocess(iamp).rel_reject_threshold = {};
-    ex.preprocess(iamp).N_trials_presented = {};
-    ex.preprocess(iamp).reject_rate = {};
 end
 
 %% Get all available data
@@ -60,7 +53,7 @@ all_jitter_chan = reshape(all_jitter,[],1);
 
 [kept_trials_idx, kept_trials_phases, rel_reject_threshold] = ...
     reject_and_balance_trials(all_trials_chan, all_phases_chan, ...
-    reject_threshold_mV, reject_threshold_sd);
+    rejection_threshold_microV, reject_threshold_sd);
 
 %% Save kept trials
 kept_trials = all_trials_chan(kept_trials_idx,:);
@@ -74,7 +67,7 @@ if reject_rate > 0.5
 end
 
 % Update GUI
-app.Label_rejection_rate.Text = sprintf('%.1f%%', reject_rate * 100);
+app.Label_rejection_rate.Text = sprintf('%.0f%%', reject_rate * 100);
 
 %% Save to ex structure
 ex.preprocess(iblock).rel_reject_threshold = rel_reject_threshold; % (1 x # iterations of preprocessing) saved in structure for every iamp

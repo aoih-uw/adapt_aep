@@ -30,6 +30,10 @@ end
 
 my_latency_sample = ceil(my_threshold_sample);
 
+if my_latency_sample ~= 2118
+    keyboard
+end
+
 % Display results to command window
 fprintf('\nLatency in samples: %d\nLatency in seconds: %.4f\n', my_latency_sample, my_latency_sample/fs);
 

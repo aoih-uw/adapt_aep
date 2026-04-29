@@ -29,16 +29,20 @@ ex_save.preprocessing_stats = ex.preprocess(1:iblock); % Preprocessing statistic
 ex_save.decision = ex.decision(iamp); % Decisions related to this specific stimulus amplitude and frequency
 
 ex_save.kept = ex.kept; % Save the latest round of preprocessed signals
-ex_save.kept = rmfield(ex_save.block, 'trials'); % Don't need these
-ex_save.kept = rmfield(ex_save.block, 'trials_weighted');
+ex_save.kept = rmfield(ex_save.kept, 'trials'); % Don't need these
+ex_save.kept = rmfield(ex_save.kept, 'trials_weighted');
 
 ex_save.health = ex.health(1:ihealth);
+ex_save.health = rmfield(ex_save.health, 'hydrophone_mV'); % Don't need these
+ex_save.health = rmfield(ex_save.health, 'electrodes_microV');
+ex_save.health = rmfield(ex_save.health, 'loopback');
+
 ex_save.fft = ex.fft;
 ex_save.bootstrap = ex.boot(1:iboot);
 
 % Remove stimulus_block from all block entries
-if isfield(ex_save.block, 'stimulus_block')
-    ex_save.block = rmfield(ex_save.block, 'stimulus_block');
+if isfield(ex_save.block_level_info, 'stimulus_block')
+    ex_save.block_level_info = rmfield(ex_save.block_level_info, 'stimulus_block');
 end
 
 % Save

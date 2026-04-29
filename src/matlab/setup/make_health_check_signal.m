@@ -1,8 +1,10 @@
 function ex = make_health_check_signal(ex)
-ex.counter.health = 0;
+ex.counter.ihealth = 0;
 fs = ex.info.recording.sampling_rate_hz;
 stim_freq = ex.info.health.stim_frequency_hz;
-full_amp_stim_ON_ms = ex.info.stimulus.full_amplitude_duration_ms;
+stimulus_period = 1/stim_freq;
+num_cycles = ex.info.stimulus.full_amplitude_cycle_num; 
+full_amp_stim_ON_ms = stimulus_period*num_cycles*1e3;
 ramp_stim_ON_ms = ex.info.stimulus.ramp_duration_ms;
 stim_amplitude = ex.info.health.stim_amp_spl;
 trials_per_block = ex.info.adaptive.trials_per_block;

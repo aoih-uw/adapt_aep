@@ -4,8 +4,6 @@ ex = struct( ...
     'info', struct(), ...     % static experiment configuration
     'block', struct(), ...      % per-trial metadata (transient)
     'raw', struct(), ...   % raw signals
-    'cleaned', struct(), ...  % cleaned signals
-    'analysis', struct(), ...    % derived metrics
     'model', struct(), ...
     'decision', struct(), ...
     'counter', struct(), ...
@@ -15,7 +13,7 @@ ex = struct( ...
 %% Iteration Counters
 ex.counter.iamp = 0;
 ex.counter.iblock = 0;
-ex.counter.health = 0;
+ex.counter.ihealth = 0;
 ex.counter.iboot = 0;
 
 % Experiment State Markers

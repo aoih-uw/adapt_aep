@@ -13,10 +13,9 @@ else
 end
 noise_floor = ex.model.noise_floor; % (trials x tested_amps)
 resp_found = [ex.decision(1:iamp).resp_found];
-mad_criteria = ex.info.analysis.mad_criteria;
 trial_count = ex.trial_count(1:iamp);
 
-all_noise_floor = horzcat(noise_floor{:}); % Get all noise floor measures across tested ampltudes
+all_noise_floor = vertcat(noise_floor{:}); % Get all noise floor measures across tested ampltudes
 noise_floor_median = median(all_noise_floor);
 noise_floor_mad = median(abs(noise_floor_median-all_noise_floor))*1.4826;
 
@@ -44,7 +43,7 @@ try
     upper_responses = response_sorted(mid_idx:end);
     upper_amps = amplitude_sorted(mid_idx:end);
     init_m = max(0.001, (mean(upper_responses) - mean(response_sorted(1:mid_idx))) / ...
-        (mean(upper_amps) - mean(amplitude_sorted(1:mid_idx))));
+        (mean(upper_amps) - mean(amplitude_sorted(1:mid_idx)))); % y2-y1 / x2 - x1
 
     % Set a1 initial guess above zero
     a1_fit = noise_floor_median;
@@ -143,12 +142,12 @@ try
     yline(app.UIAxes_model,noise_floor_median, 'k-','LineWidth',2);
     xlims = xlim(app.UIAxes_model);
     x_fill = [xlims(1), xlims(2), xlims(2), xlims(1)];
-    y_fill = [noise_floor_median - mad_criteria*1.4826*noise_floor_mad, noise_floor_median - mad_criteria*1.4826*noise_floor_mad, ...
-        noise_floor_median + mad_criteria*1.4826*noise_floor_mad, noise_floor_median + mad_criteria*1.4826*noise_floor_mad];
+    y_fill = [noise_floor_median - 3*1.4826*noise_floor_mad, noise_floor_median - 3*1.4826*noise_floor_mad, ...
+        noise_floor_median + 3*1.4826*noise_floor_mad, noise_floor_median + 3*1.4826*noise_floor_mad];
     fill(app.UIAxes_model,x_fill, y_fill, tableau_10('purple'), 'FaceAlpha', 0.2, 'EdgeColor', 'none');    xlabel(app.UIAxes_model, 'Stimulus Amplitude (dB SPL)');
     ylabel(app.UIAxes_model, '2f Amplitude (\muV)');
     if good_fit
-        title(app.UIAxes_model, sprintf('Elbow Fit: x0=%.3f, a1=%.3f, m=%.3f', x0_fit, a1_fit, m_fit));
+        title(app.UIAxes_model, sprintf('Elbow Fit: x0=%.3f, a1=%.3f, m=%.3f (R²=%.4f)', x0_fit, a1_fit, m_fit, R_squared));
     else
         title(app.UIAxes_model, sprintf('Linear Fit: m=%.3f, b=%.3f (R²=%.4f)', m_fit, y_int, R_squared));
     end
@@ -161,6 +160,7 @@ try
     xlabel(app.UIAxes_thresh_est, 'Iteration');
     ylabel(app.UIAxes_thresh_est, 'x0');
     title(app.UIAxes_thresh_est, 'Threshold Estimate');
+    yticks(app.UIAxes_thresh_est, floor(min(ex.model.x0_fit))-5:1:ceil(max(ex.model.x0_fit))+5);
     grid(app.UIAxes_thresh_est, 'on');
 
     % Plot m_fit on slope axes
@@ -171,7 +171,7 @@ try
     title(app.UIAxes_slope_est, 'Slope Estimate');
     grid(app.UIAxes_slope_est, 'on');
 
-    drawnow
+    drawnow limitrate
 
     %% Suggest next best amplitude to test
     fprintf('\nStarting Monte Carlo simulation')

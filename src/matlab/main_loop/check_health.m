@@ -1,8 +1,8 @@
 function ex = check_health(ex, app)
 %% Present stimulus and measure response
 % Load variables
-ex.counter.health = ex.counter.health + 1;
-ihealth = ex.counter.health;
+ex.counter.ihealth = ex.counter.ihealth + 1;
+ihealth = ex.counter.ihealth;
 stimulus_block = ex.info.health.stimulus_block;
 phase_vec = ex.info.health.phase_vec;
 fs = ex.info.recording.sampling_rate_hz;
@@ -43,7 +43,7 @@ ex.health(ihealth).time_stamp = datetime('now', 'TimeZone', 'America/Los_Angeles
 plot_to_monitor('health',ex,app,N_samples,N_trials,N_channels)
 
 %% Reject artefacts
-reject_threshold_mV = ex.info.signal_quality.rejection_threshold_mV;
+rejection_threshold_microV = ex.info.signal_quality.rejection_threshold_microV;
 reject_threshold_sd = ex.info.signal_quality.rejection_threshold_sd;
 
 % Make channel labels
@@ -54,7 +54,7 @@ end
 
 [kept_trials_idx, ~, ~] = ...
     reject_and_balance_trials(electrode_sigs, phase_vec, ...
-    reject_threshold_mV, reject_threshold_sd);
+    rejection_threshold_microV, reject_threshold_sd);
 
 kept_trials = electrode_sigs(kept_trials_idx,:);
 kept_trials_channels = all_channel_label(kept_trials_idx); % Kept_trials_channels the labels for the channels

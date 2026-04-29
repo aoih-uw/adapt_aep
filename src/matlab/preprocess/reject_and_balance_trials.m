@@ -1,6 +1,6 @@
 function [kept_trials_idx, kept_trials_phases, rel_reject_threshold] = ...
     reject_and_balance_trials(all_trials_chan, all_phases_chan, ...
-    reject_threshold_mV, reject_threshold_sd)
+    rejection_threshold_microV, reject_threshold_sd)
 
 % Calculate RMS per trial
 all_trials_chan_rms = sqrt(mean(all_trials_chan.^2, 2, 'omitnan'));
@@ -11,7 +11,7 @@ all_mad = median(abs(all_median - all_trials_chan_rms));
 rel_reject_threshold = all_median + reject_threshold_sd * all_mad * 1.4826;
 
 % Keep trials below threshold
-kept_trials_idx = find(all_trials_chan_rms < rel_reject_threshold);
+kept_trials_idx = find(all_trials_chan_rms < rel_reject_threshold & all_trials_chan_rms < rejection_threshold_microV);
 kept_trials_phases = all_phases_chan(kept_trials_idx);
 
 % Balance positive and negative phase trials

@@ -1,6 +1,6 @@
 function plot_to_monitor(data_type, ex,app, N_samples, N_trials, N_channels)
 if strcmp(data_type, 'health')
-    ihealth = ex.counter.health;
+    ihealth = ex.counter.ihealth;
     hydrophone_data = ex.health(ihealth).hydrophone_mV;
     electrode_data = ex.health(ihealth).electrodes_microV;
 elseif strcmp(data_type, 'raw')

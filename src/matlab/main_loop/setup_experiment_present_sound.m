@@ -59,3 +59,8 @@ end
 
 %% Plot signals
 plot_to_monitor('raw',ex,app,N_samples,N_trials,N_channels)
+
+%% Calculate hydrophone RMS dB SPL 
+ex = calculate_hydrophone_RMS(ex);
+% Display RMS Noise floor and stimulus amplitude onto the GUI
+app.Label_tank_noise_floor.Text = string(ceil(ex.block(iblock).hydrophone.stim_OFF_rms_dB_spl));

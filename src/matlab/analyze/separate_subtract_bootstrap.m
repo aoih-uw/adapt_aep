@@ -5,12 +5,11 @@ fs = ex.info.recording.sampling_rate_hz;
 kept_trials_filtered = ex.kept.trials_filtered;
 kept_jitter = ex.kept.jitter;
 latency_samples = ex.info.recording.latency_samples;
-period_length_samps = length(ex.info.stimulus.waveform);
+period_length_samples = length(ex.info.stimulus.waveform);
 cla(app.UIAxes_boot)
 iamp = ex.counter.iamp;
 trials_presented = ex.trial_count(iamp);
 mad_criteria = ex.info.analysis.mad_criteria;
-peak_mult = ex.info.analysis.peak_mult;
 N_channels = ex.info.channels.n_channels;
 max_trials = ex.info.adaptive.max_trials;
 min_trials_for_analysis = ex.info.adaptive.min_trials_for_analysis;
@@ -21,21 +20,11 @@ if ex.test == 1
 else
     double_freq_hz  = ex.info.stimulus.frequency_hz*2;
 end
+
 doub_freq_range_hz = ex.info.analysis.doub_freq_range_hz;
 current_amplitude = ex.info.stimulus.amplitude_spl;
 
-stim_OFF_start = latency_samples + kept_jitter + 1; % Each trial has different jitter, and thus will have different starting points
-
-stim_OFF = zeros(size(kept_trials_filtered,1), period_length_samps); % (N_trials x time samples)
-stim_ON = zeros(size(kept_trials_filtered,1), period_length_samps);
-
-for itrial = 1:size(kept_trials_filtered,1) % Extract periods by trial
-    cur_stim_OFF_start = stim_OFF_start(itrial);
-    stim_OFF(itrial,:) = kept_trials_filtered(itrial,cur_stim_OFF_start:cur_stim_OFF_start+period_length_samps-1);
-
-    stim_ON_start = cur_stim_OFF_start+period_length_samps;
-    stim_ON(itrial,:) = kept_trials_filtered(itrial,stim_ON_start:stim_ON_start+period_length_samps-1);
-end
+[stim_ON , stim_OFF] = extract_stim_ON_OFF(latency_samples, period_length_samples, kept_jitter, kept_trials_filtered);
 
 %% See if noise has averaged down enough to do analysis
 if trials_presented == ex.info.adaptive.trials_per_block
@@ -67,27 +56,33 @@ freq_vec = freq_vec_stim_ON(1,:);
 
 %% Get STIM ON 2f value across all trials
 [doub_freq_range_hz,doub_freq_stim_ON_vec] = ...
-    find_fft_bins(double_freq_hz, doub_freq_range_hz, fft_vals_dur, freq_vec);
-
-%% DIFF: Subtract ON - OFF for bootstrap
-diffs = fft_vals_stim_ON - fft_vals_stim_OFF;
-% Get DIFF 2f value across all trials
-[doub_freq_range_hz, doub_freq_diff_vec] = ...
-    find_fft_bins(double_freq_hz, doub_freq_range_hz, diffs, freq_vec);
-
-%% Calculate mean diff 2f magnitude to compare to other peaks in diff
-doub_freq_diff_mean = mean(doub_freq_diff_vec); % Collapse 2f diff bin means across trials
+    find_fft_bins(double_freq_hz, doub_freq_range_hz, fft_vals_stim_ON, freq_vec);
 
 %% Calculate fft noise floor (i.e., magnitude @ 2f stim OFF)
-for itrial = 1:size(diffs,1)
-    temp = fft_vals_stim_OFF(itrial,:); % Get the magnitude value at 2f in the stim OFF period to compare to stim ON period for the model
-    [doub_freq_range_hz, noise_distribution(itrial)] = ...
-    find_fft_bins(double_freq_hz, doub_freq_range_hz, temp, freq_vec);
-end
+% Get the magnitude value at 2f in the stim OFF period to compare to stim ON period for the model
+    [doub_freq_range_hz, noise_distribution] = ...
+    find_fft_bins(double_freq_hz, doub_freq_range_hz, fft_vals_stim_OFF, freq_vec);
 
 noise_median = median(noise_distribution);
 noise_mad = mad(noise_distribution, 1);  
 peak_criteria = noise_median + noise_mad*mad_criteria*1.4826;
+
+%% DIFF: Subtract ON - OFF for bootstrap
+diffs = fft_vals_stim_ON - fft_vals_stim_OFF;
+[~, doub_freq_diff_vec] = ...
+    find_fft_bins(double_freq_hz, doub_freq_range_hz, diffs, freq_vec);
+
+% Calculate mean diff 2f magnitude to compare to other peaks in diff
+doub_freq_diff_mean = mean(doub_freq_diff_vec); % Collapse 2f diff bin means across trials
+
+% Calculate distribution of values at non 2f bins for comparison
+other_freq_diff_mean_distribution = ...
+    calculate_fft_noise_floor(double_freq_hz/2, doub_freq_range_hz, mean(diffs), freq_vec);
+top_percent_peak_num = ceil(length(other_freq_diff_mean_distribution)*0.05);
+max_vals = maxk(other_freq_diff_mean_distribution,top_percent_peak_num);
+other_freq_median = median(max_vals);
+other_freq_mad = median(abs(other_freq_median - max_vals));
+other_freq_criteria = other_freq_median + other_freq_mad*4*1.4826;
 
 %% Plotting
 f_diffs = freq_vec;
@@ -111,15 +106,6 @@ hold(app.UIAxes_diff_fft, 'off');
 
 drawnow
 
-%% Get max vals
-if length(mean_diffs) > 5
-max_vals = maxk(mean_diffs, 5);
-% Do not get the top value in case the 2f response is that max value
-max_val = median(max_vals(2:5));
-else
-    keyboard
-end
-
 %% Assign values to ex.block
 ex.fft.diffs = diffs;
 ex.fft.stim_ON = fft_vals_stim_ON;
@@ -131,14 +117,15 @@ ex.fft.diff_2f_vec = doub_freq_diff_vec;
 
 %% Decision Logic
 % Run bootstrap if...
-% 1. When mean difference FFT @2f is 5x greater than mean of 2 through 5th largest peaks
-% 2. If RMS of signal has reduced to 0.5 AND the mean diff 2f value > peak_criteria
+% 1. When mean difference FFT @2f bin is 3 MAD greater than the median of the 5% greatest peaks at the other frequency bins in the difference fft
+% 2. If RMS of signal has reduced to 0.5 (i.e., signal quality has increaased by 50%) AND the mean(stim ON 2f bin) >
+% 2 MAD above the median(stim OFF 2f bin) AND we have at least N_trials available for analysis
 % 3. Or if we have hit the trial limit
 
-if doub_freq_diff_mean > peak_mult*max_val 
+if doub_freq_diff_mean > other_freq_criteria 
     run_bootstrap = 1;
     gate_type = 1;
-elseif mean(doub_freq_stim_ON_vec,1) > peak_criteria && rms_ratio < 0.5 && trials_presented > min_trials_for_analysis
+elseif mean(doub_freq_stim_ON_vec) > peak_criteria && rms_ratio < 0.5 && trials_presented > min_trials_for_analysis
     run_bootstrap = 1;
     gate_type = 2;
 elseif trials_presented == max_trials
@@ -192,11 +179,9 @@ if run_bootstrap
     % Save values
     if ex.decision(ex.counter.iamp).resp_found == 1 || trials_presented == max_trials
         ex.model.doub_freq_stim_ON_vec = [ex.model.doub_freq_stim_ON_vec {doub_freq_stim_ON_vec}]; % (trials x stimulus amplitude)
+        ex.model.doub_freq_diff_vec = [ex.model.doub_freq_diff_vec {doub_freq_diff_vec}];
         ex.model.noise_floor = [ex.model.noise_floor {noise_distribution}]; % (trials x stimulus amplitude)
         ex.model.amplitude_vec = [ex.model.amplitude_vec current_amplitude]; % (1 x N_tested_amplitudes)
-        fprintf('\nSignificant difference between ON and OFF responses found!\n')
-    else
-        fprintf('\nNo significant difference between ON and OFF responses\n')
     end
 else
     %% Signal too noisy

@@ -32,15 +32,15 @@ end
 ex_save = struct();
 
 % Keep specified top-level fields
-ex.save.stimulus_frequency = ex.info.stimulus.frequency_hz;
+ex_save.stimulus_frequency = ex.info.stimulus.frequency_hz;
 ex_save.total_trial_count = sum(ex.trial_count(1:iamp));
 
 % Keep ex.info but exclude ex.info.stimulus
 ex_save.info = ex.info;
-ex_save.info = rmfield(ex_save.info.stimulus, 'amplitude_spl');
+ex_save.info.stimulus = rmfield(ex_save.info.stimulus, 'amplitude_spl');
 
 % Save decision
-ex_save.decision
+ex_save.decision = ex.decision(1:iamp);
 
 % Save model info from ex_save.model
 ex_save.model = ex.model;
