@@ -16,8 +16,8 @@ resp_found = [ex.decision(1:iamp).resp_found];
 trial_count = ex.trial_count(1:iamp);
 
 all_noise_floor = vertcat(noise_floor{:}); % Get all noise floor measures across tested ampltudes
-noise_floor_median = median(all_noise_floor);
-noise_floor_mad = median(abs(noise_floor_median-all_noise_floor))*1.4826;
+noise_floor_median = median(all_noise_floor,'omitnan');
+noise_floor_mad = median(abs(noise_floor_median-all_noise_floor),'omitnan')*1.4826;
 
 % Check for nans
 check_for_nans(noise_floor_median,'variable')
@@ -142,8 +142,8 @@ try
     yline(app.UIAxes_model,noise_floor_median, 'k-','LineWidth',2);
     xlims = xlim(app.UIAxes_model);
     x_fill = [xlims(1), xlims(2), xlims(2), xlims(1)];
-    y_fill = [noise_floor_median - 3*1.4826*noise_floor_mad, noise_floor_median - 3*1.4826*noise_floor_mad, ...
-        noise_floor_median + 3*1.4826*noise_floor_mad, noise_floor_median + 3*1.4826*noise_floor_mad];
+    y_fill = [noise_floor_median - 3*noise_floor_mad, noise_floor_median - 3*noise_floor_mad, ...
+        noise_floor_median + 3*noise_floor_mad, noise_floor_median + 3*noise_floor_mad];
     fill(app.UIAxes_model,x_fill, y_fill, tableau_10('purple'), 'FaceAlpha', 0.2, 'EdgeColor', 'none');    xlabel(app.UIAxes_model, 'Stimulus Amplitude (dB SPL)');
     ylabel(app.UIAxes_model, '2f Amplitude (\muV)');
     if good_fit
@@ -160,7 +160,6 @@ try
     xlabel(app.UIAxes_thresh_est, 'Iteration');
     ylabel(app.UIAxes_thresh_est, 'x0');
     title(app.UIAxes_thresh_est, 'Threshold Estimate');
-    yticks(app.UIAxes_thresh_est, floor(min(ex.model.x0_fit))-5:1:ceil(max(ex.model.x0_fit))+5);
     grid(app.UIAxes_thresh_est, 'on');
 
     % Plot m_fit on slope axes

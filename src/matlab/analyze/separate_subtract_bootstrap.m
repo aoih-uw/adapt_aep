@@ -6,7 +6,6 @@ kept_trials_filtered = ex.kept.trials_filtered;
 kept_jitter = ex.kept.jitter;
 latency_samples = ex.info.recording.latency_samples;
 period_length_samples = length(ex.info.stimulus.waveform);
-cla(app.UIAxes_boot)
 iamp = ex.counter.iamp;
 trials_presented = ex.trial_count(iamp);
 mad_criteria = ex.info.analysis.mad_criteria;
@@ -14,6 +13,14 @@ N_channels = ex.info.channels.n_channels;
 max_trials = ex.info.adaptive.max_trials;
 min_trials_for_analysis = ex.info.adaptive.min_trials_for_analysis;
 run_bootstrap = 0;
+
+% Permutation Variables
+n_permutations = 1000;
+my_alpha = 0.5;
+
+% Clear axes
+cla(app.UIAxes_boot)
+cla(app.UIAxes_perm)
 
 if ex.test == 1
     double_freq_hz  = ex.info.stimulus.frequency_hz;
@@ -58,6 +65,7 @@ freq_vec = freq_vec_stim_ON(1,:);
 [doub_freq_range_hz,doub_freq_stim_ON_vec] = ...
     find_fft_bins(double_freq_hz, doub_freq_range_hz, fft_vals_stim_ON, freq_vec);
 
+%#% Should noise floor calculations include all available data instead of just from this amplitude???
 %% Calculate fft noise floor (i.e., magnitude @ 2f stim OFF)
 % Get the magnitude value at 2f in the stim OFF period to compare to stim ON period for the model
     [doub_freq_range_hz, noise_distribution] = ...
@@ -77,7 +85,7 @@ doub_freq_diff_mean = mean(doub_freq_diff_vec); % Collapse 2f diff bin means acr
 
 % Calculate distribution of values at non 2f bins for comparison
 other_freq_diff_mean_distribution = ...
-    calculate_fft_noise_floor(double_freq_hz/2, doub_freq_range_hz, mean(diffs), freq_vec);
+    calculate_fft_noise_floor(double_freq_hz/2, doub_freq_range_hz, mean(diffs), freq_vec,1);
 top_percent_peak_num = ceil(length(other_freq_diff_mean_distribution)*0.05);
 max_vals = maxk(other_freq_diff_mean_distribution,top_percent_peak_num);
 other_freq_median = median(max_vals);
@@ -122,10 +130,12 @@ ex.fft.diff_2f_vec = doub_freq_diff_vec;
 % 2 MAD above the median(stim OFF 2f bin) AND we have at least N_trials available for analysis
 % 3. Or if we have hit the trial limit
 
+%#% This gating function necesetates a large effect size (i.e., high SNR)
+% or have enough trials in order to do Bootstrapping which is necessary...
 if doub_freq_diff_mean > other_freq_criteria 
     run_bootstrap = 1;
     gate_type = 1;
-elseif mean(doub_freq_stim_ON_vec) > peak_criteria && rms_ratio < 0.5 && trials_presented > min_trials_for_analysis
+elseif mean(doub_freq_stim_ON_vec) > peak_criteria && rms_ratio < 0.4 && trials_presented > min_trials_for_analysis
     run_bootstrap = 1;
     gate_type = 2;
 elseif trials_presented == max_trials
@@ -133,6 +143,7 @@ elseif trials_presented == max_trials
     gate_type = 3;
 end
 
+% Run the bootstrap
 if run_bootstrap
     ex.counter.iboot = ex.counter.iboot + 1;
     iboot = ex.counter.iboot;
@@ -141,18 +152,18 @@ if run_bootstrap
     fprintf('\nBootstrapping CI range: [ %.3f , %.3f ]',lower_CI, upper_CI)
     
     % Save to boot
-    ex.boot(iboot).bootstat = bootstat;
-    ex.boot(iboot).gate_type = gate_type;
-    ex.boot(iboot).lower_CI = lower_CI;
-    ex.boot(iboot).upper_CI = upper_CI;
+    ex.stats(iboot).bootstat = bootstat;
+    ex.stats(iboot).gate_type = gate_type;
+    ex.stats(iboot).lower_CI = lower_CI;
+    ex.stats(iboot).upper_CI = upper_CI;
 
     % Plot bootstrapped distribution on app axes
     reset(app.UIAxes_boot)
     histogram(app.UIAxes_boot, bootstat, 'FaceColor', tableau_10('blue'));
     hold(app.UIAxes_boot, 'on');
     xline(app.UIAxes_boot, 0, '--');
-    xline(app.UIAxes_boot, lower_CI, 'Color', tableau_10('red'), 'LineWidth', 1.5)
-    xline(app.UIAxes_boot, upper_CI, 'Color', tableau_10('red'), 'LineWidth', 1.5)
+    xline(app.UIAxes_boot, lower_CI,  'LineStyle', '--', 'Color', tableau_10('red'), 'LineWidth', 1.5)
+    xline(app.UIAxes_boot, upper_CI,  'LineStyle', '--', 'Color', tableau_10('red'), 'LineWidth', 1.5)
     xlim(app.UIAxes_boot, 'auto');
     cur_xlim = xlim(app.UIAxes_boot);
     xlim(app.UIAxes_boot, [-max(abs(cur_xlim)), max(abs(cur_xlim))]);
@@ -161,6 +172,43 @@ if run_bootstrap
     grid(app.UIAxes_boot, 'on');
     ylabel(app.UIAxes_boot, 'Frequency');
     hold(app.UIAxes_boot, 'off');
+
+    drawnow
+
+    %% Permutation test
+    diff_dist = doub_freq_stim_ON_vec-noise_distribution;
+    test_stat = mean(diff_dist);
+    N_trials = length(diff_dist);
+    perm_matrix = zeros(n_permutations,1);
+
+    for iperm = 1:n_permutations
+        my_sign = sign(randn(N_trials,1));
+        perm_matrix(iperm) = mean(diff_dist.*my_sign);
+    end
+
+    sig_thresh = prctile(perm_matrix,100-my_alpha);
+    
+    % Save to ex
+    ex.stats(iboot).perm_test_stat = test_stat;
+    ex.stats(iboot).perm_sig_threshold = sig_thresh;
+    ex.stats(iboot).perm_test_result = test_stat > sig_thresh;
+    
+    fprintf('\nPermutation test result \nSignificance threshold: %1.3f\n Test statistic: %1.3f\n ',sig_thresh, test_stat)
+    
+    % Plot bootstrapped distribution on app axes
+    reset(app.UIAxes_perm)
+    histogram(app.UIAxes_perm, perm_matrix, 'FaceColor', tableau_10('blue'));
+    hold(app.UIAxes_perm, 'on');
+    xline(app.UIAxes_perm, test_stat, 'Color', tableau_10('blue'), 'LineWidth', 1.5)
+    xline(app.UIAxes_perm, sig_thresh, 'LineStyle', '--', 'Color', tableau_10('red'), 'LineWidth', 1.5)
+    xlim(app.UIAxes_perm, 'auto');
+    cur_xlim = xlim(app.UIAxes_perm);
+    xlim(app.UIAxes_perm, [-max(abs(cur_xlim)), max(abs(cur_xlim))]);
+    title(app.UIAxes_perm, 'Permutation Distribution');
+    xlabel(app.UIAxes_perm, 'Difference');
+    grid(app.UIAxes_perm, 'on');
+    ylabel(app.UIAxes_perm, 'Frequency');
+    hold(app.UIAxes_perm, 'off');
 
     drawnow
     

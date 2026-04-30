@@ -1,42 +1,29 @@
 function ex = select_next_dialog(ex)
-% SELECT_NEXT_DIALOG  Prompt user to select the next stimulus amplitude.
-%
-% SYNTAX
-%   ex = select_next_dialog(ex)
-%
-% DESCRIPTION
-%   Presents a command-line prompt and validates numeric scalar input.
-%   Loops until a valid dB SPL value is entered, then stores it in ex.
-%
-% INPUTS
-%   ex  - struct  Experiment struct
-%
-% OUTPUTS
-%   ex  - struct  Experiment struct with updated amplitude field
-%
-% MODIFIED FIELDS
-%   ex.info.stimulus.amplitude_spl  - Stimulus amplitude in dB SPL
-%
-% CALLED BY
-%   run_adapt_aep, pause_dialog
-%
-% SEE ALSO
-%   make_decision_dialog, pause_dialog
-
 [y, Fs] = audioread('step.mp3');
 sound(y, Fs)
-
 fprintf('\n========================================\n');
 fprintf('  Set Stimulus Amplitude\n');
 fprintf('========================================\n');
-
-while true % Loops forever
-    val = input('Enter amplitude (dB SPL): ');
-    if ~isempty(val) && isnumeric(val) && isscalar(val) && ~isnan(val)
-        ex.info.stimulus.amplitude_spl = val;
-        break;
+fprintf('  Valid range: %g - %g dB SPL\n', ex.info.stimulus.min_amplitude_limit, ex.info.stimulus.max_amplitude_limit);
+while true
+    try
+        val = str2double(input('Enter amplitude (dB SPL): ', 's'));
+    catch
+        fprintf('Invalid input. Please enter a valid number.\n');
+        continue;
+    end
+    if ~isnan(val)
+        if val < ex.info.stimulus.min_amplitude_limit || val > ex.info.stimulus.max_amplitude_limit
+            fprintf('Amplitude out of range. Please enter a value between %g and %g dB SPL.\n', ...
+                ex.info.stimulus.min_amplitude_limit, ex.info.stimulus.max_amplitude_limit);
+        elseif ismember(val, ex.model.amplitude_vec)
+            fprintf('Amplitude already used. Please choose a different amplitude.\n');
+        else
+            ex.info.stimulus.amplitude_spl = val;
+            break;
+        end
     else
-        fprintf('Invalid input. Please enter a valid number.\n'); % Loop back at the top and ask again
+        fprintf('Invalid input. Please enter a valid number.\n');
     end
 end
 end

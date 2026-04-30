@@ -1,5 +1,4 @@
 function find_optimal_stimulus
-
 % Initialize
 addpath(genpath('C:\Users\AEP\Desktop\adapt_aep\src\matlab'))
 ex = setup_ex();
@@ -52,23 +51,11 @@ for ifreq = 1:length(freqs_hz)
             % Define a region
             selected_idx = freq_vec > 1 & freq_vec < 1000;
             freq_vec = freq_vec(selected_idx);
-
             fft_vals = ex.info.calibration.fft_vals(selected_idx); % mean already calculated
-            [target_freq_range, stim_freq_amp] = ...
-                find_fft_bins(cur_freq, target_freq_range, fft_vals, freq_vec);
-
-            % Get noise floor amplitude
-            noise_distribution = ...
-                calculate_fft_noise_floor(cur_freq, target_freq_range, fft_vals, freq_vec);
-
-            noise_median = median(noise_distribution);
-            noise_sum = sum(noise_distribution);
-
-            cur_score_median = 20*log10(stim_freq_amp/noise_median);
-            cur_score_sum = 20*log10(stim_freq_amp/noise_sum);
-
-            score_median(idur,iramp,ifreq) = cur_score_median;
-            score_sum(idur,iramp,ifreq) = cur_score_sum;
+            
+            my_snr = calculate_fft_snr(fft_vals,freq_vec, cur_freq, target_freq_range,0);
+            
+            score_median(idur,iramp,ifreq) = my_snr;
 
         end
     end

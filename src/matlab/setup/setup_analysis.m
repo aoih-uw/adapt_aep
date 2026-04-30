@@ -19,10 +19,13 @@ ex.fft.diff_2f_vec = [];
 
 % Bootstrap Test
 for iboot = 1:100
-ex.boot(iboot).gate_type = [];
-ex.boot(iboot).bootstat = [];
-ex.boot(iboot).lower_CI = [];
-ex.boot(iboot).upper_CI = [];
+ex.stats(iboot).gate_type = [];
+ex.stats(iboot).bootstat = [];
+ex.stats(iboot).lower_CI = [];
+ex.stats(iboot).upper_CI = [];
+ex.stats(iboot).perm_test_stat = [];
+ex.stats(iboot).perm_sig_threshold = [];
+ex.stats(iboot).perm_test_result = [];
 end
 
 

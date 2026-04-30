@@ -14,7 +14,7 @@ ex = app.ex;
 ex.info.experiment.exp_time_start = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
 ex = select_next_dialog(ex);
 
-try
+% try
     while ~ex.exp_done % While testing current stimulus frequency
         ex.counter.iamp = ex.counter.iamp + 1;
         ex.decision(ex.counter.iamp).resp_found = 0;
@@ -118,12 +118,12 @@ try
         end
     end
 
-catch ME
-    [y, Fs] = audioread('error.mp3');
-    sound(y, Fs)
-    fprintf('\nExperiment error: %s\n', ME.message)
-    ex = save_raw_data(ex);
-    ex = save_session_data(ex, app);
-    rethrow(ME)
-end
+% catch ME
+%     [y, Fs] = audioread('error.mp3');
+%     sound(y, Fs)
+%     fprintf('\nExperiment error: %s\n', ME.message)
+%     ex = save_raw_data(ex);
+%     ex = save_session_data(ex, app);
+%     rethrow(ME)
+% end
 

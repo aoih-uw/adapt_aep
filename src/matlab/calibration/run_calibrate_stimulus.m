@@ -9,6 +9,7 @@ function ex  = run_calibrate_stimulus(app, ex)
 
 %% Define variables
 fs = ex.info.recording.sampling_rate_hz;
+target_freq_range = ex.info.analysis.doub_freq_range_hz;
 
 % Assign cal to either health or experiment signal
 if ex.info.health.make_health_sig == 1
@@ -77,6 +78,10 @@ plot(app.ax_hydrophone, time_vector, mean_hydrophone_sig)
 plot(app.ax_hydrophone_spectra, freq_vec,fft_vals)
 xlim(app.ax_hydrophone_spectra, [0, 1000])
 
+% Measure signal quality
+my_snr = calculate_fft_snr(fft_vals, freq_vec, stimulus_freq, target_freq_range, 0);
+app.label_snr.Text = string(my_snr);
+
 drawnow;
 
 %% Check if stimulus amplitude is within range with correction factor
@@ -106,6 +111,10 @@ plot(app.ax_hydrophone, time_vector, mean_hydrophone_sig)
 [~, freq_vec, fft_vals] = calc_fft(mean_hydrophone_sig,fs);
 plot(app.ax_hydrophone_spectra, freq_vec,fft_vals)
 
+% Measure signal quality
+my_snr = calculate_fft_snr(fft_vals, freq_vec, stimulus_freq, target_freq_range, 0);
+app.label_snr.Text = string(my_snr);
+
 drawnow;
 
 % Save data to ex
@@ -113,6 +122,7 @@ cal.time_vector = time_vector;
 cal.time_sig = mean_hydrophone_sig;
 cal.freq_vec = freq_vec;
 cal.fft_vals = fft_vals;
+cal.snr = my_snr;
 
 % Initialize attempt counter only on first call
 if ~isfield(cal, 'attempt')
@@ -126,6 +136,7 @@ if cal.corrected_level >= target_level-correction_tolerance_dB && ...
     cal.check_passed = 1;
     fprintf('\nTarget level = %.1f +/- %.1f \nCorrected level = %.3f \nEffective calibration factor identified. Calibration complete.\n', ...
         target_level, correction_tolerance_dB, hydrophone_rms_dB)
+
 
     % Save calibration file
     cal.signals = rec_data_mV;

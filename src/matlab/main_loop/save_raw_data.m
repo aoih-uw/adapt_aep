@@ -38,7 +38,7 @@ ex_save.health = rmfield(ex_save.health, 'electrodes_microV');
 ex_save.health = rmfield(ex_save.health, 'loopback');
 
 ex_save.fft = ex.fft;
-ex_save.bootstrap = ex.boot(1:iboot);
+ex_save.bootstrap = ex.stats(1:iboot);
 
 % Remove stimulus_block from all block entries
 if isfield(ex_save.block_level_info, 'stimulus_block')

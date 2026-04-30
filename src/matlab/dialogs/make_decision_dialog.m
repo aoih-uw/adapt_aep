@@ -26,7 +26,5 @@ function ex = make_decision_dialog(ex,app)
     if strcmpi(choice, 'n')
     else
         ex.exp_done = 1;
-        fprintf('\nSaving session data...\n');
-        ex = save_session_data(ex, app);
     end
 end
