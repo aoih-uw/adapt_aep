@@ -1,9 +1,9 @@
 function save_raw_figures(ex, folder)
 iamp = ex.counter.iamp;
 if ex.test == 1
-    double_freq_hz  = ex.info.stimulus.frequency_hz;
+    freq_2f_hz  = ex.info.stimulus.frequency_hz;
 else
-    double_freq_hz  = ex.info.stimulus.frequency_hz*2;
+    freq_2f_hz  = ex.info.stimulus.frequency_hz*2;
 end
 diffs_fft = ex.fft.diffs;
 stim_ON_fft = ex.fft.stim_ON;
@@ -21,11 +21,11 @@ std_fft = std(diffs_fft,0,1);
 fill([freq_vec fliplr(freq_vec)], [mean_fft+std_fft fliplr(mean_fft-std_fft)], tableau_10('blue'), 'FaceAlpha', 0.3, 'EdgeColor', 'none');
 hold on;
 plot(freq_vec, mean_fft, 'Color', tableau_10('blue'), 'LineWidth', 1.5);
-xlim([(double_freq_hz-(double_freq_hz/1.1))*2, (double_freq_hz+(double_freq_hz/1.1))*2]);
+xlim([(freq_2f_hz-(freq_2f_hz/1.1))*2, (freq_2f_hz+(freq_2f_hz/1.1))*2]);
 title(sprintf('Mean Difference FFT: %1.0f Trials', num_trials));
 grid on;
 yline(0, '--');
-xline(double_freq_hz, '--');
+xline(freq_2f_hz, '--');
 xlabel('Frequency (Hz)');
 ylabel('Amplitude (\muV)');
 hold off;
@@ -41,11 +41,11 @@ std_fft = std(stim_ON_fft,0,1);
 fill([freq_vec fliplr(freq_vec)], [mean_fft+std_fft fliplr(mean_fft-std_fft)], tableau_10('blue'), 'FaceAlpha', 0.3, 'EdgeColor', 'none');
 hold on;
 plot(freq_vec, mean_fft, 'Color', tableau_10('blue'), 'LineWidth', 1.5);
-xlim([(double_freq_hz-(double_freq_hz/1.1))*2, (double_freq_hz+(double_freq_hz/1.1))*2]);
+xlim([(freq_2f_hz-(freq_2f_hz/1.1))*2, (freq_2f_hz+(freq_2f_hz/1.1))*2]);
 title(sprintf('Mean STIM ON FFT: %1.0f Trials', num_trials));
 grid on;
 yline(0, '--');
-xline(double_freq_hz, '--');
+xline(freq_2f_hz, '--');
 xlabel('Frequency (Hz)');
 ylabel('Amplitude (\muV)');
 hold off;
@@ -55,9 +55,11 @@ close(f2);
 
 % Noise floor distribution
 f3 = figure('Visible', 'off');
-noise_floor = ex.model.noise_floor{iamp};
+noise_floor = ex.model.stim_OFF_2f_vec{iamp};
 histogram(noise_floor, 'FaceColor', tableau_10('blue'));
-xlim([min(noise_floor), max(noise_floor)]);
+if min(noise_floor) < max(noise_floor)
+    xlim([min(noise_floor), max(noise_floor)]);
+end
 title('Noise Floor Distribution');
 xlabel('Amplitude (\muV)')
 ylabel('Frequency');
@@ -67,7 +69,7 @@ close(f3);
 
 % Difference FFT Bootstrapped distribution
 f4 = figure('Visible', 'off');
-doub_freq_diff_vec = ex.model.doub_freq_diff_vec;
+doub_freq_diff_vec = ex.model.diff_2f_vec;
 [bootstat, lower_CI, upper_CI] = calculate_bootstrap(ex, doub_freq_diff_vec);
 
 % Plot bootstrapped distribution in new figure

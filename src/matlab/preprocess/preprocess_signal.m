@@ -2,6 +2,7 @@ function ex = preprocess_signal(ex,app)
 fs = ex.info.recording.sampling_rate_hz;
 pass_band_hz = ex.info.signal_quality.pass_band_hz;
 analysis_channel = ex.info.channels.analysis_channel;
+ex.no_valid_trials = 0;
 
 %% Reject artefacts
 ex = reject_artefacts(ex,app);
@@ -11,6 +12,8 @@ kept_trials_channels = ex.kept.channels;
 analysis_channel_idx = kept_trials_channels == analysis_channel;
 trial_set = ex.kept.trials(analysis_channel_idx,:);
 kept_trials_channels = kept_trials_channels(analysis_channel_idx);
+
+if ~isempty(kept_trials_channels)
 ex.kept.jitter = ex.kept.jitter(analysis_channel_idx);
 
 % Check if there are any NaNs
@@ -34,3 +37,8 @@ ex.kept.trials_filtered = trial_set;
 
 % Check if there are any NaNs
 check_for_nans(trial_set,'signal')
+else
+    ex.no_valid_trials = 1;
+    keyboard
+    return
+end

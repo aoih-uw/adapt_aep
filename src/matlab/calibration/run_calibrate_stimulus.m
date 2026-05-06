@@ -9,20 +9,21 @@ function ex  = run_calibrate_stimulus(app, ex)
 
 %% Define variables
 fs = ex.info.recording.sampling_rate_hz;
-target_freq_range = ex.info.analysis.doub_freq_range_hz;
+target_freq_range = ex.info.analysis.range_2f_hz;
 
 % Assign cal to either health or experiment signal
 if ex.info.health.make_health_sig == 1
     cal = ex.info.health.calibration;
     waveform = ex.info.health.waveform;
-    stimulus_freq = ex.info.health.stim_frequency_hz;
-    target_level= ex.info.health.stim_amp_spl;
+    stimulus_freq = ex.info.health.stimulus_frequency_hz;
+    target_level = ex.info.health.stimulus_amplitude_spl;
 else
     cal = ex.info.calibration;
-    waveform = ex.info.stimulus.waveform;
     stimulus_freq = ex.info.stimulus.frequency_hz;
     target_level = ex.info.calibration.target_amp_spl;
+    waveform = ex.info.stimulus.waveform; % When using optimize signal quality function
 end
+
 
 correction_tolerance_dB = ex.info.calibration.correction_tolerance_dB;
 
@@ -79,6 +80,9 @@ plot(app.ax_hydrophone_spectra, freq_vec,fft_vals)
 xlim(app.ax_hydrophone_spectra, [0, 1000])
 
 % Measure signal quality
+selected_idx = freq_vec > 1 & freq_vec < stimulus_freq*3;
+freq_vec = freq_vec(selected_idx);
+fft_vals = fft_vals(selected_idx);
 my_snr = calculate_fft_snr(fft_vals, freq_vec, stimulus_freq, target_freq_range, 0);
 app.label_snr.Text = string(my_snr);
 
@@ -112,6 +116,9 @@ plot(app.ax_hydrophone, time_vector, mean_hydrophone_sig)
 plot(app.ax_hydrophone_spectra, freq_vec,fft_vals)
 
 % Measure signal quality
+selected_idx = freq_vec > 1 & freq_vec < stimulus_freq*3;
+freq_vec = freq_vec(selected_idx);
+fft_vals = fft_vals(selected_idx);
 my_snr = calculate_fft_snr(fft_vals, freq_vec, stimulus_freq, target_freq_range, 0);
 app.label_snr.Text = string(my_snr);
 
@@ -171,8 +178,8 @@ else
         return
     else
         fprintf('Max attempts reached.\n')
-       
-        
+
+
     end
 end
 

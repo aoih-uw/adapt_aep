@@ -4,7 +4,7 @@ function rec_data_mV = present_sound(stimulus, ...
     electrode_voltage_scaling_factor_V, ...
     hydrophone_voltage_scaling_factor_V)
 %% Here we actually present and measure sounds
-
+signal_clip_threshold = 4850; %mv
 %% Pre-allocate for efficiency
 rec_data_mV = zeros(size(stimulus,2), ...
     length(input_channels), size(stimulus,1)); % # of samples x # of channels x # of trials
@@ -58,6 +58,16 @@ for itrial = 1:height(stimulus)
 
     % Convert digital values to millivolts - ALL channels
     rec_data_mV(:,:,itrial) = rec_data;
+
+    % Check for clipped signals
+    for ichan = 1:length(input_channels)
+            cur_sig = rec_data(:,ichan);
+            if any(cur_sig >= signal_clip_threshold)
+                fprintf('Possible clipping. Inspect signal.')
+                keyboard
+            end
+        
+    end
 
     % Apply specific scaling factors and convert to mV
     rec_data_mV(:,electrode_idx,itrial) = 1e3.*(rec_data(:,electrode_idx).*electrode_voltage_scaling_factor_V);

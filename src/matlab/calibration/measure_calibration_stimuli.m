@@ -14,7 +14,11 @@ stimulus = cat(3,calibration_stim,trigger_stim);
         = init_present_sound_variables(ex, stimulus(:,:,1));
 
 % Initialize other variables
-ramp_duration_ms = ex.info.stimulus.ramp_duration_ms;
+if ex.info.health.make_health_sig == 1
+    ramp_duration_ms = ex.info.health.ramp_duration_ms;
+else
+    ramp_duration_ms = ex.info.stimulus.ramp_duration_ms;
+end
 hydrophone_gain_mV_per_Pa = ex.info.recording.hydrophone_gain_mV_per_Pa;
 
 rec_data_mV = present_sound(stimulus, ...
@@ -35,5 +39,5 @@ end_idx = start_idx + length(waveform) - ramp_samples*2 - 1; % ramp_samples*2 al
 full_amp_hydrophone_sig = filtered_mean_hydrophone_sig(start_idx:end_idx);
 
 [~ , hydrophone_rms_dB] = convert_mV_to_dB_spl(full_amp_hydrophone_sig,hydrophone_gain_mV_per_Pa);
-
+check_for_nans(hydrophone_rms_dB,'variable')
 end

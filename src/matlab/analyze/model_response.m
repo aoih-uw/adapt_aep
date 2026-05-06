@@ -1,6 +1,12 @@
 function ex = model_response(ex,app)
 iamp = ex.counter.iamp;
-doub_freq_stim_ON_mean  = cellfun(@mean,ex.model.doub_freq_stim_ON_vec); % (trials x tested_amps)
+mad_to_std = ex.info.analysis.mad_to_std;
+stim_ON_2f_mean  = cellfun(@mean,ex.model.stim_ON_2f_vec); % (trials x tested_amps)
+stim_ON_2f_std  = cellfun(@std,ex.model.stim_ON_2f_vec); 
+
+per_amp_noise  = cellfun(@median,ex.model.stim_OFF_2f_vec); % (trials x tested_amps)
+per_amp_noise_mad = cellfun(@(x) mad(x,1)*mad_to_std, ex.model.stim_OFF_2f_vec);
+
 if ex.test == 1
     amplitude_vec = ex.snr_vec;
     fixed_upper_level = 20*log10(1/0.1);
@@ -11,13 +17,13 @@ else
     fixed_upper_level = ex.info.stimulus.max_amplitude_limit;
     flex_lower_level = 0:5:fixed_upper_level-5;
 end
-noise_floor = ex.model.noise_floor; % (trials x tested_amps)
+noise_floor = ex.model.stim_OFF_2f_vec; % (trials x tested_amps)
 resp_found = [ex.decision(1:iamp).resp_found];
 trial_count = ex.trial_count(1:iamp);
 
 all_noise_floor = vertcat(noise_floor{:}); % Get all noise floor measures across tested ampltudes
 noise_floor_median = median(all_noise_floor,'omitnan');
-noise_floor_mad = median(abs(noise_floor_median-all_noise_floor),'omitnan')*1.4826;
+noise_floor_mad = median(abs(noise_floor_median-all_noise_floor),'omitnan')*mad_to_std;
 
 % Check for nans
 check_for_nans(noise_floor_median,'variable')
@@ -25,13 +31,25 @@ check_for_nans(noise_floor_mad,'variable')
 
 % Sort data by tested stimulus amplitudes
 [amplitude_sorted, sort_idx] = sort(amplitude_vec);
-response_sorted = doub_freq_stim_ON_mean(sort_idx);
+
+response_sorted = stim_ON_2f_mean(sort_idx);
+response_std_sorted = stim_ON_2f_std(sort_idx);
+
+per_amp_noise_sorted = per_amp_noise(sort_idx);
+per_amp_noise_mad_sorted = per_amp_noise_mad(sort_idx);
+
 resp_found_sorted = resp_found(sort_idx);
 trial_count_sorted = trial_count(sort_idx);
 
 % Save values to ex
 ex.model.amplitude_vec_sorted = amplitude_sorted;
+
 ex.model.response_vec_sorted = response_sorted;
+ex.model.response_vec_std_sorted = response_std_sorted;
+
+ex.model.per_amp_noise_sorted = per_amp_noise_sorted;
+ex.model.per_amp_noise_mad_sorted = per_amp_noise_mad_sorted;
+
 ex.model.resp_found_sorted = resp_found_sorted;
 ex.model.trial_count_sorted = trial_count_sorted;
 
@@ -93,11 +111,6 @@ try
 
         ex.model.Rsquared = [ex.model.Rsquared R_squared];
 
-        ex.model.amplitude_vec_sorted = amplitude_sorted;
-        ex.model.response_vec_sorted = response_sorted;
-        ex.model.resp_found_sorted = resp_found_sorted;
-        ex.model.trial_count_sorted = trial_count_sorted;
-
         % Plot Model
         x_plot = linspace(min(amplitude_sorted), max(amplitude_sorted), 200);
         y_fit = elbow_function(x_plot, x0_fit, a1_fit, m_fit);
@@ -125,7 +138,11 @@ try
         plot(app.UIAxes_model, x_plot, y_fit, 'Color', tableau_10('blue'), 'LineWidth', 2);
     end
 
-    % Plot individual trial dots
+    % Plot individual amplitude noise_floor dots
+    errorbar(app.UIAxes_model, amplitude_sorted, per_amp_noise_sorted, per_amp_noise_mad_sorted, ...
+        'o','MarkerFaceColor', tableau_10('grey'), 'MarkerEdgeColor', tableau_10('grey'), 'Color', tableau_10('grey'));
+
+    % Plot individual amplitude dots
     for i = 1:length(amplitude_sorted)
         if resp_found_sorted(i) == 1
             color = tableau_10('green');
@@ -133,18 +150,16 @@ try
         else
             color = tableau_10('red');
         end
-        plot(app.UIAxes_model, amplitude_sorted(i), response_sorted(i), 'o', 'MarkerSize', 6+trial_count_sorted(i)/max(trial_count_sorted), 'MarkerFaceColor', color, 'MarkerEdgeColor', color);
+        errorbar(app.UIAxes_model, amplitude_sorted(i), response_sorted(i), response_std_sorted(i), ...
+        'o', 'MarkerSize', 4+6*(1 - trial_count_sorted(i) / max(trial_count_sorted)), ...
+        'MarkerFaceColor', color, 'MarkerEdgeColor', color, 'Color', color);
     end
 
     if good_fit
         xline(app.UIAxes_model, x0_fit, '--', 'Color', tableau_10('grey'),'LineWidth',2);
-    end    
-    yline(app.UIAxes_model,noise_floor_median, 'k-','LineWidth',2);
-    xlims = xlim(app.UIAxes_model);
-    x_fill = [xlims(1), xlims(2), xlims(2), xlims(1)];
-    y_fill = [noise_floor_median - 3*noise_floor_mad, noise_floor_median - 3*noise_floor_mad, ...
-        noise_floor_median + 3*noise_floor_mad, noise_floor_median + 3*noise_floor_mad];
-    fill(app.UIAxes_model,x_fill, y_fill, tableau_10('purple'), 'FaceAlpha', 0.2, 'EdgeColor', 'none');    xlabel(app.UIAxes_model, 'Stimulus Amplitude (dB SPL)');
+    end
+    
+    yline(app.UIAxes_model,noise_floor_median, 'k--','LineWidth',1);
     ylabel(app.UIAxes_model, '2f Amplitude (\muV)');
     if good_fit
         title(app.UIAxes_model, sprintf('Elbow Fit: x0=%.3f, a1=%.3f, m=%.3f (R²=%.4f)', x0_fit, a1_fit, m_fit, R_squared));
@@ -153,10 +168,11 @@ try
     end
     grid(app.UIAxes_model,  'on');
     hold(app.UIAxes_model, 'off');
-
+    xlim(app.UIAxes_model,[min(amplitude_sorted)-5, max(amplitude_sorted)+5])
+    
     % Plot x0_fit on threshold axes
     cla(app.UIAxes_thresh_est)
-    plot(app.UIAxes_thresh_est, ex.model.x0_fit, 'o-', 'Color', tableau_10('teal'), 'LineWidth', 1.5);
+    plot(app.UIAxes_thresh_est, ex.model.x0_fit, 'o-', 'Color', tableau_10('teal'), 'LineWidth', 1, 'MarkerFaceColor', tableau_10('teal'));
     xlabel(app.UIAxes_thresh_est, 'Iteration');
     ylabel(app.UIAxes_thresh_est, 'x0');
     title(app.UIAxes_thresh_est, 'Threshold Estimate');
@@ -164,7 +180,7 @@ try
 
     % Plot m_fit on slope axes
     cla(app.UIAxes_slope_est)
-    plot(app.UIAxes_slope_est, ex.model.m_fit, 'o-', 'Color', tableau_10('orange'), 'LineWidth', 1.5);
+    plot(app.UIAxes_slope_est, ex.model.m_fit, 'o-', 'Color', tableau_10('orange'), 'LineWidth', 1 , 'MarkerFaceColor', tableau_10('orange'));
     xlabel(app.UIAxes_slope_est, 'Iteration');
     ylabel(app.UIAxes_slope_est, 'm');
     title(app.UIAxes_slope_est, 'Slope Estimate');

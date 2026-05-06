@@ -77,18 +77,18 @@ pass_band_hz = ex.info.signal_quality.pass_band_hz;
 
 %% Calculate magnitude at 2f
 if ex.test == 1
-    double_freq_hz  = ex.info.stimulus.frequency_hz;
+    freq_2f_hz  = ex.info.stimulus.frequency_hz;
 else
-    double_freq_hz  = ex.info.stimulus.frequency_hz*2;
+    freq_2f_hz  = ex.info.stimulus.frequency_hz*2;
 end
-doub_freq_range_hz = ex.info.analysis.doub_freq_range_hz;
+range_2f_hz = ex.info.analysis.range_2f_hz;
 
 
 mean_response = mean(kept_trials_filtered,1);
 [~, freq_vec, fft_vec] = calc_fft(mean_response,fs);
 
 [~, doub_freq_mag] = ...
-    find_fft_bins(double_freq_hz, doub_freq_range_hz, fft_vec, freq_vec);
+    find_fft_bins(freq_2f_hz, range_2f_hz, fft_vec, freq_vec);
 
 % Check to see if we have already measured a baseline_response for this
 % animal
@@ -139,7 +139,7 @@ end
     y_vec = [ex.health(1:ihealth).rel_strength];
     ax = app.UIAxes_health;
     cla(ax)
-    plot(ax,x_vec,y_vec,'o-','Color',tableau_10('red'));
+    plot(ax,x_vec,y_vec,'o-','Color',tableau_10('red'),'MarkerFaceColor',tableau_10('red'));
     hold(ax,'on')
     yline(ax,1, '--','Color',tableau_10('grey'));
     ylim(ax,[-0.2,1.2])

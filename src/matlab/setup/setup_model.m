@@ -1,13 +1,14 @@
 function ex = setup_model(ex)
 
 % Model
-ex.model.doub_freq_stim_ON_vec = []; 
-ex.model.doub_freq_diff_vec = [];
-ex.model.noise_floor = []; 
+ex.model.stim_ON_2f_vec = []; 
+ex.model.stim_OFF_2f_vec = []; 
+ex.model.diff_2f_vec = [];
 ex.model.amplitude_vec = [];
 
 ex.model.amplitude_vec_sorted = [];
 ex.model.response_vec_sorted = [];
+ex.model.per_amp_noise_sorted = [] ;
 ex.model.resp_found_sorted = [];
 ex.model.trial_count_sorted = [];
 

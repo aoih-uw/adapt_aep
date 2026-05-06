@@ -10,7 +10,7 @@ for iblock = 1:max_block
 ex.block(iblock).water_temp_C = NaN; % Get thermometer working
 ex.block(iblock).jitter = NaN;
 ex.block(iblock).phase_vec = NaN;
-ex.block(iblock).stimulus_block = NaN; % Created in make_stim_block, presented via playrec
+ex.block(iblock).stimulus_block = NaN; % Created in make_scaled_jittered_stim_block, presented via playrec
 ex.block(iblock).hydrophone.stim_ON_rms_dB_spl = NaN;
 ex.block(iblock).hydrophone.stim_OFF_rms_dB_spl = NaN;
 
@@ -26,3 +26,6 @@ ex.preprocess(iblock).reject_rate =  [];
 ex.preprocess(iblock).channel_weights = [];
 
 end
+
+% Setup noise
+ex.noise.starting_rms = NaN;

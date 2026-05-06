@@ -29,7 +29,7 @@ ex = select_next_dialog(ex);
 
             %% CREATE BLOCK OF TRIALS
             fprintf('\nCreating trial block...\n')
-            ex = create_experiment_stim_block(ex);
+            ex = create_new_stimuli_block(ex);
 
             %% READ THERMOMETER
             fprintf('\nChecking temperature...\n')
@@ -56,6 +56,10 @@ ex = select_next_dialog(ex);
             %% DATA PRE-PROCESSING
             fprintf('\nPre-processing responses...\n')
             ex = preprocess_signal(ex,app);
+
+            if ex.no_valid_trials
+                continue
+            end
 
             %% DATA ANALYSIS
             fprintf('\nAnalyzing responses...\n')

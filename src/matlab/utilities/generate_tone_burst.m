@@ -10,7 +10,7 @@ ramp_samp = round(ramp_stim_ON_s*fs);
 
 % Check if sample numbers are reasonable
 if full_amp_samp < 1 || ramp_samp < 1
-    error('make_experiment_tone_burst:InvalidDuration', ...
+    error('make_stimulus_template:InvalidDuration', ...
         'Tone burst sample number less than 1, check stimulus duration values')
 end
 

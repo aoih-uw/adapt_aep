@@ -1,4 +1,4 @@
-function [target_freq_range, mean_across_bins] = ...
+function [target_freq_range, max_val] = ...
     find_fft_bins(target_freq, target_freq_range, input_signal, freq_vec)
 
 % Input structure requirements
@@ -12,20 +12,15 @@ lower_end = target_freq - target_freq_range;
 upper_end = target_freq + target_freq_range;
 
 bin_idxs = freq_vec >= lower_end & freq_vec <= upper_end;
+found_idxs = find(bin_idxs);
+bin_freq_vec = freq_vec(bin_idxs);
+[~, bin_idx_2f] = min(abs(bin_freq_vec-target_freq));
 n_tries = 0;
 
-while sum(bin_idxs) == 0 && n_tries < 15
-    warning('Did not find bins within range. Going to increase range by 1 Hz')
-    n_tries = n_tries + 1;
-    target_freq_range = target_freq_range + 1;
-    lower_end = target_freq - target_freq_range;
-    upper_end = target_freq + target_freq_range;
-    bin_idxs = freq_vec >= lower_end & freq_vec <= upper_end;
+if isempty(bin_idx_2f)
+    keyboard
 end
 
-if n_tries >= 15
-    error('No fft bins found')
-else
-    mean_across_bins = mean(input_signal(:,bin_idxs),2,'omitnan'); % Keep rows across trials
-end
+max_val = input_signal(:,found_idxs(bin_idx_2f)); % Keep rows across trials
+
 

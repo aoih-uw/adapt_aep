@@ -10,4 +10,4 @@ noise_distribution = ...
 
 noise_median = median(noise_distribution);
 
-my_snr = 20*log10(signal_fft_bin/noise_median);
+my_snr = log10(signal_fft_bin/noise_median);

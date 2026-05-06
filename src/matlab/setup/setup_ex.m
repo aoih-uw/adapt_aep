@@ -20,6 +20,7 @@ ex.counter.iboot = 0;
 ex.exp_done = 0;
 ex.test = 0;
 ex.last_autosave_time = [];
+ex.no_valid_trials = 0;
 
 % Trial counter
 for iamp = 1:100
@@ -46,5 +47,6 @@ for ihealth = 1:100
     ex.health(ihealth).status = NaN;
     ex.health(ihealth).end_test = 0;
 end
+
 
 end

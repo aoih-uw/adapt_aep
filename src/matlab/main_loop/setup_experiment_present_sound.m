@@ -57,12 +57,11 @@ for ich = 1:size(ex.raw(iblock).electrodes_microV, 3)
     check_for_nans(ex.raw(iblock).electrodes_microV(:,:,ich), 'signal')
 end
 
-%% Plot signals
-plot_to_monitor('raw',ex,app,N_samples,N_trials,N_channels)
-
 %% Calculate hydrophone RMS dB SPL 
 ex = calculate_hydrophone_sig_quality(ex);
 % Display RMS Noise floor and stimulus amplitude onto the GUI
 app.UIAxes_hydrophone.Title.String = sprintf('Hydrophone: %.0f dB SPL',ex.block(iblock).hydrophone.stim_ON_rms_dB_spl);
-app.Label_tank_noise_floor.Text = string(ceil(ex.block(iblock).hydrophone.stim_OFF_rms_dB_spl));
-app.Label_signal_snr.Text = string(ex.block(iblock).hydrophone.stim_ON_snr);
+
+%% Plot signals
+plot_to_monitor('raw',ex,app,N_samples,N_trials,N_channels)
+
