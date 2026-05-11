@@ -1,5 +1,6 @@
 function ex = model_response(ex,app)
 iamp = ex.counter.iamp;
+max_trial_lim = ex.info.adaptive.max_trials;
 mad_to_std = ex.info.analysis.mad_to_std;
 stim_ON_2f_mean  = cellfun(@mean,ex.model.stim_ON_2f_vec); % (trials x tested_amps)
 stim_ON_2f_std  = cellfun(@std,ex.model.stim_ON_2f_vec); 
@@ -31,7 +32,6 @@ check_for_nans(noise_floor_mad,'variable')
 
 % Sort data by tested stimulus amplitudes
 [amplitude_sorted, sort_idx] = sort(amplitude_vec);
-
 response_sorted = stim_ON_2f_mean(sort_idx);
 response_std_sorted = stim_ON_2f_std(sort_idx);
 
@@ -40,6 +40,16 @@ per_amp_noise_mad_sorted = per_amp_noise_mad(sort_idx);
 
 resp_found_sorted = resp_found(sort_idx);
 trial_count_sorted = trial_count(sort_idx);
+
+% Add the noise floor value at 70 dB
+amplitude_sorted = [70 amplitude_sorted];
+response_sorted = [noise_floor_median response_sorted];
+response_std_sorted = [noise_floor_mad response_std_sorted];
+per_amp_noise_sorted = [noise_floor_median per_amp_noise_sorted];
+per_amp_noise_mad_sorted = [noise_floor_mad per_amp_noise_mad_sorted];
+resp_found_sorted = [0 resp_found_sorted];
+trial_count_sorted = [max_trial_lim trial_count_sorted];
+
 
 % Save values to ex
 ex.model.amplitude_vec_sorted = amplitude_sorted;
@@ -66,14 +76,31 @@ try
     % Set a1 initial guess above zero
     a1_fit = noise_floor_median;
 
-    init_guess = [median(amplitude_sorted), init_m]; % x0, m ; a1 is fixed
+    % # %Upper bound for x0: smallest amplitude with a detected response
+    resp_amps = amplitude_sorted(resp_found_sorted == 1);
+    if ~isempty(resp_amps)
+        x0_upper = min(resp_amps);
+    else
+        x0_upper = max(amplitude_sorted);   % fallback if nothing was detected yet
+    end
+
+    % Make sure lb < ub for x0 (in case x0_upper is at/below lb)
+    x0_lower = min(amplitude_sorted) - 20;
+    if x0_upper <= x0_lower
+        x0_upper = x0_lower + eps;
+    end
 
     % Set bounds for the optimizer
-    lb = [min(amplitude_sorted) - 20, 1e-6]; % force m > 0, and allow x0 to go slightly below the minimum observed amplitue
+    lb = [x0_lower, 1e-6]; % force m > 0, and allow x0 to go slightly below the minimum observed amplitue
 
-    ub = [max(amplitude_sorted), inf];     % x0, a1, m upper bounds
+    ub = [x0_upper, inf];     % x0, a1, m upper bounds
     options = optimoptions('lsqcurvefit', 'MaxIterations', 1000, ...
         'FunctionTolerance', 1e-9, 'StepTolerance', 1e-9); % Tolerance = stopping criteria for optimizer, stop when change in the cost functions is smaller than 1e-9
+
+    % # %Clamp initial guess so it sits inside [lb, ub]
+    init_x0 = median(amplitude_sorted);
+    init_x0 = min(max(init_x0, x0_lower), x0_upper);
+    init_guess = [init_x0, init_m];
 
     fprintf('\nStarting model fitting\n')
     tic()
@@ -138,10 +165,13 @@ try
         plot(app.UIAxes_model, x_plot, y_fit, 'Color', tableau_10('blue'), 'LineWidth', 2);
     end
 
+    for i = 1:length(amplitude_sorted)
     % Plot individual amplitude noise_floor dots
-    errorbar(app.UIAxes_model, amplitude_sorted, per_amp_noise_sorted, per_amp_noise_mad_sorted, ...
-        'o','MarkerFaceColor', tableau_10('grey'), 'MarkerEdgeColor', tableau_10('grey'), 'Color', tableau_10('grey'));
-
+    errorbar(app.UIAxes_model, amplitude_sorted(i), per_amp_noise_sorted(i), per_amp_noise_mad_sorted(i), ...
+        'o','MarkerFaceColor', tableau_10('grey'), 'MarkerEdgeColor', tableau_10('grey'), ...
+        'MarkerSize', 4+6*(1 - trial_count_sorted(i) / max(trial_count_sorted)), 'Color', tableau_10('grey'));
+    end
+    
     % Plot individual amplitude dots
     for i = 1:length(amplitude_sorted)
         if resp_found_sorted(i) == 1
@@ -166,9 +196,9 @@ try
     else
         title(app.UIAxes_model, sprintf('Linear Fit: m=%.3f, b=%.3f (R²=%.4f)', m_fit, y_int, R_squared));
     end
-    grid(app.UIAxes_model,  'on');
     hold(app.UIAxes_model, 'off');
     xlim(app.UIAxes_model,[min(amplitude_sorted)-5, max(amplitude_sorted)+5])
+    ylim(app.UIAxes_model,[min(per_amp_noise_sorted)-0.1, max(response_sorted)+0.1])
     
     % Plot x0_fit on threshold axes
     cla(app.UIAxes_thresh_est)
@@ -176,7 +206,6 @@ try
     xlabel(app.UIAxes_thresh_est, 'Iteration');
     ylabel(app.UIAxes_thresh_est, 'x0');
     title(app.UIAxes_thresh_est, 'Threshold Estimate');
-    grid(app.UIAxes_thresh_est, 'on');
 
     % Plot m_fit on slope axes
     cla(app.UIAxes_slope_est)
@@ -184,7 +213,6 @@ try
     xlabel(app.UIAxes_slope_est, 'Iteration');
     ylabel(app.UIAxes_slope_est, 'm');
     title(app.UIAxes_slope_est, 'Slope Estimate');
-    grid(app.UIAxes_slope_est, 'on');
 
     drawnow limitrate
 

@@ -32,10 +32,10 @@ ex_save.kept = ex.kept; % Save the latest round of preprocessed signals
 ex_save.kept = rmfield(ex_save.kept, 'trials'); % Don't need these
 ex_save.kept = rmfield(ex_save.kept, 'trials_weighted');
 
-ex_save.health = ex.health(1:ihealth);
-ex_save.health = rmfield(ex_save.health, 'hydrophone_mV'); % Don't need these
-ex_save.health = rmfield(ex_save.health, 'electrodes_microV');
-ex_save.health = rmfield(ex_save.health, 'loopback');
+% ex_save.health = ex.health(1:ihealth);
+% ex_save.health = rmfield(ex_save.health, 'hydrophone_mV'); % Don't need these
+% ex_save.health = rmfield(ex_save.health, 'electrodes_microV');
+% ex_save.health = rmfield(ex_save.health, 'loopback');
 
 ex_save.fft = ex.fft;
 ex_save.bootstrap = ex.stats(1:iboot);

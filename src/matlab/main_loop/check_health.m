@@ -142,7 +142,7 @@ end
     plot(ax,x_vec,y_vec,'o-','Color',tableau_10('red'),'MarkerFaceColor',tableau_10('red'));
     hold(ax,'on')
     yline(ax,1, '--','Color',tableau_10('grey'));
-    ylim(ax,[-0.2,1.2])
+    ylim(ax,[min(y_vec)-1,max(y_vec)+1])
 
 
 % Decide

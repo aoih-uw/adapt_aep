@@ -46,6 +46,11 @@ for itrial = 1:height(stimulus)
 
         % Clean up the page
         playrec('delPage', ipage);
+
+        if length(stimulus) < 54*44100/1e3 % Signals less than 40 ms need more time between stimuli
+            pause(0.01)
+        end
+
     catch ME
         % Clean up on error
         try
@@ -59,9 +64,13 @@ for itrial = 1:height(stimulus)
     % Convert digital values to millivolts - ALL channels
     rec_data_mV(:,:,itrial) = rec_data;
 
-    % Check for clipped signals
+    % Apply specific scaling factors and convert to mV
+    rec_data_mV(:,electrode_idx,itrial) = 1e3.*(rec_data(:,electrode_idx).*electrode_voltage_scaling_factor_V);
+    rec_data_mV(:,hydrophone_idx,itrial) = 1e3.*(rec_data(:,hydrophone_idx).*hydrophone_voltage_scaling_factor_V);
+    
+     % Check for clipped signals
     for ichan = 1:length(input_channels)
-            cur_sig = rec_data(:,ichan);
+            cur_sig = rec_data_mV(:,ichan,itrial);
             if any(cur_sig >= signal_clip_threshold)
                 fprintf('Possible clipping. Inspect signal.')
                 keyboard
@@ -69,10 +78,6 @@ for itrial = 1:height(stimulus)
         
     end
 
-    % Apply specific scaling factors and convert to mV
-    rec_data_mV(:,electrode_idx,itrial) = 1e3.*(rec_data(:,electrode_idx).*electrode_voltage_scaling_factor_V);
-    rec_data_mV(:,hydrophone_idx,itrial) = 1e3.*(rec_data(:,hydrophone_idx).*hydrophone_voltage_scaling_factor_V);
-    
     % Check for absurdly large electrode signals
     if any(abs(rec_data_mV(:)) > 1e4)
         [y, Fs] = audioread('error.mp3');

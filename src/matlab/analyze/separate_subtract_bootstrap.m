@@ -96,7 +96,7 @@ other_freq_diff_mean_distribution = ...
     calculate_fft_noise_floor(freq_2f_hz/2, range_2f_hz, mean(diffs), freq_vec,1); % freq_2f_hz/2 is used so we can also account for stimulus artefact
 top_percent_peak_num = ceil(length(other_freq_diff_mean_distribution)*0.05);
 max_vals = maxk(other_freq_diff_mean_distribution,top_percent_peak_num);
-within_diff_criteria = prctile(max_vals,99)*5;
+within_diff_criteria = median(max_vals)+mad(max_vals,1)*3*mad_to_std;
 
 %% Assign values to ex.block
 ex.fft.diffs = diffs;
@@ -119,7 +119,6 @@ hold(app.UIAxes_diff_fft, 'on');
 plot(app.UIAxes_diff_fft, f_diffs, mean_diffs, 'Color', tableau_10('blue'), 'LineWidth', 1.5);
 xlim(app.UIAxes_diff_fft, [(freq_2f_hz-(freq_2f_hz/1.1))*2, (freq_2f_hz+(freq_2f_hz/1.1))*2]);
 title(app.UIAxes_diff_fft, 'Difference FFT');
-grid(app.UIAxes_diff_fft, 'on');
 yline(app.UIAxes_diff_fft, 0, '--');
 xline(app.UIAxes_diff_fft, freq_2f_hz,'--')
 yline(app.UIAxes_diff_fft, stim_OFF_criteria ,'-','Color',tableau_10('pink'),'LineWidth',1.5)
@@ -127,6 +126,7 @@ xlabel(app.UIAxes_diff_fft,'Frequency (Hz)')
 ylabel(app.UIAxes_diff_fft,'Amplitude (\muV)')
 hold(app.UIAxes_diff_fft, 'off');
 
+drawnow
 %% Decision Logic
 % Run bootstrap if...
 % 1. When mean difference FFT @2f bin is x MAD greater than the median of the 5% greatest peaks at the other frequency bins in the difference fft
@@ -139,7 +139,7 @@ hold(app.UIAxes_diff_fft, 'off');
 if diff_2f_mean > within_diff_criteria 
     run_bootstrap = 1;
     gate_type = 1;
-elseif mean(stim_ON_2f_vec) > stim_OFF_criteria && rms_ratio < 0.5 && trials_presented > min_trials_for_analysis
+elseif rms_ratio <= 0.8 && trials_presented > min_trials_for_analysis
     run_bootstrap = 1;
     gate_type = 2;
 elseif trials_presented == max_trials
@@ -174,7 +174,6 @@ if run_bootstrap
     xlim(app.UIAxes_boot, [-max(abs(cur_xlim)), max(abs(cur_xlim))]);
     title(app.UIAxes_boot, 'Bootstrap Distribution');
     xlabel(app.UIAxes_boot, 'Difference');
-    grid(app.UIAxes_boot, 'on');
     ylabel(app.UIAxes_boot, 'Frequency');
     hold(app.UIAxes_boot, 'off');
 
@@ -218,7 +217,6 @@ if run_bootstrap
     xlim(app.UIAxes_perm, [-max(abs(cur_xlim)), max(abs(cur_xlim))]);
     title(app.UIAxes_perm, 'Permutation Distribution');
     xlabel(app.UIAxes_perm, 'Difference');
-    grid(app.UIAxes_perm, 'on');
     ylabel(app.UIAxes_perm, 'Frequency');
     hold(app.UIAxes_perm, 'off');
 

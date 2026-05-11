@@ -11,7 +11,8 @@ all_mad = median(abs(all_median - all_trials_chan_rms));
 rel_reject_threshold = all_median + reject_threshold_sd * all_mad *1.4826;
 
 % Keep trials below threshold
-kept_trials_idx = find(all_trials_chan_rms < rel_reject_threshold & all_trials_chan_rms < rejection_threshold_microV);
+kept_trials_idx = find(all_trials_chan_rms < rejection_threshold_microV); % Tr out only rejection absolute threshold
+% kept_trials_idx = find(all_trials_chan_rms < rel_reject_threshold & all_trials_chan_rms < rejection_threshold_microV);
 kept_trials_phases = all_phases_chan(kept_trials_idx);
 
 % Balance positive and negative phase trials

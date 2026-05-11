@@ -8,19 +8,22 @@ function [target_freq_range, max_val] = ...
 freq_vec = freq_vec(:)';
 
 % Select double freq response values
+% This wider range is necessary since the 2f response is not always
+% precisely at 2f
 lower_end = target_freq - target_freq_range;
 upper_end = target_freq + target_freq_range;
 
 bin_idxs = freq_vec >= lower_end & freq_vec <= upper_end;
-found_idxs = find(bin_idxs);
-bin_freq_vec = freq_vec(bin_idxs);
-[~, bin_idx_2f] = min(abs(bin_freq_vec-target_freq));
-n_tries = 0;
 
-if isempty(bin_idx_2f)
+% Only consider positive values in the case that the peak is down shifted
+select_bins = find(bin_idxs);
+if isempty(select_bins)
     keyboard
 end
-
-max_val = input_signal(:,found_idxs(bin_idx_2f)); % Keep rows across trials
-
+pos_idx = mean(input_signal(:, select_bins), 1) > 0;
+if ~any(pos_idx) % Just take the mean across all values within range
+    max_val = mean(input_signal(:, bin_idxs), 2);
+else
+    max_val = mean(input_signal(:, select_bins(pos_idx)), 2);
+end
 

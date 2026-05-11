@@ -9,13 +9,13 @@ ex.info.adaptive.response_feature = 'Double Frequency';
 ex.info.adaptive.max_trials = 300;
 ex = setup_hardware(ex);
 target_freq_range = ex.info.analysis.range_2f_hz;
-test_cycles = 0;
+test_cycles = 1;
 
 % Select which frequencies and durations to test
 freqs_hz = [40 100 400];
 num_cycles = 6;
 if test_cycles
-    ramp_cycles = [1 2 3 4 5 6];
+    ramp_cycles = [1 3 6];
 else
     ramp_ms = [20 60 100 140 180 220];
 end
@@ -27,13 +27,13 @@ for ifreq = 1:length(freqs_hz)
     cur_freq = ex.info.stimulus.frequency_hz;
     for idur = 1:length(num_cycles)
         ex.info.stimulus.full_amplitude_duration_ms = full_amp_ms(idur,ifreq);
-        for iramp = 1:length(ramp_ms)
+        for iramp = 1:length(ramp_cycles)
             if test_cycles
                 cur_ramp_cycles = ramp_cycles(iramp);
                 ramp_durs_ms(ifreq,idur,iramp) = (1/cur_freq)*cur_ramp_cycles*1e3;
                 ex.info.stimulus.ramp_duration_ms = ramp_durs_ms(ifreq,idur,iramp);
             else
-                ex.info.stimulus.ramp_duration_ms = ramp_ms(iramp);
+                ex.info.stimulus.ramp_duration_ms = ramp_cycles(iramp);
             end
 
             ex.info.animal.filename_root = sprintf('%s_%d_%gHz', ...
@@ -63,7 +63,7 @@ for ifreq = 1:length(freqs_hz)
             % Get stimulus frequency amplitude
             freq_vec = ex.info.calibration.freq_vec;
             % Define a region
-            selected_idx = freq_vec > 1 & freq_vec < cur_freq*3;
+            selected_idx = freq_vec > 1 & freq_vec < 5000;
             freq_vec = freq_vec(selected_idx);
             fft_vals = ex.info.calibration.fft_vals(selected_idx); % mean already calculated
             

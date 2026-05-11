@@ -80,7 +80,7 @@ plot(app.ax_hydrophone_spectra, freq_vec,fft_vals)
 xlim(app.ax_hydrophone_spectra, [0, 1000])
 
 % Measure signal quality
-selected_idx = freq_vec > 1 & freq_vec < stimulus_freq*3;
+selected_idx = freq_vec > 1 & freq_vec < 5000;
 freq_vec = freq_vec(selected_idx);
 fft_vals = fft_vals(selected_idx);
 my_snr = calculate_fft_snr(fft_vals, freq_vec, stimulus_freq, target_freq_range, 0);
@@ -116,7 +116,7 @@ plot(app.ax_hydrophone, time_vector, mean_hydrophone_sig)
 plot(app.ax_hydrophone_spectra, freq_vec,fft_vals)
 
 % Measure signal quality
-selected_idx = freq_vec > 1 & freq_vec < stimulus_freq*3;
+selected_idx = freq_vec > 1 & freq_vec < 5000;
 freq_vec = freq_vec(selected_idx);
 fft_vals = fft_vals(selected_idx);
 my_snr = calculate_fft_snr(fft_vals, freq_vec, stimulus_freq, target_freq_range, 0);

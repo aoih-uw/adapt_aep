@@ -23,7 +23,7 @@ hold on;
 plot(freq_vec, mean_fft, 'Color', tableau_10('blue'), 'LineWidth', 1.5);
 xlim([(freq_2f_hz-(freq_2f_hz/1.1))*2, (freq_2f_hz+(freq_2f_hz/1.1))*2]);
 title(sprintf('Mean Difference FFT: %1.0f Trials', num_trials));
-grid on;
+grid off;
 yline(0, '--');
 xline(freq_2f_hz, '--');
 xlabel('Frequency (Hz)');
@@ -43,7 +43,7 @@ hold on;
 plot(freq_vec, mean_fft, 'Color', tableau_10('blue'), 'LineWidth', 1.5);
 xlim([(freq_2f_hz-(freq_2f_hz/1.1))*2, (freq_2f_hz+(freq_2f_hz/1.1))*2]);
 title(sprintf('Mean STIM ON FFT: %1.0f Trials', num_trials));
-grid on;
+grid off;
 yline(0, '--');
 xline(freq_2f_hz, '--');
 xlabel('Frequency (Hz)');
@@ -52,20 +52,6 @@ hold off;
 savefig(f2, fullfile(figures_folder, [fig_prefix '_mean_stim_on_fft.fig']));
 print(f2, fullfile(figures_folder, [fig_prefix '_mean_stim_on_fft.png']), '-dpng', '-r150');
 close(f2);
-
-% Noise floor distribution
-f3 = figure('Visible', 'off');
-noise_floor = ex.model.stim_OFF_2f_vec{iamp};
-histogram(noise_floor, 'FaceColor', tableau_10('blue'));
-if min(noise_floor) < max(noise_floor)
-    xlim([min(noise_floor), max(noise_floor)]);
-end
-title('Noise Floor Distribution');
-xlabel('Amplitude (\muV)')
-ylabel('Frequency');
-savefig(f3, fullfile(figures_folder, [fig_prefix '_noise_floor.fig']));
-print(f3, fullfile(figures_folder, [fig_prefix '_noise_floor.png']), '-dpng', '-r150');
-close(f3);
 
 % Difference FFT Bootstrapped distribution
 f4 = figure('Visible', 'off');
@@ -84,7 +70,7 @@ xlim([-max(abs(cur_xlim)), max(abs(cur_xlim))]);
 title('Bootstrap Distribution');
 xlabel('Difference (\muV)');
 ylabel('Frequency');
-grid on;
+grid off;
 hold off;
 savefig(f4, fullfile(figures_folder, [fig_prefix '_bootstrap.fig']));
 print(f4, fullfile(figures_folder, [fig_prefix '_bootstrap.png']), '-dpng', '-r150');

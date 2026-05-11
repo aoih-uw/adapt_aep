@@ -18,8 +18,6 @@ for i = 1:3
     ax_new.XLabel.String = axes_list{i}.XLabel.String;
     ax_new.YLabel.String = axes_list{i}.YLabel.String;
     ax_new.Title.String = axes_list{i}.Title.String;
-    ax_new.XGrid = axes_list{i}.XGrid;
-    ax_new.YGrid = axes_list{i}.YGrid;
     savefig(f, fullfile(figures_folder, [fig_prefix suffixes{i} '.fig']));
     print(f, fullfile(figures_folder, [fig_prefix suffixes{i} '.png']), '-dpng', '-r150');
     close(f);

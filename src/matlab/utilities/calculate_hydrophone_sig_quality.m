@@ -23,6 +23,8 @@ stim_ON = stim_ON(:,ramp_duration_samples:end-ramp_duration_samples);
 for itrial = 1:size(stim_OFF,1)
     cur_sig = stim_OFF(itrial,:);
     stim_OFF(itrial,:) = bandpassfilter(cur_sig,stimulus_freq-0.5,stimulus_freq+0.5,4,fs);
+    cur_sig = stim_ON(itrial,:);
+    stim_ON(itrial,:) = bandpassfilter(cur_sig,stimulus_freq-0.5,stimulus_freq+0.5,4,fs);
 end
 
 % Calculate dB RMS re 1 microVolt
@@ -41,7 +43,7 @@ ex.block(iblock).hydrophone.stim_OFF_rms_dB_spl = median(stim_OFF_dB);
 stim_ON_same_phase = phase_vec.*stim_ON;
 mean_ON = mean(stim_ON_same_phase);
 [~, freq_vec, fft_ON] = calc_fft(mean_ON,fs);
-selected_idx = freq_vec > 1 & freq_vec < stimulus_freq*3;
+selected_idx = freq_vec > 1 & freq_vec < 5000;
 freq_vec = freq_vec(selected_idx);
 fft_ON = fft_ON(selected_idx);
 ex.block(iblock).hydrophone.stim_ON_snr  = ...
