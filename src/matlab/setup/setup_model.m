@@ -8,6 +8,10 @@ ex.model.amplitude_vec = [];
 
 ex.model.amplitude_vec_sorted = [];
 ex.model.response_vec_sorted = [];
+
+ex.model.response_vec_sorted_orig = [];
+ex.model.response_vec_std_sorted_orig = [];
+
 ex.model.per_amp_noise_sorted = [] ;
 ex.model.resp_found_sorted = [];
 ex.model.trial_count_sorted = [];
@@ -17,3 +21,5 @@ ex.model.a1_fit = [];
 ex.model.m_fit = [];
 ex.model.y_int = [];
 ex.model.Rsquared = [];
+
+ex.model.gp_threshold = [];

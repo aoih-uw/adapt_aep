@@ -36,7 +36,7 @@ current_amplitude = ex.info.stimulus.amplitude_spl;
 
 % Clear axes
 cla(app.UIAxes_boot)
-cla(app.UIAxes_perm)
+% cla(app.UIAxes_perm)
 cla(app.UIAxes_gate)
 
 % Extract Stim ON and OFF Periods
@@ -117,7 +117,19 @@ reset(app.UIAxes_diff_fft);
 fill(app.UIAxes_diff_fft, [f_diffs fliplr(f_diffs)], [mean_diffs+s_diffs fliplr(mean_diffs-s_diffs)], tableau_10('blue'), 'FaceAlpha', 0.3, 'EdgeColor', 'none');
 hold(app.UIAxes_diff_fft, 'on');
 plot(app.UIAxes_diff_fft, f_diffs, mean_diffs, 'Color', tableau_10('blue'), 'LineWidth', 1.5);
-xlim(app.UIAxes_diff_fft, [(freq_2f_hz-(freq_2f_hz/1.1))*2, (freq_2f_hz+(freq_2f_hz/1.1))*2]);
+
+% X-limits: symmetric window around 2f
+half_width = freq_2f_hz / 2;          % tweak: 0.5*2f gives an octave on each side
+xl = [freq_2f_hz - half_width, freq_2f_hz + half_width];
+xlim(app.UIAxes_diff_fft, xl);
+
+% Y-limits: focus on the 2f bin
+in_2f = f_diffs >= (freq_2f_hz - range_2f_hz) & f_diffs <= (freq_2f_hz + range_2f_hz);
+y_lo = min(mean_diffs(in_2f) - s_diffs(in_2f));
+y_hi = max([mean_diffs(in_2f) + s_diffs(in_2f), stim_OFF_criteria]);
+pad  = 0.15 * (y_hi - y_lo);
+ylim(app.UIAxes_diff_fft, [y_lo - pad, y_hi + pad]);
+
 title(app.UIAxes_diff_fft, 'Difference FFT');
 yline(app.UIAxes_diff_fft, 0, '--');
 xline(app.UIAxes_diff_fft, freq_2f_hz,'--')
@@ -206,19 +218,19 @@ if run_bootstrap
     
     fprintf('\nPermutation test result \nSignificance threshold: %1.3f\n Test statistic: %1.3f\n ',sig_thresh, test_stat)
     
-    % Plot bootstrapped distribution on app axes
-    reset(app.UIAxes_perm)
-    histogram(app.UIAxes_perm, perm_matrix, 'FaceColor', tableau_10('blue'));
-    hold(app.UIAxes_perm, 'on');
-    xline(app.UIAxes_perm, test_stat, 'Color', tableau_10('blue'), 'LineWidth', 1.5)
-    xline(app.UIAxes_perm, sig_thresh, 'LineStyle', '--', 'Color', tableau_10('red'), 'LineWidth', 1.5)
-    xlim(app.UIAxes_perm, 'auto');
-    cur_xlim = xlim(app.UIAxes_perm);
-    xlim(app.UIAxes_perm, [-max(abs(cur_xlim)), max(abs(cur_xlim))]);
-    title(app.UIAxes_perm, 'Permutation Distribution');
-    xlabel(app.UIAxes_perm, 'Difference');
-    ylabel(app.UIAxes_perm, 'Frequency');
-    hold(app.UIAxes_perm, 'off');
+    % % Plot bootstrapped distribution on app axes
+    % reset(app.UIAxes_perm)
+    % histogram(app.UIAxes_perm, perm_matrix, 'FaceColor', tableau_10('blue'));
+    % hold(app.UIAxes_perm, 'on');
+    % xline(app.UIAxes_perm, test_stat, 'Color', tableau_10('blue'), 'LineWidth', 1.5)
+    % xline(app.UIAxes_perm, sig_thresh, 'LineStyle', '--', 'Color', tableau_10('red'), 'LineWidth', 1.5)
+    % xlim(app.UIAxes_perm, 'auto');
+    % cur_xlim = xlim(app.UIAxes_perm);
+    % xlim(app.UIAxes_perm, [-max(abs(cur_xlim)), max(abs(cur_xlim))]);
+    % title(app.UIAxes_perm, 'Permutation Distribution');
+    % xlabel(app.UIAxes_perm, 'Difference');
+    % ylabel(app.UIAxes_perm, 'Frequency');
+    % hold(app.UIAxes_perm, 'off');
 
     drawnow
     

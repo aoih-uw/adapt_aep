@@ -16,7 +16,7 @@ time_s = (0:N_samples-1) / fs;
 % Downsample for plotting
 max_plot_points = 2000; % Adjust as needed
 if N_samples > max_plot_points
-    ds_factor = floor(N_samples / max_plot_points);
+    ds_factor = 10;
     plot_idx = 1:ds_factor:N_samples;
 else
     plot_idx = 1:N_samples;

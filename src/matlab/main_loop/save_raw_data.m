@@ -4,6 +4,9 @@ iblock = ex.counter.iblock;
 ihealth = ex.counter.ihealth;
 iboot = ex.counter.iboot;
 iamp = ex.counter.iamp;
+fs = ex.info.recording.sampling_rate_hz;
+downsamp_rate = 2;
+N_chan = ex.info.channels.n_channels;
 
 % Generate timestamp
 ex.info.experiment.exp_time_end = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
@@ -24,7 +27,23 @@ ex_save = struct();
 ex_save.info = ex.info; % Basic experiment parameters
 ex_save.counter = ex.counter; % Know how many of each thing we did by the time we finished testing this amplitude
 ex_save.block_level_info = ex.block(1:iblock); % Block level info
-ex_save.raw_signals = ex.raw(1:iblock); % The raw signals
+
+% Downsample
+for iiblock = 1:iblock
+    cur_sig_block = ex.raw(iiblock);
+    hydrophone_ds = cur_sig_block.hydrophone_mV(:,1:downsamp_rate:end);
+    loopback_ds = cur_sig_block.loopback(:,1:downsamp_rate:end);
+    time_stamp_ds = cur_sig_block.time_stamp(:,1:downsamp_rate:end);
+    channel_ds = cur_sig_block.electrodes_microV(:,1:downsamp_rate:end,:);
+
+    ex_save.raw_signals(iiblock).hydrophone_ds = hydrophone_ds;
+    ex_save.raw_signals(iiblock).loopback_ds = loopback_ds;
+    ex_save.raw_signals(iiblock).time_stamp_ds = time_stamp_ds;
+    ex_save.raw_signals(iiblock).electrodes_microV_ds = channel_ds;
+
+end
+
+ex_save.ds_fs = fs/downsamp_rate;
 ex_save.preprocessing_stats = ex.preprocess(1:iblock); % Preprocessing statistics
 ex_save.decision = ex.decision(iamp); % Decisions related to this specific stimulus amplitude and frequency
 

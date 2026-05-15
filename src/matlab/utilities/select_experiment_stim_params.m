@@ -12,7 +12,7 @@ ramp_cycles = ex.info.stimulus.ramp_duration_cycles;
 ramp_ms =  stimulus_period*ramp_cycles*1e3;
 
 % Ramp cycle duration
-ex.info.stimulus.ramp_duration_ms = max(ramp_ms, 25);
+ex.info.stimulus.ramp_duration_ms = max(ramp_ms, 50);
 
 % Full amp duration
 desired_freq_res = 5; %fs/N = 5
