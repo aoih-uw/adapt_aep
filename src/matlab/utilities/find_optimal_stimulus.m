@@ -67,7 +67,7 @@ for ifreq = 1:length(freqs_hz)
             freq_vec = freq_vec(selected_idx);
             fft_vals = ex.info.calibration.fft_vals(selected_idx); % mean already calculated
             
-            my_snr = calculate_fft_snr(fft_vals,freq_vec, cur_freq, target_freq_range,0);
+            my_snr = calculate_fft_snr(fft_vals,freq_vec, cur_freq, target_freq_range,0,0);
             
             score_median(idur,iramp,ifreq) = my_snr;
 

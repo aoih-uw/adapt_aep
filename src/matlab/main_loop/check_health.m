@@ -88,7 +88,7 @@ mean_response = mean(kept_trials_filtered,1);
 [~, freq_vec, fft_vec] = calc_fft(mean_response,fs);
 
 [~, doub_freq_mag] = ...
-    find_fft_bins(freq_2f_hz, range_2f_hz, fft_vec, freq_vec);
+    find_fft_bins(freq_2f_hz, range_2f_hz, fft_vec, freq_vec,1);
 
 % Check to see if we have already measured a baseline_response for this
 % animal

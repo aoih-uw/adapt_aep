@@ -16,8 +16,6 @@ while true
         if val < ex.info.stimulus.min_amplitude_limit || val > ex.info.stimulus.max_amplitude_limit
             fprintf('Amplitude out of range. Please enter a value between %g and %g dB SPL.\n', ...
                 ex.info.stimulus.min_amplitude_limit, ex.info.stimulus.max_amplitude_limit);
-        elseif ismember(val, ex.model.amplitude_vec)
-            fprintf('Amplitude already used. Please choose a different amplitude.\n');
         else
             ex.info.stimulus.amplitude_spl = val;
             break;

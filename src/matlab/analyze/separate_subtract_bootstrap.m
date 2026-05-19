@@ -72,12 +72,12 @@ freq_vec = freq_vec_stim_ON(1,:);
 
 %% Extract Stim ON 2f bins
 [range_2f_hz,stim_ON_2f_vec] = ...
-    find_fft_bins(freq_2f_hz, range_2f_hz, fft_vals_stim_ON, freq_vec);
+    find_fft_bins(freq_2f_hz, range_2f_hz, fft_vals_stim_ON, freq_vec,1);
 
 %% Extract Stim OFF 2f bins (i.e., noise floor)
 % Get the magnitude value at 2f in the stim OFF period to compare to stim ON period for the model
     [range_2f_hz, stim_OFF_2f_vec] = ...
-    find_fft_bins(freq_2f_hz, range_2f_hz, fft_vals_stim_OFF, freq_vec);
+    find_fft_bins(freq_2f_hz, range_2f_hz, fft_vals_stim_OFF, freq_vec,1);
 
 stim_OFF_2f_median = median(stim_OFF_2f_vec);
 stim_OFF_2f_mad = mad(stim_OFF_2f_vec, 1);  
@@ -86,7 +86,7 @@ stim_OFF_criteria = stim_OFF_2f_median + stim_OFF_2f_mad*mad_criteria*mad_to_std
 %% Calculate DIFF: Subtract ON - OFF for bootstrap
 diffs = fft_vals_stim_ON - fft_vals_stim_OFF;
 [~, diff_2f_vec] = ...
-    find_fft_bins(freq_2f_hz, range_2f_hz, diffs, freq_vec);
+    find_fft_bins(freq_2f_hz, range_2f_hz, diffs, freq_vec,1);
 
 % Calculate mean diff 2f magnitude to compare to other peaks in diff
 diff_2f_mean = mean(diff_2f_vec); % Collapse 2f diff bin means across trials

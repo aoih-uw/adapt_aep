@@ -47,4 +47,4 @@ selected_idx = freq_vec > 1 & freq_vec < 5000;
 freq_vec = freq_vec(selected_idx);
 fft_ON = fft_ON(selected_idx);
 ex.block(iblock).hydrophone.stim_ON_snr  = ...
-    calculate_fft_snr(fft_ON, freq_vec, stimulus_freq, target_freq_range, 0);
+    calculate_fft_snr(fft_ON, freq_vec, stimulus_freq, target_freq_range, 0, 0);

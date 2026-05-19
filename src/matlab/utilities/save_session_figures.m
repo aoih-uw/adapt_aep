@@ -4,9 +4,9 @@ function save_session_figures(ex, folder, app)
 % Adapt_AEP interface
 figures_folder = fullfile(folder, 'figures');
 fig_prefix = sprintf('%s', ex.info.animal.filename_root);
-axes_list = {app.UIAxes_model, app.UIAxes_model_2, app.UIAxes_model_3, app.UIAxes_thresh_est, app.UIAxes_slope_est};
-suffixes = {'_GP', '_expo', '_piece', '_thresh_est', '_slope_est'};
-subfolders = {'GP', 'expo', 'piece', 'thresh_est', 'slope_est'};
+axes_list = {app.UIAxes_model, app.UIAxes_model_3, app.UIAxes_thresh_est, app.UIAxes_slope_est};
+suffixes = {'_GP', '_softplus', '_thresh_est', '_slope_est'};
+subfolders = {'GP', 'softplus', 'thresh_est', 'slope_est'};
 
 for i = 1:length(suffixes)
     if isempty(get(axes_list{i}, 'Children')), continue; end
@@ -21,8 +21,16 @@ for i = 1:length(suffixes)
     ax_new.XLabel.String = axes_list{i}.XLabel.String;
     ax_new.YLabel.String = axes_list{i}.YLabel.String;
     ax_new.Title.String = axes_list{i}.Title.String;
-    savefig(f, fullfile(out_dir, [fig_prefix suffixes{i} '.fig']));
-    print(f, fullfile(out_dir, [fig_prefix suffixes{i} '.png']), '-dpng', '-r150');
+    
+    base = fullfile(out_dir, [fig_prefix suffixes{i}]);
+    name = base; n = 1;
+    while exist([name '.fig'], 'file') || exist([name '.png'], 'file')
+        n = n + 1;
+        name = sprintf('%s_%d', base, n);
+    end
+    savefig(f, [name '.fig']);
+    print(f, [name '.png'], '-dpng', '-r150');
     close(f);
+    
 end
 end
