@@ -4,12 +4,9 @@ function [ex, selected_cycle_samples, stimulus, phase_vec] = ...
 % Load variables
 fs = ex.info.recording.sampling_rate_hz;
 latency_samples = ex.info.recording.latency_samples;
+cur_freq = ex.info.stimulus.frequency_hz;
 
-if ex.info.health.make_health_sig == 1
-    correction_factor = ex.info.health.calibration.correction_factor_linear;
-else
-    correction_factor = ex.info.calibration.correction_factor_linear;
-end
+correction_factor = ex.info.calibration.correction_factor_linear;
 
 % Generate random phase offsets within one 60 Hz cycle
 period_60_hz = 1/60; % time it takes to complete 1 cycle of 60 Hz (s)
@@ -25,7 +22,13 @@ end
 % Define [PRE, DUR, POST] stimulus periods
 stim_OFF = zeros(1, length(waveform));
 stim_ON = waveform;
-post_stim = zeros(1, length(waveform));
+if cur_freq < 100
+post_stim = zeros(1, fs*1); % 1 sec pause
+elseif cur_freq >= 100 && cur_freq < 200
+    post_stim = zeros(1,fs*100/1e3); % 100 ms pause
+elseif cur_freq >= 200
+    post_stim = zeros(1,fs*50/1e3);
+end
 latency = zeros(1,latency_samples);
 
 % Calculate maximum trial length

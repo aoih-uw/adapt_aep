@@ -13,7 +13,7 @@ figures_folder = fullfile(folder, 'figures');
 fig_prefix = sprintf('%s_%ddBSPL', ex.info.animal.filename_root, ex.info.stimulus.amplitude_spl);
 
 % Mean Difference FFT
-f1 = figure('Visible', 'off');
+f1 = figure('Visible', 'on');
 mean_fft = mean(diffs_fft,1);
 std_fft = std(diffs_fft,0,1);
 fill([freq_vec fliplr(freq_vec)], [mean_fft+std_fft fliplr(mean_fft-std_fft)], tableau_10('blue'), 'FaceAlpha', 0.3, 'EdgeColor', 'none');
@@ -31,7 +31,7 @@ save_with_unique_name(f1, fullfile(figures_folder, 'mean_diff_fft'), [fig_prefix
 close(f1);
 
 % Mean STIM ON FFT
-f2 = figure('Visible', 'off');
+f2 = figure('Visible', 'on');
 mean_fft = mean(stim_ON_fft,1);
 std_fft = std(stim_ON_fft,0,1);
 fill([freq_vec fliplr(freq_vec)], [mean_fft+std_fft fliplr(mean_fft-std_fft)], tableau_10('blue'), 'FaceAlpha', 0.3, 'EdgeColor', 'none');

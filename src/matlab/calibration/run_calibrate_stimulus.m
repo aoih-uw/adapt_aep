@@ -11,19 +11,10 @@ function ex  = run_calibrate_stimulus(app, ex)
 fs = ex.info.recording.sampling_rate_hz;
 target_freq_range = ex.info.analysis.range_2f_hz;
 
-% Assign cal to either health or experiment signal
-if ex.info.health.make_health_sig == 1
-    cal = ex.info.health.calibration;
-    waveform = ex.info.health.waveform;
-    stimulus_freq = ex.info.health.stimulus_frequency_hz;
-    target_level = ex.info.health.stimulus_amplitude_spl;
-else
-    cal = ex.info.calibration;
-    stimulus_freq = ex.info.stimulus.frequency_hz;
-    target_level = ex.info.calibration.target_amp_spl;
-    waveform = ex.info.stimulus.waveform; % When using optimize signal quality function
-end
-
+cal = ex.info.calibration;
+stimulus_freq = ex.info.stimulus.frequency_hz;
+target_level = ex.info.calibration.target_amp_spl;
+waveform = ex.info.stimulus.waveform; % When using optimize signal quality function
 
 correction_tolerance_dB = ex.info.calibration.correction_tolerance_dB;
 
@@ -31,8 +22,6 @@ cal.initial_calibration_complete = 0;
 cal.check_passed = 0;
 
 max_attempts = 3;
-
-fprintf('\nStarting calibration...\n')
 
 %% Create stimuli
 % Create calibration stimulus (Send to speaker)
@@ -163,31 +152,17 @@ else
     cal.attempt = cal.attempt + 1;
 
     if cal.attempt < max_attempts
-        if ex.info.health.make_health_sig == 1
-            ex.info.health.calibration.attempt = cal.attempt;
-        else
-            ex.info.calibration.attempt = cal.attempt;
-        end
+        ex.info.calibration.attempt = cal.attempt;
         ex = run_calibrate_stimulus(app, ex);
         % Set back to 0 to allow another 3 tries
-        if ex.info.health.make_health_sig == 1
-            ex.info.health.calibration.attempt = 0;
-        else
-            ex.info.calibration.attempt = 0;
-        end
+        ex.info.calibration.attempt = 0;
         return
     else
         fprintf('Max attempts reached.\n')
-
-
     end
 end
 
-if ex.info.health.make_health_sig == 1
-    ex.info.health.calibration = cal;
-else
-    ex.info.calibration = cal;
-end
+ex.info.calibration = cal;
 
 end
 

@@ -71,7 +71,7 @@ ex.info.stimulus = struct( ...
 % Channel parameters
 ex.info.channels = struct( ...
     'n_channels',             4, ...
-    'names',                 {{'L','R','Midline','Forebrain'}}, ...
+    'names',                 {{'EKG','R','Midline','Forebrain'}}, ...
     'reference_location',    'tail', ...
     'ground_location',       'in water', ...
     'electrode_type',        'Subdermal, differential measurment, stainless steel, 27 gauge, 13 mm, Rochester Electromedical Inc.; Coral Springs, FL, USA', ...
@@ -137,26 +137,4 @@ ex.info.calibration = struct( ... % These values will be updated by prepare_next
     'check_passed',                    NaN ... % auto generate here
     );
 
-% Health
-ex.info.health.waveform = NaN;
-ex.info.health.make_health_sig = 0;
-ex.info.health.stimulus_frequency_hz = 100;
-ex.info.health.stimulus_amplitude_spl = 120;
-ex.info.health.ramp_duration_ms = 100;
-ex.info.health.stimulus_block = NaN;
-ex.info.health.phase_vec = NaN;
-ex.info.health.baseline_response = NaN;
-ex.info.health.filename_root = NaN;
 
-% Health Calibration related
-ex.info.health.calibration.check_passed = NaN;
-ex.info.health.calibration.initial_calibration_complete = NaN;
-ex.info.health.calibration.uncorrected_levels = NaN;
-ex.info.health.calibration.correction_factor_dB = NaN;
-ex.info.health.calibration.correction_factor_linear = NaN;
-ex.info.health.calibration.signals = NaN;
-ex.info.health.calibration.corrected_level = NaN;
-ex.info.health.calibration.time_vector = NaN;
-ex.info.health.calibration.time_sig = NaN;
-ex.info.health.calibration.freq_vec = NaN;
-ex.info.health.calibration.fft_vals = NaN;

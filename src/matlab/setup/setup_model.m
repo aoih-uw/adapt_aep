@@ -16,10 +16,10 @@ ex.model.per_amp_noise_sorted = [] ;
 ex.model.resp_found_sorted = [];
 ex.model.trial_count_sorted = [];
 
-ex.model.x0_fit = [];
-ex.model.a1_fit = [];
-ex.model.m_fit = [];
-ex.model.y_int = [];
-ex.model.Rsquared = [];
-
+ex.model.x0_fit    = [];
+ex.model.a1_fit    = [];
+ex.model.k_fit     = [];
+ex.model.y_int     = [];
+ex.model.x_10      = [];
+ex.model.Rsquared  = [];
 ex.model.gp_threshold = [];

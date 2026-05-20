@@ -35,17 +35,17 @@ ex = select_next_dialog(ex);
             fprintf('\nChecking temperature...\n')
             % ex = check_temperature(ex);
 
-            % %% HEALTH CHECK
-            % time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.health(ex.counter.ihealth).time_stamp;
-            % if time_diff >= minutes(15)
-            %     fprintf('\nChecking animal health...\n')
-            %     ex = check_health(ex,app);
-            %     if ex.exp_done == 1 % Did user decide to stop testing due to bad health?
-            %         ex = save_raw_data(ex);
-            %         ex = save_session_data(ex, app);
-            %         return
-            %     end
-            % end
+            %% HEALTH CHECK
+            time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.health(ex.counter.ihealth).time_stamp;
+            if time_diff >= minutes(15)
+                fprintf('\nChecking animal health...\n')
+                ex = check_health(ex,app);
+                if ex.exp_done == 1 % Did user decide to stop testing due to bad health?
+                    ex = save_raw_data(ex);
+                    ex = save_session_data(ex, app);
+                    return
+                end
+            end
 
             %% DATA COLLECTION
             fprintf('\nPresenting stimulus...\n')

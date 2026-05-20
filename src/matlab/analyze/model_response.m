@@ -68,8 +68,6 @@ ex.model.trial_count_sorted = trial_count_sorted;
 plot_model_data_points(app.UIAxes_model_3, amplitude_sorted, per_amp_noise_sorted, ...
     per_amp_noise_mad_sorted, trial_count_sorted, response_sorted, response_std_sorted, resp_found_sorted)
 
-xlim(app.UIAxes_model_3,[min(amplitude_sorted)-3 max(amplitude_sorted)+3])
-ylim(app.UIAxes_model_3,[min(response_sorted)-0.01, max(response_sorted)+0.01])
 title(app.UIAxes_model_3,'Current Data')
 drawnow
 

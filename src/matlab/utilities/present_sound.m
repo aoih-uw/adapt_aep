@@ -15,8 +15,7 @@ for itrial = 1:height(stimulus)
     pct = itrial / height(stimulus);
     bar = repmat('█', 1, round(pct * 20));
     gap = repmat('░', 1, 20 - round(pct * 20));
-    fprintf('\r  %s%s %d/%d (%.0f%%)', bar, gap, itrial, height(stimulus), pct*100);
-    if itrial == height(stimulus), fprintf('\n  Finished\n'); end
+    fprintf('\r  %s%s %d/%d', bar, gap, itrial, height(stimulus));
 
     % Get current trial
     if size(stimulus,3) > 1 % We have signals to present on more than one channel
@@ -25,7 +24,7 @@ for itrial = 1:height(stimulus)
         current_waveform = stimulus(itrial,:)';
         current_waveform = [current_waveform current_waveform]; % Give a signal to loopback too!
     end
-    
+
     % Check amplitude range for safety (prevent speaker/electrode damage)
     max_amplitude = max(abs(current_waveform));
     amplitude_threshold = 1.0; % Adjust based on your system's safe range
@@ -67,26 +66,27 @@ for itrial = 1:height(stimulus)
     % Apply specific scaling factors and convert to mV
     rec_data_mV(:,electrode_idx,itrial) = 1e3.*(rec_data(:,electrode_idx).*electrode_voltage_scaling_factor_V);
     rec_data_mV(:,hydrophone_idx,itrial) = 1e3.*(rec_data(:,hydrophone_idx).*hydrophone_voltage_scaling_factor_V);
-    
-     % Check for clipped signals
+
+    % Check for clipped signals
     for ichan = 1:length(input_channels)
-            cur_sig = rec_data_mV(:,ichan,itrial);
-            if any(cur_sig >= signal_clip_threshold)
-                fprintf('Possible clipping. Inspect signal.')
-                keyboard
-            end
-        
+        cur_sig = rec_data_mV(:,ichan,itrial);
+        if any(cur_sig >= signal_clip_threshold)
+            fprintf('Possible clipping. Inspect signal.')
+            keyboard
+        end
+
     end
 
     % Check for absurdly large electrode signals
     if any(abs(rec_data_mV(:)) > 1e4)
         [y, Fs] = audioread('error.mp3');
-            sound(y, Fs)
+        sound(y, Fs)
         fprintf('\nUnusually large voltage values detected in sensors (max: %.2f mV)\n', ...
             max(abs(rec_data_mV(:))));
         pause(2)
     end
-    
+
+    if itrial == height(stimulus), fprintf('\n  Finished\n'); end
 end
 
 rec_data_mV = permute(rec_data_mV,[3,1,2]); % change to n_trial, n_sample, n_channel

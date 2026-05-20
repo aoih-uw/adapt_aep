@@ -39,13 +39,8 @@ ex = setup_model(ex);
 
 % Setup health
 for ihealth = 1:100
-    ex.health(ihealth).hydrophone_mV= NaN;
     ex.health(ihealth).electrodes_microV= NaN;
     ex.health(ihealth).time_stamp = NaN;
-    ex.health(ihealth).doub_stim_mag = NaN;
-    ex.health(ihealth).rel_strength = NaN;
-    ex.health(ihealth).status = NaN;
-    ex.health(ihealth).end_test = 0;
 end
 
 
