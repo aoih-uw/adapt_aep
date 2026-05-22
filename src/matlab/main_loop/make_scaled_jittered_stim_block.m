@@ -23,11 +23,11 @@ end
 stim_OFF = zeros(1, length(waveform));
 stim_ON = waveform;
 if cur_freq < 100
-post_stim = zeros(1, fs*1); % 1 sec pause
+post_stim = zeros(1, fs*400/1e3); %  400ms
 elseif cur_freq >= 100 && cur_freq < 200
-    post_stim = zeros(1,fs*100/1e3); % 100 ms pause
+    post_stim = zeros(1,fs*50/1e3); % 50 ms
 elseif cur_freq >= 200
-    post_stim = zeros(1,fs*50/1e3);
+    post_stim = zeros(1,fs*20/1e3); % 20 ms
 end
 latency = zeros(1,latency_samples);
 

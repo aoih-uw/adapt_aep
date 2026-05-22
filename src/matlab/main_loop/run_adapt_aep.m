@@ -14,7 +14,7 @@ ex = app.ex;
 ex.info.experiment.exp_time_start = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
 ex = select_next_dialog(ex);
 
-% try
+try
     while ~ex.exp_done % While testing current stimulus frequency
         ex.counter.iamp = ex.counter.iamp + 1;
         ex.decision(ex.counter.iamp).resp_found = 0;
@@ -39,7 +39,7 @@ ex = select_next_dialog(ex);
             time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.health(ex.counter.ihealth).time_stamp;
             if time_diff >= minutes(15)
                 fprintf('\nChecking animal health...\n')
-                ex = check_health(ex,app);
+                ex = check_health(ex);
                 if ex.exp_done == 1 % Did user decide to stop testing due to bad health?
                     ex = save_raw_data(ex);
                     ex = save_session_data(ex, app);
@@ -122,12 +122,12 @@ ex = select_next_dialog(ex);
         end
     end
 
-% catch ME
-%     [y, Fs] = audioread('error.mp3');
-%     sound(y, Fs)
-%     fprintf('\nExperiment error: %s\n', ME.message)
-%     ex = save_raw_data(ex);
-%     ex = save_session_data(ex, app);
-%     rethrow(ME)
-% end
+catch ME
+    [y, Fs] = audioread('error.mp3');
+    sound(y, Fs)
+    fprintf('\nExperiment error: %s\n', ME.message)
+    ex = save_raw_data(ex);
+    ex = save_session_data(ex, app);
+    rethrow(ME)
+end
 
