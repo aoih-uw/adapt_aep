@@ -1,10 +1,11 @@
 function plotting_2026_05_19()
 addpath(genpath('\\wsl.localhost\ubuntu\home\aoih\adapt_aep\src\matlab'))
-
+% Set data location
 cd('F:\2026\Research\May Midshipman\2026_05_15\hydrolagus_colliei_9_20260515')
+
 % Get files
 clear all
-subjid = 9;
+subjid = 8;
 files = dir(sprintf('*%d_*_session_data*', subjid));
 mynames = {files.name};
 
@@ -115,7 +116,7 @@ end
 sgtitle(sprintf('Subject %d Growth Functions', subjid))
 linkaxes(findobj(gcf,'Type','axes'),'xy');
 
-% Exclude data points
+%% Exclude data points
 exclude_idx = [5,8,9];
 
 keep = setdiff(1:length(mynames), exclude_idx);
@@ -140,7 +141,6 @@ gp_thresh       = gp_thresh(keep);
 
 
 %% Fit softplus
-softplus = @(p,x) p(1)*log1p(exp(p(3)*(x - p(2))))/p(3) + p(4);
 n = length(amp_vec);
 sp_params = cell(1,n);
 figure;
@@ -149,90 +149,15 @@ tiledlayout(nrows, ncols, 'TileSpacing','compact', 'Padding','compact');
 for i = 1:n
     x = amp_vec{i}(:); y = resp_vec{i}(:);
     p0 = [(max(y)-min(y))/range(x), median(x), 1, min(y)];
-    p = lsqcurvefit(softplus, p0, x, y, [], [], optimset('Display','off'));
+    p = lsqcurvefit(@softplus_func, p0, x, y, [], [], optimset('Display','off'));
     sp_params{i} = p;
     x_10(i) = p(2) - log(9)/p(3);
     nexttile;
     xx = linspace(min(x), max(x), 200);
-    plot(xx, softplus(p,xx), '-','LineWidth',2); hold on;
+    plot(xx, softplus_func(p,xx), '-','LineWidth',2); hold on;
     plot(x, y, 'o');
     xline(x_10(i), '--');
     title(sprintf('%.1f Hz | x_{10}=%.2f', freq(i), x_10(i)));
 end
-
-% %% Fit 2 elbows
-% elbow = @(p,x) elbow_2_function(x, p(1), p(2), p(3), p(4), p(5));
-% n = length(amp_vec);
-% fit_params = cell(1,n);
-% figure;
-% nrows = ceil(sqrt(n)); ncols = ceil(n/nrows);
-% t = tiledlayout(nrows, ncols, 'TileSpacing', 'compact', 'Padding', 'compact');
-% for i = 1:n
-%     x = amp_vec{i}(:); y = resp_vec{i}(:);
-%     p0 = [quantile(x,1/3), quantile(x,2/3), min(y), (max(y)-min(y))/range(x), (max(y)-min(y))/range(x)];
-%     lb = [min(x), min(x), -inf, -inf, -inf];
-%     ub = [max(x), max(x),  inf,  inf,  inf];
-%     p = lsqcurvefit(elbow, p0, x, y, lb, ub, optimset('Display','off'));
-%     fit_params{i} = p;
-%     nexttile;
-%     xx = linspace(min(x), max(x), 200);
-%     plot(xx, elbow(p, xx), '-','LineWidth',2); hold on;
-%     plot(x, y, 'o');
-%     xline(p(1), '--');
-%     title(sprintf('%.1f Hz | x0=%.3g', freq(i), p(1)));
-% end
-
-%% Elbow functions
-for i = 1:length(fit_params)
-    x0_2(i) = fit_params{i}(1);
-end
-
-figure;
-plot(freq,x0_2,'o-')
-
-% one elbow x0 predictions
-figure;
-for iname = 1:length(mynames)
-    cur_x0 = x0_fit{iname};
-    if ~isempty(cur_x0)
-        scatter(freq(iname), x0_fit{iname}(end), 100,colors.blue/255, 'filled');
-    end
-    hold on;
-end
-xlim([min(freq)-min(freq)*.2 max(freq)+max(freq)*.2]);
-xticks(unique(freq))
-xscale('log')
-xlabel('Stimulus Frequency (Hz)')
-ylabel('Threshold dB SPL')
-title('x0 values')
-
-% Smallest Bootstrap Threshold
-for iname = 1:length(mynames)
-    myidx = find(resp_found_vec{iname},1,'first');
-    if ~isempty(myidx)
-        if ~isempty(myidx) ...
-                && myidx+1 <= length(amp_vec{iname}) ...
-                && amp_vec{iname}(myidx+1) == 0
-            thresh_val(iname) = NaN;
-        else
-            thresh_val(iname) = amp_vec{iname}(myidx);
-        end
-    else
-        thresh_val(iname) = NaN;
-    end
-end
-
-figure;
-for iname = 1:length(mynames)
-    cur_x0 = x0_fit{iname};
-    if ~isempty(cur_x0)
-        scatter(freq(iname), thresh_val(iname), 100,colors.blue/255, 'filled');
-    end
-    hold on;
-end
-xlim([min(freq)-min(freq)*.2 max(freq)+max(freq)*.2]);
-xticks(unique(freq))
-xscale('log')
-xlabel('Stimulus Frequency (Hz)')
-ylabel('Threshold dB SPL')
-title('Smallest Boot')
+linkaxes
+db_stop = 1;
