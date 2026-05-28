@@ -1,5 +1,5 @@
 function [ex, selected_cycle_samples, stimulus, phase_vec] = ...
-        make_scaled_jittered_stim_block(ex, waveform, current_amplitude, trials_per_block)
+        make_scaled_jittered_stim_block(ex, waveform, current_amplitude, trials_per_block,is_adaptive)
 
 % Load variables
 fs = ex.info.recording.sampling_rate_hz;
@@ -20,14 +20,20 @@ else
 end
 
 % Define [PRE, DUR, POST] stimulus periods
-stim_OFF = zeros(1, length(waveform));
+if is_adaptive
+    stim_OFF = zeros(1, length(waveform));
+else
+    stim_OFF = zeros(1,round(fs*5/1e3)); % 5 ms
+end
 stim_ON = waveform;
 if cur_freq < 100
-post_stim = zeros(1, fs*400/1e3); %  400ms
+post_stim = zeros(1, round(fs*600/1e3)); %  600 ms
 elseif cur_freq >= 100 && cur_freq < 200
-    post_stim = zeros(1,fs*50/1e3); % 50 ms
-elseif cur_freq >= 200
-    post_stim = zeros(1,fs*20/1e3); % 20 ms
+    post_stim = zeros(1,round(fs*100/1e3)); % 100 ms
+elseif cur_freq >= 200 & cur_freq <= 800
+    post_stim = zeros(1,round(fs*40/1e3)); % 40 ms
+elseif  cur_freq > 800
+    post_stim = zeros(1,round(fs*20/1e3)); % 20 ms
 end
 latency = zeros(1,latency_samples);
 

@@ -14,11 +14,11 @@ for itrial = 1:length(num_trials)
 
         off_on_dur_ms = (full_amp_ms+ramp_ms*2)*2+(2118/fs*1e3); % 2118 = latency
         if cur_freq < 100
-            post_stim_ms = 400; % 400 ms pause
+            post_stim_ms = 600; % 400 ms pause
         elseif cur_freq >= 100 && cur_freq < 200
-            post_stim_ms = 50; % 100 ms pause
+            post_stim_ms = 100; % 100 ms pause
         elseif cur_freq >= 200
-            post_stim_ms = 20; % 50 ms pause
+            post_stim_ms = 40; % 50 ms pause
         end
 
         whole_trial_dur_sec(ifreq) = ((off_on_dur_ms + post_stim_ms)/1e3);

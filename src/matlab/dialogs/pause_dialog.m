@@ -31,7 +31,10 @@ while true
             ex.decision(ex.counter.iamp).current_amplitude = ex.info.stimulus.amplitude_spl;
             ex.exp_done = 1;
             ex.decision(ex.counter.iamp).amp_done_reason = 'User override';
-            ex = save_session_data(ex, app);
+            
+            if strcmp(app.DropDown_test_mode.Value, 'Adaptive')
+                ex = save_session_data(ex, app);
+            end
             return;
         otherwise
             fprintf('Invalid choice. Please enter r, c, or e.\n');

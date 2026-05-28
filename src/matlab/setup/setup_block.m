@@ -2,7 +2,7 @@ function ex = setup_block(ex)
 %% Setup block-level layers to ex
 
 %% Per block metadata
-max_block = ex.info.adaptive.max_trials / ex.info.adaptive.trials_per_block;
+max_block = ceil(ex.info.adaptive.max_trials / ex.info.adaptive.trials_per_block);
 
 %% Trial counter
 for iblock = 1:max_block

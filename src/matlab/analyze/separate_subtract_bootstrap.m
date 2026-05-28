@@ -247,7 +247,7 @@ if run_bootstrap
     end
 
     % Save values
-    if ex.decision(ex.counter.iamp).resp_found == 1 || trials_presented == max_trials
+    if ex.decision(ex.counter.iamp).resp_found == 1 || trials_presented >= max_trials
         ex.model.stim_ON_2f_vec = [ex.model.stim_ON_2f_vec {stim_ON_2f_vec}]; % (trials x stimulus amplitude)
         ex.model.stim_OFF_2f_vec = [ex.model.stim_OFF_2f_vec {stim_OFF_2f_vec}]; % (trials x stimulus amplitude)
         ex.model.diff_2f_vec = [ex.model.diff_2f_vec {diff_2f_vec}];

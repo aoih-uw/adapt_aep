@@ -9,7 +9,7 @@ elseif strcmp(data_type, 'raw')
     electrode_data = ex.raw(iblock).electrodes_microV;
 end
 %% Plot signals
-fs = ex.info.recording.sampling_rate_hz; 
+fs = ex.info.recording.sampling_rate_hz;
 color_names = {'blue', 'orange', 'red', 'teal', 'green', 'yellow', 'purple', 'pink', 'brown', 'grey'};
 time_s = (0:N_samples-1) / fs;
 
@@ -30,23 +30,25 @@ plot(app.UIAxes_hydrophone, time_s_ds, hydrophone_data(randperm(N_trials,1), plo
     'Color', tableau_10('purple'), 'LineWidth', 1.5);
 hold(app.UIAxes_hydrophone, 'off');
 if strcmp(data_type, 'raw')
-title(app.UIAxes_hydrophone, sprintf('Hydrophone; Stimulus amplitude: %.0f', ex.block(iblock).hydrophone.stim_ON_rms_dB_spl));
+    title(app.UIAxes_hydrophone, sprintf('Hydrophone; Stimulus amplitude: %.0f', ex.block(iblock).hydrophone.stim_ON_rms_dB_spl));
 else
     title(app.UIAxes_hydrophone, sprintf('Hydrophone'));
 end
 
-if strcmp(data_type, 'raw')
-    cla(app.UIAxes_tank_noise_floor)
-    cla(app.UIAxes_signal_SNR)
-    rms_vec = arrayfun(@(b) b.hydrophone.stim_OFF_rms_dB_spl, ex.block(1:iblock));
-    snr_vec = arrayfun(@(b) b.hydrophone.stim_ON_snr,        ex.block(1:iblock));
-    
-    plot(app.UIAxes_tank_noise_floor, rms_vec, 'o-', 'Color', tableau_10('green'), 'MarkerFaceColor', tableau_10('green'));
-    plot(app.UIAxes_signal_SNR,       snr_vec, 'o-', 'Color', tableau_10('orange'), 'MarkerFaceColor', tableau_10('orange'));
+if strcmp(app.DropDown_test_mode.Value, 'Adaptive')
+    if strcmp(data_type, 'raw')
+        cla(app.UIAxes_tank_noise_floor)
+        cla(app.UIAxes_signal_SNR)
+        rms_vec = arrayfun(@(b) b.hydrophone.stim_OFF_rms_dB_spl, ex.block(1:iblock));
+        snr_vec = arrayfun(@(b) b.hydrophone.stim_ON_snr,        ex.block(1:iblock));
 
-    pad = 0.5;  % or whatever margin makes sense
-    ylim(app.UIAxes_tank_noise_floor, [min(rms_vec)-pad, max(rms_vec)+pad]);
-    ylim(app.UIAxes_signal_SNR,       [min(snr_vec)-pad,  max(snr_vec)+pad]);
+        plot(app.UIAxes_tank_noise_floor, rms_vec, 'o-', 'Color', tableau_10('green'), 'MarkerFaceColor', tableau_10('green'));
+        plot(app.UIAxes_signal_SNR,       snr_vec, 'o-', 'Color', tableau_10('orange'), 'MarkerFaceColor', tableau_10('orange'));
+
+        pad = 0.5;  % or whatever margin makes sense
+        ylim(app.UIAxes_tank_noise_floor, [min(rms_vec)-pad, max(rms_vec)+pad]);
+        ylim(app.UIAxes_signal_SNR,       [min(snr_vec)-pad,  max(snr_vec)+pad]);
+    end
 end
 
 % Plot electrode channels
@@ -62,8 +64,8 @@ for ch = 1:N_channels
     color = tableau_10(color_names{mod(ch-1, 10) + 1});
 
     fill(electrode_axes{ch}, [time_s_ds, fliplr(time_s_ds)], ...
-         [data_mean + data_std, fliplr(data_mean - data_std)], ...
-         color, 'FaceAlpha', 0.3, 'EdgeColor', 'none');
+        [data_mean + data_std, fliplr(data_mean - data_std)], ...
+        color, 'FaceAlpha', 0.3, 'EdgeColor', 'none');
 
     plot(electrode_axes{ch}, time_s_ds, data_mean, 'Color', color, 'LineWidth', 1.5);
     xlim(electrode_axes{ch},[min(time_s_ds),max(time_s_ds)])
@@ -78,3 +80,4 @@ ylim(electrode_axes{1}, [min(data_mean_all(:)) - pad, max(data_mean_all(:)) + pa
 linkaxes([electrode_axes{:}], 'xy');
 
 drawnow
+

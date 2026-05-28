@@ -31,17 +31,10 @@ for iamp = 1:100
     ex.decision(iamp).amp_done_reason = NaN;
 end
 
-% Set up sets of ex
-ex = setup_info(ex); % User input of experiment parameters
-ex = setup_block(ex); % Per amplitude meta/data
-ex = setup_analysis(ex); % Analysis deta/data
-ex = setup_model(ex);
-
 % Setup health
 for ihealth = 1:100
     ex.health(ihealth).electrodes_microV= NaN;
     ex.health(ihealth).time_stamp = NaN;
+    ex.health(ihealth).ekg_rate = NaN;
 end
-
-
 end

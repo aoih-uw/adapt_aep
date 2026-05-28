@@ -14,7 +14,7 @@ ex = app.ex;
 ex.info.experiment.exp_time_start = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
 ex = select_next_dialog(ex);
 
-try
+% try
     while ~ex.exp_done % While testing current stimulus frequency
         ex.counter.iamp = ex.counter.iamp + 1;
         ex.decision(ex.counter.iamp).resp_found = 0;
@@ -27,25 +27,14 @@ try
 
         while ~ex.decision(ex.counter.iamp).amp_done % While testing current stimulus amplitude
 
+            tic()
             %% CREATE BLOCK OF TRIALS
             fprintf('\nCreating trial block...\n')
-            ex = create_new_stimuli_block(ex);
+            ex = create_new_stimuli_block(ex,app);
 
             %% READ THERMOMETER
             fprintf('\nChecking temperature...\n')
             % ex = check_temperature(ex);
-
-            %% HEALTH CHECK
-            time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.health(ex.counter.ihealth).time_stamp;
-            if time_diff >= minutes(15)
-                fprintf('\nChecking animal health...\n')
-                ex = check_health(ex);
-                if ex.exp_done == 1 % Did user decide to stop testing due to bad health?
-                    ex = save_raw_data(ex);
-                    ex = save_session_data(ex, app);
-                    return
-                end
-            end
 
             %% DATA COLLECTION
             fprintf('\nPresenting stimulus...\n')
@@ -61,48 +50,73 @@ try
                 continue
             end
 
-            %% DATA ANALYSIS
-            fprintf('\nAnalyzing responses...\n')
-            ex = separate_subtract_bootstrap(ex,app);
-
-            %% AUTOSAVE
+            % AUTOSAVE
             ex = autosave_data(ex,app);
 
-            %% CHECK IF FINISHED TESTING THIS AMPLITUDE
-            if ex.decision(ex.counter.iamp).resp_found % When there was a significant response found
-                [y, Fs] = audioread('resp_found.mp3');
-                sound(y, Fs)
-                ex.decision(ex.counter.iamp).amp_done = 1;
-                ex.decision(ex.counter.iamp).amp_done_reason = 'Response detected';
+            %% DATA ANALYSIS
+            if strcmp(app.DropDown_test_mode.Value, 'Adaptive')
+                fprintf('\nAnalyzing responses...\n')
+                ex = separate_subtract_bootstrap(ex,app);
+
+                %% CHECK IF FINISHED TESTING THIS AMPLITUDE
+                if ex.decision(ex.counter.iamp).resp_found % When there was a significant response found
+                    [y, Fs] = audioread('resp_found.mp3');
+                    sound(y, Fs)
+                    ex.decision(ex.counter.iamp).amp_done = 1;
+                    ex.decision(ex.counter.iamp).amp_done_reason = 'Response detected';
+                end
             end
 
-            %% CHECK IF MAX TRIALS PRESENTED
-            if ex.trial_count(ex.counter.iamp) >= ex.info.adaptive.max_trials ...
+            %% CHECK IF MAX TRIALS PRESENTED OR TIME LIMIT MET
+            if strcmp(app.DropDown_test_mode.Value, 'Adaptive') || strcmp(app.DropDown_test_mode.Value, 'Static trial count')
+                if ex.trial_count(ex.counter.iamp) >= ex.info.adaptive.max_trials ...
                     && ex.decision(ex.counter.iamp).amp_done == 0 ...
                     && ex.decision(ex.counter.iamp).resp_found == 0
-                [y, Fs] = audioread('no_resp.mp3');
-                sound(y, Fs)
-                ex.decision(ex.counter.iamp).amp_done = 1;
-                ex.decision(ex.counter.iamp).current_amplitude = ex.info.stimulus.amplitude_spl;
-                ex.decision(ex.counter.iamp).amp_done_reason = 'Maximum trials reached';
+                    [y, Fs] = audioread('no_resp.mp3');
+                    sound(y, Fs)
+                    ex.decision(ex.counter.iamp).amp_done = 1;
+                    ex.decision(ex.counter.iamp).current_amplitude = ex.info.stimulus.amplitude_spl;
+                    ex.decision(ex.counter.iamp).amp_done_reason = 'Maximum trials reached';
+                end
+            elseif strcmp(app.DropDown_test_mode.Value, 'Timed')
+                if ex.info.experiment.total_time_elapsed >= minutes(ex.info.experiment.timer_dur_min)
+                    [y, Fs] = audioread('no_resp.mp3');
+                    sound(y, Fs)
+                    ex.decision(ex.counter.iamp).amp_done = 1;
+                    ex.decision(ex.counter.iamp).current_amplitude = ex.info.stimulus.amplitude_spl;
+                    ex.decision(ex.counter.iamp).amp_done_reason = 'Experiment time reached';
+                end
+            end
+
+            %% HEALTH CHECK
+            time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.health(ex.counter.ihealth).time_stamp;
+            if time_diff >= minutes(10)
+                fprintf('\nChecking animal health...\n')
+                ex = check_health(ex,app);
             end
 
             %% Are we done testing at this frequency?
             if ex.decision(ex.counter.iamp).amp_done == 1
-                ex = model_response(ex,app);
+                % Model response
+                if strcmp(app.DropDown_test_mode.Value, 'Adaptive')
+                    ex = model_response(ex,app);
+                end
+
                 % Select next amplitude to test
-                fprintf('\nSaving current amplitude data...\n');
                 ex = save_raw_data(ex);
                 ex = make_decision_dialog(ex,app);
 
                 % End experiment?
                 if ex.exp_done
-                    ex = save_session_data(ex, app);
+                    if strcmp(app.DropDown_test_mode.Value, 'Adaptive')
+                        ex = save_session_data(ex, app);
+                    end
                     return
                 else
                     ex = select_next_dialog(ex);
                 end
             end
+
 
             %% CHECK IF USER PRESSED PAUSE
             if app.PauseFlag
@@ -111,8 +125,6 @@ try
                 [action, ex] = pause_dialog(ex,app);
                 app.PauseFlag = false;  % Reset pause flag
                 if strcmp(action, 'stop')
-                    ex = save_raw_data(ex);
-                    ex = save_session_data(ex, app);
                     return
                 elseif strcmp(action, 'change')
                     continue
@@ -122,12 +134,12 @@ try
         end
     end
 
-catch ME
-    [y, Fs] = audioread('error.mp3');
-    sound(y, Fs)
-    fprintf('\nExperiment error: %s\n', ME.message)
-    ex = save_raw_data(ex);
-    ex = save_session_data(ex, app);
-    rethrow(ME)
-end
+% catch ME
+%     [y, Fs] = audioread('error.mp3');
+%     sound(y, Fs)
+%     fprintf('\nExperiment error: %s\n', ME.message)
+%     ex = save_raw_data(ex);
+%     % ex = save_session_data(ex, app); %#%#%#
+%     rethrow(ME)
+% end
 
