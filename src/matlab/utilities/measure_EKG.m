@@ -1,4 +1,4 @@
-function [ex, ekg_sig, ekg_mean, ekg_rng] = measure_EKG(ex)
+function [ex, ekg_sig_cat, ekg_mean, ekg_rng] = measure_EKG(ex)
 fs = ex.info.recording.sampling_rate_hz;
 
 % Findpeaks vars
@@ -14,6 +14,8 @@ fprintf('Please wait %d seconds ...',sample_dur_s*3)
     = init_present_sound_variables(ex, stimulus_block);
 
 redo = true;
+ekg_sig_cat = [];
+
 while redo    
     for i = 1:3
     [~, ekg_sig] = run_ekg(stimulus_block, input_channels, output_channels, ...
@@ -27,6 +29,7 @@ while redo
     % Measure spikes per second
     [pks, locs] = findpeaks(ekg_sig, 'MinPeakHeight', peak_threshold, 'MinPeakDistance', minDist);
     num_spikes = numel(pks);
+    ekg_sig_cat = [ekg_sig_cat ekg_sig];
     ekg_rate(i) = (num_spikes/sample_dur_s)*60;
     end
 

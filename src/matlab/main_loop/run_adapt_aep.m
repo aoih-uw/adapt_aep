@@ -90,11 +90,17 @@ ex = select_next_dialog(ex);
 
             %% HEALTH CHECK
             time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.health(ex.counter.ihealth).time_stamp;
-            if time_diff >= minutes(10)
-                fprintf('\nChecking animal health...\n')
-                ex = check_health(ex,app);
+            if ifstrcmp(app.DropDown_test_mode.Value, 'Timed')
+                if time_diff >= minutes(1)
+                    fprintf('\nChecking animal health...\n')
+                    ex = check_health(ex,app);
+                end
+            else
+                if time_diff >= minutes(10)
+                    fprintf('\nChecking animal health...\n')
+                    ex = check_health(ex,app);
+                end
             end
-
             %% Are we done testing at this frequency?
             if ex.decision(ex.counter.iamp).amp_done == 1
                 % Model response
