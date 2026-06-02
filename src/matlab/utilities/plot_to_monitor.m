@@ -10,7 +10,7 @@ elseif strcmp(data_type, 'raw')
 end
 %% Plot signals
 fs = ex.info.recording.sampling_rate_hz;
-color_names = {'blue', 'orange', 'red', 'teal', 'green', 'yellow', 'purple', 'pink', 'brown', 'grey'};
+color_names = {'red', 'blue', 'orange', 'teal', 'green', 'yellow', 'purple', 'pink', 'brown', 'grey'};
 time_s = (0:N_samples-1) / fs;
 
 % Downsample for plotting

@@ -4,9 +4,9 @@ function save_session_figures(ex, folder, app)
 % Adapt_AEP interface
 figures_folder = fullfile(folder, 'figures');
 fig_prefix = sprintf('%s', ex.info.animal.filename_root);
-axes_list = {app.UIAxes_model, app.UIAxes_model_3, app.UIAxes_thresh_est, app.UIAxes_slope_est};
-suffixes = {'_GP', '_softplus', '_thresh_est', '_slope_est'};
-subfolders = {'GP', 'softplus', 'thresh_est', 'slope_est'};
+axes_list = {app.UIAxes_model, app.UIAxes_model_3, app.UIAxes_thresh_est, app.UIAxes_slope_est, app.UIAxes_health};
+suffixes = {'_GP', '_softplus', '_thresh_est', '_slope_est', '_health'};
+subfolders = {'GP', 'softplus', 'thresh_est', 'slope_est', 'health'};
 
 for i = 1:length(suffixes)
     if isempty(get(axes_list{i}, 'Children')), continue; end

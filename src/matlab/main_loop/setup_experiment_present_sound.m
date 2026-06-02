@@ -9,11 +9,6 @@ trials_per_block = ex.info.adaptive.trials_per_block;
 N_trials_presented = iblock*trials_per_block;
 fs = 44100;
 
-% Piano sounds
-notes = {'C3','D3','E3','F3','G3','A3','B3','C4'};
-[y,Fs] = audioread([notes{mod(iblock-1,numel(notes))+1} '.mp3']);
-sound(y,Fs); pause(numel(y)/Fs);
-
 [ex, N_channels, N_trials, N_samples, output_channels, ...
     input_channels, hydrophone_idx, loopback_idx, electrode_idx, ...
     electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V] ...
@@ -77,6 +72,11 @@ if strcmp(app.DropDown_test_mode.Value, 'Adaptive')
     app.UIAxes_hydrophone.Title.String = sprintf('Hydrophone: %.0f dB SPL',ex.block(iblock).hydrophone.stim_ON_rms_dB_spl);
 end
 
+% Sound design
+[y, Fs] = audioread('batch.mp3');
+sound(y, Fs)
+
 %% Plot signals
 plot_to_monitor('raw',ex,app,N_samples,N_trials,N_channels)
+
 

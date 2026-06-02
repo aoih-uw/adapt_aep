@@ -1,12 +1,12 @@
-function [ex, ekg_sig_cat, ekg_mean, ekg_rng] = measure_EKG(ex)
+function [ex, ekg_sig_ds,ekg_rate] = measure_EKG(ex,init_check)
 fs = ex.info.recording.sampling_rate_hz;
 
 % Findpeaks vars
 minDist = fs*.5; % at least a quarter of a second between
-sample_dur_s = 6;
+sample_dur_s = 10;
 stimulus_block = zeros(1,fs*sample_dur_s); % Take 1 15 second reading of the EKG
 
-fprintf('Please wait %d seconds ...',sample_dur_s*3)
+fprintf('Please wait %d seconds ...',sample_dur_s)
 
 % Get present_sound_variables
 [ex, ~, ~, N_samples, output_channels, input_channels, ...
@@ -14,10 +14,8 @@ fprintf('Please wait %d seconds ...',sample_dur_s*3)
     = init_present_sound_variables(ex, stimulus_block);
 
 redo = true;
-ekg_sig_cat = [];
 
-while redo    
-    for i = 1:3
+while redo
     [~, ekg_sig] = run_ekg(stimulus_block, input_channels, output_channels, ...
         electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, ...
         hydrophone_voltage_scaling_factor_V);
@@ -29,12 +27,8 @@ while redo
     % Measure spikes per second
     [pks, locs] = findpeaks(ekg_sig, 'MinPeakHeight', peak_threshold, 'MinPeakDistance', minDist);
     num_spikes = numel(pks);
-    ekg_sig_cat = [ekg_sig_cat ekg_sig];
-    ekg_rate(i) = (num_spikes/sample_dur_s)*60;
-    end
+    ekg_rate = (num_spikes/sample_dur_s)*60;
 
-    ekg_mean = mean(ekg_rate);
-    ekg_rng = [min(ekg_rate) max(ekg_rate)];
 
     % Plot signal
     myfig = figure;
@@ -43,18 +37,30 @@ while redo
     hold on;
     plot(t(locs), pks, 'rv', 'MarkerFaceColor', 'r');
     xlabel('Time (s)'); ylabel('EKG (\muV)');
-    title(sprintf('EKG Rate: %1.0f BPM %1.0f Range — Confirm Signal Quality', ekg_mean, range(ekg_rate)));
+    title(sprintf('EKG Rate: %1.0f BPM — Confirm Signal Quality', ekg_rate));
     grid on; xlim([0 t(end)]); drawnow;
-    
-    % Alert experimenter
-    [y, Fs] = audioread('step.mp3'); sound(y, Fs);
-    
-    % Ask experimenter to confirm or redo
-    resp = input('Press Enter to confirm, or type "r" to remeasure: ', 's');
-    close(myfig);
-    redo = strcmpi(strtrim(resp), 'r');
+
+
+    if strcmp(ex.info.experiment.exp_type,'Adaptive') || init_check
+        % Alert experimenter
+        [y, Fs] = audioread('step.mp3'); sound(y, Fs);
+        % Ask experimenter to confirm or redo
+        resp = input('Press Enter to confirm, or type "r" to remeasure: ', 's');
+        close(myfig);
+        redo = strcmpi(strtrim(resp), 'r');
+    elseif strcmp(ex.info.experiment.exp_type,'Timed') || strcmp(ex.info.experiment.exp_type,'Static trial count')
+        [y, Fs] = audioread('step.mp3'); sound(y, Fs);
+        pause(3)
+        close(myfig);
+        redo = false;
+    end
 end
+
+% Downsample concatenated signal
+ekg_sig_ds = decimate(ekg_sig,3);
+
 end
+
 
 function [rec_data_mV, ekg_sig] = run_ekg(stimulus_block, input_channels, output_channels, ...
     electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V)

@@ -90,15 +90,15 @@ ex = select_next_dialog(ex);
 
             %% HEALTH CHECK
             time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.health(ex.counter.ihealth).time_stamp;
-            if ifstrcmp(app.DropDown_test_mode.Value, 'Timed')
+            if strcmp(app.DropDown_test_mode.Value, 'Timed')
                 if time_diff >= minutes(1)
                     fprintf('\nChecking animal health...\n')
-                    ex = check_health(ex,app);
+                    ex = check_health(ex,app,0);
                 end
             else
                 if time_diff >= minutes(10)
                     fprintf('\nChecking animal health...\n')
-                    ex = check_health(ex,app);
+                    ex = check_health(ex,app,0);
                 end
             end
             %% Are we done testing at this frequency?
@@ -109,7 +109,7 @@ ex = select_next_dialog(ex);
                 end
 
                 % Select next amplitude to test
-                ex = save_raw_data(ex);
+                ex = save_raw_data(ex,app);
                 ex = make_decision_dialog(ex,app);
 
                 % End experiment?
@@ -144,7 +144,7 @@ ex = select_next_dialog(ex);
 %     [y, Fs] = audioread('error.mp3');
 %     sound(y, Fs)
 %     fprintf('\nExperiment error: %s\n', ME.message)
-%     ex = save_raw_data(ex);
+%     ex = save_raw_data(ex,app);
 %     % ex = save_session_data(ex, app); %#%#%#
 %     rethrow(ME)
 % end

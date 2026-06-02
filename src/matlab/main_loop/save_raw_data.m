@@ -1,5 +1,5 @@
-function ex = save_raw_data(ex, is_autosave)
-if nargin < 2, is_autosave = false; end
+function ex = save_raw_data(ex, app, is_autosave)
+if nargin < 3, is_autosave = false; end
 
 fprintf('\nSaving current amplitude data...\n');
 
@@ -67,7 +67,10 @@ sound(y, Fs)
 %% Save figures and reset block
 if ~is_autosave
     if strcmp(ex.info.experiment.exp_type,'Adaptive')
-        save_raw_figures(ex,folder)
+        save_adaptive_figures(ex,folder)
+        delete_autosaves(folder, ex.info.animal.filename_root);
+    elseif strcmp(ex.info.experiment.exp_type,'Timed') || strcmp(ex.info.experiment.exp_type,'Static trial count')
+        save_timed_static_figures(ex,app,folder)
         delete_autosaves(folder, ex.info.animal.filename_root);
     end
     ex = setup_block(ex);
