@@ -2,8 +2,8 @@ clearvars -except ex_save
 addpath(genpath('\\wsl.localhost\ubuntu\home\aoih\adapt_aep\src\matlab'))
 
 % Set data location
-cd 'F:\2026\Research\May Midshipman\2026_06_02\porichthys_notatus_16_20260602\1024'
-subjid_vec = {16};
+cd 'F:\2026\Research\May Midshipman\2026_05_26\porichthys_notatus_14_20260526\1024_trials'
+subjid_vec = {14};
 stim_freq = 110;
 file_type = 'raw_data';
 
@@ -55,9 +55,9 @@ for isubj = 1:length(subjid_vec)
         grand_sorted = grand_fft_vec(sorted_idx);
 
         % Reset variables
-        a1_fit = [];
-        x0_fit = [];
-        k_fit = [];
+        slope_1_fit = [];
+        elbow_1_fit = [];
+        slope_2_fit = [];
         y_int = [];
         x_1 = [];
 
@@ -74,39 +74,40 @@ for isubj = 1:length(subjid_vec)
                 for i_it = 1:n_it
                     rand_select = randperm(size(cur_set,1),cur_trial);
                     tmp_mean = mean(cur_set(rand_select),1);
+                    tmp_std = std(cur_set(rand_select),[],1);
                     tmp_it_mean = [tmp_it_mean; tmp_mean];
+                    tmp_it_std = [tmp_it_std; tmp_std];
                 end
                 my_trial_set(:,iname) = tmp_it_mean;
+                my_std_set(:,iname) = tmp_it_std;
             end
 
             for i_it = 1:n_it
                 cur_mean = my_trial_set(i_it,:);
-                % Bootstrap the noisefloor estimate
-                noise_boot = bootstrp(1000,'median',grand_sorted{1}(1:50));
-                noise_floor_center = prctile(noise_boot,50);
-                noise_floor_UL = prctile(noise_boot, 99);
+                cur_std = my_std_set(i_it,:);
 
-                % floor added OUTSIDE the log; x0 is now the true bend point
-                softplus = @(p,x) noise_floor_center + p(1)*log1p( exp(p(3)*(x - p(2))) );
-                p0 = [ (max(cur_mean)-min(cur_mean))/range(amp_sorted), median(amp_sorted), 1.0];
+                noise_floor_center = cur_mean(1);
+                % Model
+                p0 = [0.1,  100,  0.5,  110];
+                lb  = [0,   min(amp_sorted),  0,  min(amp_sorted)];
+                ub  = [Inf, max(amp_sorted), Inf, max(amp_sorted)];
 
-                % bounds keep k sane and x0 inside your stimulus range
-                lb = [0,   min(amp_sorted), -0.1];
-                ub = [Inf, max(amp_sorted), 3  ];
-                p = lsqcurvefit(softplus, p0, amp_sorted, cur_mean, lb, ub, optimset('Display','off'));
-
-                a1_fit(i_it,i_tri) = p(1);
-                x0_fit(i_it,i_tri) = p(2);
-                k_fit(i_it,i_tri) = p(3);
+                piecewise2 = @(p,x) noise_floor_center + p(1)*max(x-p(2),0) + p(3)*max(x-p(4),0);
+                p = lsqcurvefit(piecewise2, p0, amp_sorted, cur_mean, lb, ub, optimset('Display','off'));
+                
+                slope_1_fit(i_it,i_tri) = p(1);
+                elbow_1_fit(i_it,i_tri) = p(2);
+                slope_2_fit(i_it,i_tri) = p(3);
+                elbow_2(i_it,i_tri) = p(4);
                 y_int(i_it,i_tri) = noise_floor_center;
                 
                 x_vec = linspace(min(amp_sorted), max(amp_sorted),500);
-                y_vec = softplus(p,x_vec);
-                x_1(i_it,i_tri) = x0_fit;
+                y_vec = piecewise2(p,x_vec);
+                x_1(i_it,i_tri) = p(2);
 
-                if mod(i_it,50) == 0
+                if mod(i_it,100) == 0
                     figure(f_1);
-                    plot(amp_sorted, cur_mean , 'o-')
+                    errorbar(amp_sorted, cur_mean , cur_std,'o-')
                     hold on;
                     xline(x_1(i_it,i_tri))
 
