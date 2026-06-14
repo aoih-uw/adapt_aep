@@ -2,8 +2,8 @@ clearvars
 addpath(genpath('\\wsl.localhost\ubuntu\home\aoih\adapt_aep\src\matlab'))
 
 % Set data location
-cd 'F:\2026\Research\May Midshipman\2026_05_22\porichthys_notatus_12_20260522\530 PM post'
-subjid_vec = {12};
+cd 'F:\2026\Research\May Midshipman\2026_06_02\porichthys_notatus_16_20260602\benzo'
+subjid_vec = {16};
 stim_freq = 110;
 stim_amp = [];
 file_type = 'raw_data';

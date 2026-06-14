@@ -1,4 +1,5 @@
 %% Load your data first with load_my_file
+clearvars my_mean_set my_std_set a_fit k_fit x0_fit my_x_thresh chi2_red grand_fft_vec grand_sorted amp_sorted sorted_idx dy d2y
 
 % 1024 trial specific variables
 trials_vec = [16 32 64 128 256 512 1024];
@@ -7,8 +8,12 @@ my_chans = [2,3,4]; % 3 = skull pierce, 2 = skin, 1 = EKG , 4 = forebrain
 my_mean_set = [];
 my_std_set = [];
 
+% My functions
+dsoftplus_dx = @(p,x) p(1) ./ (1 + exp(-p(2).*(x - p(3))));
+
 % Extract 1024 related data
 for isubj = 1:length(subjid_list)
+        f_1 = figure('Visible','off'); t1 = tiledlayout(length(my_chans), length(trials_vec), 'TileSpacing','tight','Padding','tight');
     for ichan = 1:length(my_chans)
         cur_chan = my_chans(ichan);
         if ichan == 1
@@ -19,7 +24,6 @@ for isubj = 1:length(subjid_list)
             cur_color = tableau_10('purple');
         end
         grand_fft_vec = [];
-        f_1 = figure('Visible','off'); t1 = tiledlayout('flow','TileSpacing','tight','Padding','tight');
         for iname = 1:length(my_names{isubj})
             diffs_vec = [];
             % Get 2f amplitudes from raw signals
@@ -42,7 +46,6 @@ for isubj = 1:length(subjid_list)
         % Calculate means and std across varied trial counts
         for i_tri = 1:length(trials_vec)
             % Setup figure
-            nexttile(t1)
             cur_trial = trials_vec(i_tri);
             for iname = 1:length(my_names{isubj})
                 cur_set = grand_sorted{iname};
@@ -65,7 +68,6 @@ for isubj = 1:length(subjid_list)
                 cur_std = my_std_set(i_it,:,i_tri,ichan,isubj);
                 noise_floor = cur_mean(1);
 
-                % Fit a function to the data
                 softplus = @(p,x) (p(1)/p(2))*(log1p(exp(p(2).*(x-p(3))))) + noise_floor;
 
                 % Find where the signal first exceeds the noise_floor by a
@@ -99,18 +101,36 @@ for isubj = 1:length(subjid_list)
                 % Calculate fit
                 y_fit = softplus(p, amp_sorted');
                 sem = cur_std / sqrt(cur_trial);
-                dof = numel(cur_mean) - length(p);                       % 3 free params
+                dof = numel(cur_mean) - length(p);
                 chi2_red(i_it,i_tri,ichan,isubj) = sum(((y_fit - cur_mean)./sem).^2) / dof;
 
-                % Calculate the threshold
-                dsoftplus_dx = @(p,x) p(1) ./ (1 + exp(-p(2).*(x - p(3))));
-                x_vec_d = linspace(min(amp_sorted),max(amp_sorted),200);
-                y_vec_d = dsoftplus_dx(p,x_vec_d);
-                my_y_thresh = max(y_vec_d)*0.5;
-                my_x_thresh(i_it,i_tri,ichan,isubj) = p(3) - 2*log(2)/p(2); % Tangent to x0x
+                % Only look at x_vec where the curve has started rising
+                rise_mask = y_vec > noise_floor + 0.1 * (max(y_vec) - noise_floor);
+                if any(rise_mask)
+                    x_kneedle = x_vec(rise_mask);
+                    y_kneedle = y_vec(rise_mask);
+
+                    xn = (x_kneedle - min(x_kneedle)) / (max(x_kneedle) - min(x_kneedle));
+                    yn = (y_kneedle - min(y_kneedle)) / (max(y_kneedle) - min(y_kneedle));
+                    [~, idx] = max(yn - xn);
+
+                    x_t = x_kneedle(idx);
+                    y_t = softplus(p, x_t);  % y value at knee point
+
+                    % Derivative of softplus at x_t: d/dx = a * sigmoid(k*(x - x0))
+                    slope = dsoftplus_dx(p, x_t);  % = p(1) / (1 + exp(-p(2)*(x_t - p(3))))
+
+                    % Tangent line: y = slope*(x - x_t) + y_t
+                    % Set y = noise_floor and solve for x:
+                    x_cross = x_t - (y_t - noise_floor) / slope;
+
+                    my_x_thresh(i_it,i_tri,ichan,isubj) = x_cross;
+                else
+                    my_x_thresh(i_it,i_tri,ichan,isubj) = NaN;
+                end
 
                 if mod(i_it,100) == 0
-                    set(0,'CurrentFigure',f_1);
+                    nexttile(t1, (ichan-1)*length(trials_vec) + i_tri)
                     plot(x_vec,y_vec,'Color',[128 128 128]./255,'LineWidth',2);
                     hold on;
                     errorbar(amp_sorted, cur_mean , cur_std,'o-','Color',cur_color)
@@ -118,19 +138,17 @@ for isubj = 1:length(subjid_list)
                     xlabel('Stimulus Amplitude (dB)')
                     ylabel('2f Magnitude (\muV)')
                     xline(my_x_thresh(i_it,i_tri,ichan,isubj),'-','Color',tableau_10('red'))
-                    xline(x0_fit(i_it,i_tri,ichan,isubj),'Color',tableau_10('grey'))
+                    xline(x_t,'-','Color',tableau_10('grey'))
                     yline(noise_floor,'--')
-                    linkaxes
                 end
             end
         end
-
-        % Set titles
-        figure(f_1);
-        sgtitle(sprintf('Channel %d: Threshold estimate varied by N trials included in average', cur_chan))
-
-        set([f_1],'Visible','on')
     end
+    % Set titles
+    figure(f_1);
+    sgtitle('Threshold estimate varied by N trials included in average')
+
+    set([f_1],'Visible','on')
     % Plot variance of threshold estimates per channel
     figure;
     for ichan = 1:length(my_chans)
@@ -142,9 +160,9 @@ for isubj = 1:length(subjid_list)
             cur_color = tableau_10('purple');
         end
         cur_data = my_x_thresh(:,:,ichan,isubj);
-        tmp_mean = mean(cur_data,1);
-        tmp_std = std(cur_data,[],1);
-        errorbar(trials_vec,tmp_mean,tmp_std,'o-','LineWidth',2,'MarkerFaceColor','auto','Color',cur_color)
+        tmp_mean = mean(cur_data,1,'omitnan');
+        tmp_std = std(cur_data,[],1,'omitnan');
+        errorbar(trials_vec,tmp_mean,tmp_std,'o-','LineWidth',2,'Color',cur_color)
         xticks(trials_vec)
         xtickangle(45)
         xscale('linear')
@@ -158,7 +176,7 @@ for isubj = 1:length(subjid_list)
     for iname = 1:length(my_amp(:,isubj))
         nexttile
         for ichan = 1:length(my_chans)
-            plot(trials_vec,std(squeeze(my_mean_set(:,iname,:,ichan,1)),[],1),'-o','LineWidth',2,'MarkerFaceColor','auto');
+            plot(trials_vec,std(squeeze(my_mean_set(:,iname,:,ichan,1)),[],1,'omitnan'),'-o','LineWidth',2,'MarkerFaceColor','auto');
             title(sprintf('%s dB SPL',string(amp_sorted(iname))))
             hold on;
         end
@@ -168,7 +186,7 @@ for isubj = 1:length(subjid_list)
         xlabel('Number of trials included in average')
         ylabel('Standard deviation value')
     end
-    legend(string(my_chans),'Location','eastoutside')
+    
     sgtitle('Standard Deviation of noise of bootstrapped averages')
 
     % Save figures
