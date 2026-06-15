@@ -13,16 +13,16 @@ N_chan = ex.info.channels.n_channels;
 
 % Generate timestamp
 ex.info.experiment.exp_time_end = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
-ex.info.experiment.exp_duration = char(ex.info.experiment.exp_time_end - ex.info.experiment.exp_time_start);
+ex.info.experiment.exp_duration = char(ex.info.experiment.exp_time_end - ex.info.experiment.amp_time_start);
 timestamp_str = char(ex.info.experiment.exp_time_end);
 
 % Find folder
 folder = get_subject_folder(ex);
 
 if is_autosave
-    filename = sprintf('%s_%ddBSPL_raw_data_AUTOSAVE_%s.mat', ex.info.animal.filename_root, ex.info.stimulus.amplitude_spl, timestamp_str);
+    filename = sprintf('%s_%ddBSPL_raw_data_%s_AUTOSAVE_%s.mat', ex.info.animal.filename_root, ex.info.stimulus.amplitude_spl, ex.info.experiment.test_tag, timestamp_str);
 else
-    filename = sprintf('%s_%ddBSPL_raw_data_%s.mat', ex.info.animal.filename_root, ex.info.stimulus.amplitude_spl, timestamp_str);
+    filename = sprintf('%s_%ddBSPL_raw_data_%s_%s.mat', ex.info.animal.filename_root, ex.info.stimulus.amplitude_spl, ex.info.experiment.test_tag, timestamp_str);
 end
 
 % Extract only required fields
@@ -65,13 +65,13 @@ save(fullfile(folder, filename), 'ex_save');
 sound(y, Fs)
 
 %% Save figures and reset block
-if ~is_autosave
+if ex.decision(ex.counter.iamp).amp_done == 1
     if strcmp(ex.info.experiment.exp_type,'Adaptive')
         save_adaptive_figures(ex,folder)
         delete_autosaves(folder, ex.info.animal.filename_root);
-    elseif strcmp(ex.info.experiment.exp_type,'Timed') || strcmp(ex.info.experiment.exp_type,'Static trial count')
+    elseif strcmp(ex.info.experiment.exp_type,'Timed') || ...
+            strcmp(ex.info.experiment.exp_type,'Static trial count')
         save_timed_static_figures(ex,app,folder)
-        delete_autosaves(folder, ex.info.animal.filename_root);
     end
     ex = setup_block(ex);
     ex = setup_analysis(ex);
@@ -80,11 +80,11 @@ end
 end
 
 function y = dec_rows(x, r)
-    n = ceil(size(x,2)/r);
-    y = zeros(size(x,1), n, size(x,3));
-    for k = 1:size(x,3)
-        for i = 1:size(x,1)
-            y(i,:,k) = decimate(x(i,:,k), r);
-        end
+n = ceil(size(x,2)/r);
+y = zeros(size(x,1), n, size(x,3));
+for k = 1:size(x,3)
+    for i = 1:size(x,1)
+        y(i,:,k) = decimate(x(i,:,k), r);
     end
+end
 end
