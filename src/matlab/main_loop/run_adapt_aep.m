@@ -140,6 +140,8 @@ ex = select_next_dialog(ex);
         end
     end
 
+    toc()
+
 % catch ME
 %     [y, Fs] = audioread('error.mp3');
 %     sound(y, Fs)

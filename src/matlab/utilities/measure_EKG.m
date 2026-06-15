@@ -2,7 +2,7 @@ function [ex, ekg_sig_ds,ekg_rate] = measure_EKG(ex,init_check)
 fs = ex.info.recording.sampling_rate_hz;
 
 % Findpeaks vars
-minDist = fs*.5; % at least a quarter of a second between
+minDist = fs*.75; % at least a quarter of a second between
 sample_dur_s = 10;
 stimulus_block = zeros(1,fs*sample_dur_s); % Take 1 15 second reading of the EKG
 
@@ -21,8 +21,7 @@ while redo
         hydrophone_voltage_scaling_factor_V);
 
     ekg_sig = bandpassfilter(ekg_sig, 0.5, 1, 4, fs);
-    ekg_sig = smoothdata(ekg_sig, 'movmean', 250);
-    peak_threshold = max(5, prctile(ekg_sig,98)); % microV
+    peak_threshold = max(5, prctile(ekg_sig,95)); % microV % Set peak threshold by user
 
     % Measure spikes per second
     [pks, locs] = findpeaks(ekg_sig, 'MinPeakHeight', peak_threshold, 'MinPeakDistance', minDist);
@@ -41,14 +40,14 @@ while redo
     grid on; xlim([0 t(end)]); drawnow;
 
 
-    if strcmp(ex.info.experiment.exp_type,'Adaptive') || init_check
+    if strcmp(ex.info.experiment.exp_type,'Adaptive') || init_check || strcmp(ex.info.experiment.exp_type,'Static trial count')
         % Alert experimenter
         [y, Fs] = audioread('step.mp3'); sound(y, Fs);
         % Ask experimenter to confirm or redo
         resp = input('Press Enter to confirm, or type "r" to remeasure: ', 's');
         close(myfig);
         redo = strcmpi(strtrim(resp), 'r');
-    elseif strcmp(ex.info.experiment.exp_type,'Timed') || strcmp(ex.info.experiment.exp_type,'Static trial count')
+    elseif strcmp(ex.info.experiment.exp_type,'Timed')
         [y, Fs] = audioread('step.mp3'); sound(y, Fs);
         pause(3)
         close(myfig);
