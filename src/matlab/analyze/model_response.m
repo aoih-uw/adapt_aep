@@ -43,8 +43,8 @@ per_amp_noise_mad_sorted = per_amp_noise_mad(sort_idx);
 resp_found_sorted = resp_found(sort_idx);
 trial_count_sorted = trial_count(sort_idx);
 
-% Add the noise floor value at 70 dB
-amplitude_sorted = [80 amplitude_sorted];
+% Add the noise floor value at 90 dB
+amplitude_sorted = [90 amplitude_sorted];
 response_sorted = [noise_floor_median response_sorted];
 response_std_sorted = [noise_floor_mad response_std_sorted];
 per_amp_noise_sorted = [noise_floor_median per_amp_noise_sorted];
