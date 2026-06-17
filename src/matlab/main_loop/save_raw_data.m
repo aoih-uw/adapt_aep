@@ -39,42 +39,67 @@ for iiblock = 1:iblock
     ex_save.raw_signals(iiblock).time_stamp_ds        = cur.time_stamp(:,1:downsamp_rate:end);
     ex_save.raw_signals(iiblock).electrodes_microV_ds = dec_rows(cur.electrodes_microV, downsamp_rate);
 end
-
 ex_save.ds_fs = fs/downsamp_rate;
-ex_save.preprocessing_stats = ex.preprocess(1:iblock); % Preprocessing statistics
-ex_save.decision = ex.decision(iamp); % Decisions related to this specific stimulus amplitude and frequency
 
-ex_save.kept = ex.kept; % Save the latest round of preprocessed signals
-ex_save.kept = rmfield(ex_save.kept, 'trials'); % Don't need these
-ex_save.kept = rmfield(ex_save.kept, 'trials_weighted');
-
+% Save health data
 ex_save.health = ex.health(1:ihealth);
-
-ex_save.fft = ex.fft;
-ex_save.bootstrap = ex.stats(1:iboot);
 
 % Remove stimulus_block from all block entries
 if isfield(ex_save.block_level_info, 'stimulus_block')
     ex_save.block_level_info = rmfield(ex_save.block_level_info, 'stimulus_block');
 end
 
+% Adaptive program specific
+if strcmp(ex.info.experiment.exp_type,'Adaptive')
+    ex_save.kept = ex.kept; % Save the latest round of preprocessed signals
+    ex_save.kept = rmfield(ex_save.kept, 'trials'); % Don't need these
+    ex_save.kept = rmfield(ex_save.kept, 'trials_weighted');
+    ex_save.fft = ex.fft;
+    ex_save.bootstrap = ex.stats(1:iboot);
+    ex_save.preprocessing_stats = ex.preprocess(1:iblock); % Preprocessing statistics
+    ex_save.decision = ex.decision(iamp); % Decisions related to this specific stimulus amplitude and frequency
+end
+
 % Save
-save(fullfile(folder, filename), 'ex_save');
+save(fullfile(folder, filename), 'ex_save', '-v7.3');
 
 [y, Fs] = audioread('step.mp3');
 sound(y, Fs)
 
 %% Save figures and reset block
-if ex.decision(ex.counter.iamp).amp_done == 1
-    if strcmp(ex.info.experiment.exp_type,'Adaptive')
+if strcmp(ex.info.experiment.exp_type,'Adaptive')
+    if ex.decision(ex.counter.iamp).amp_done == 1
         save_adaptive_figures(ex,folder)
         delete_autosaves(folder, ex.info.animal.filename_root);
-    elseif strcmp(ex.info.experiment.exp_type,'Timed') || ...
-            strcmp(ex.info.experiment.exp_type,'Static trial count')
-        save_timed_static_figures(ex,app,folder)
+
+        ex = setup_block(ex);
+        ex = setup_analysis(ex);
+
+        % Reset health
+        for ihealth = 1:100
+            ex.health(ihealth).electrodes_microV= NaN;
+            ex.health(ihealth).time_stamp = NaN;
+            ex.health(ihealth).ekg_rate = NaN;
+        end
+        ex.counter.ihealth = 0;
+        ex.counter.iblock = 0;
     end
+elseif strcmp(ex.info.experiment.exp_type,'Timed') || ...
+        strcmp(ex.info.experiment.exp_type,'Static trial count')
+    save_timed_static_figures(ex,app,folder)
+
     ex = setup_block(ex);
     ex = setup_analysis(ex);
+
+    % Reset health
+    for ihealth = 1:100
+        ex.health(ihealth).electrodes_microV= NaN;
+        ex.health(ihealth).time_stamp = NaN;
+        ex.health(ihealth).ekg_rate = NaN;
+    end
+    ex.counter.ihealth = 0;
+    ex.counter.iblock = 0;
+
 end
 
 end

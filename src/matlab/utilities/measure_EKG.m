@@ -3,7 +3,7 @@ fs = ex.info.recording.sampling_rate_hz;
 
 % Findpeaks vars
 minDist = fs*.75; % at least a quarter of a second between
-sample_dur_s = 6;
+sample_dur_s = 12;
 stimulus_block = zeros(1,fs*sample_dur_s); % Take 1 6 second reading of the EKG
 
 fprintf('Please wait %d seconds ...',sample_dur_s)

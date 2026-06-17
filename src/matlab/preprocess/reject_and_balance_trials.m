@@ -8,7 +8,7 @@ all_trials_chan_rms = sqrt(mean(all_trials_chan.^2, 2, 'omitnan'));
 % Relative rejection threshold based on median + MAD
 all_median = median(all_trials_chan_rms, 1, 'omitnan');
 all_mad = median(abs(all_median - all_trials_chan_rms));
-rel_reject_threshold = all_median + reject_threshold_sd * all_mad *1.4826;
+rel_reject_threshold = all_median + reject_threshold_sd * all_mad *1.4826; % 1.4826 = mad to std conversion
 
 % Keep trials below threshold
 kept_trials_idx = find(all_trials_chan_rms < rejection_threshold_microV*10); % Tr out only rejection absolute threshold
