@@ -29,7 +29,7 @@ hold(app.UIAxes_hydrophone, 'on');
 plot(app.UIAxes_hydrophone, time_s_ds, hydrophone_data(randperm(N_trials,1), plot_idx), ...
     'Color', tableau_10('purple'), 'LineWidth', 1.5);
 hold(app.UIAxes_hydrophone, 'off');
-if strcmp(data_type, 'raw')
+if strcmp(data_type, 'raw') & strcmp(ex.info.experiment.exp_type,'Adaptive')
     title(app.UIAxes_hydrophone, sprintf('Hydrophone; Stimulus amplitude: %.0f', ex.block(iblock).hydrophone.stim_ON_rms_dB_spl));
 else
     title(app.UIAxes_hydrophone, sprintf('Hydrophone'));

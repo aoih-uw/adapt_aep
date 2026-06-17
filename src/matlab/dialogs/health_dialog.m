@@ -1,8 +1,7 @@
 function ex = health_dialog(ex)
     status = ex.health(1).status;
     if strcmp(status, 'poor')
-        [y, Fs] = audioread('error.mp3');
-        sound(y, Fs)
+        [y, Fs] = audioread('user_input.mp3'); sound(y, Fs);
         fprintf('\n========================================\n');
         fprintf('  %s  Health Warning\n', char(9888));
         fprintf('  Animal health status: %s\n', upper(status));

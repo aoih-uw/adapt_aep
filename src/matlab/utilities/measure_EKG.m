@@ -1,12 +1,11 @@
-function [ex, ekg_sig_ds,ekg_rate] = measure_EKG(ex,init_check)
+function [ex, ekg_sig_ds,ekg_rate, ekg_fs_ds, peak_threshold] = measure_EKG(ex,init_check,input_peak_threshold)
 fs = ex.info.recording.sampling_rate_hz;
 
 % Findpeaks vars
 minDist = fs*.75; % at least a quarter of a second between
 sample_dur_s = 12;
 stimulus_block = zeros(1,fs*sample_dur_s); % Take 1 6 second reading of the EKG
-
-fprintf('Please wait %d seconds ...',sample_dur_s)
+ds_rate = 3;
 
 % Get present_sound_variables
 [ex, ~, ~, N_samples, output_channels, input_channels, ...
@@ -16,33 +15,50 @@ fprintf('Please wait %d seconds ...',sample_dur_s)
 redo = true;
 
 while redo
+    fprintf('Please wait %d seconds ...',sample_dur_s)
     [~, ekg_sig] = run_ekg(stimulus_block, input_channels, output_channels, ...
         electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, ...
         hydrophone_voltage_scaling_factor_V);
 
-    ekg_sig = bandpassfilter(ekg_sig, 0.5, 1, 4, fs);
-    peak_threshold = max(5, prctile(ekg_sig,95)); % microV % Set peak threshold by user
+    ekg_sig = bandpassfilter(ekg_sig, 0.5, 150, 4, fs);
+    
+    % Manually select peak_threshold value if it doesn't exist
+    if isempty(input_peak_threshold)
+        [y, Fs] = audioread('user_input.mp3'); sound(y, Fs);
+        % Show raw signal first so user can pick threshold
+        myfig = figure;
+        t = (0:N_samples-1) / fs;
+        plot(t, squeeze(ekg_sig(1,:,1)), 'r-', 'LineWidth', 1);
+        xlabel('Time (s)'); ylabel('EKG (\muV)');
+        title('Click on the signal to set peak threshold, then press Enter');
+        grid on; xlim([0 t(end)]); drawnow;
+        [~, peak_threshold] = ginput(1);  % user clicks once; y-value = threshold
+        close(myfig);
+    else
+        peak_threshold = input_peak_threshold;
+    end
 
-    % Measure spikes per second
-    [pks, locs] = findpeaks(ekg_sig, 'MinPeakHeight', peak_threshold, 'MinPeakDistance', minDist);
+    % Find peaks
+    [pks, locs] = findpeaks(ekg_sig, 'MinPeakHeight', peak_threshold, ...
+        'MinPeakDistance', minDist);
     num_spikes = numel(pks);
     ekg_rate = (num_spikes/sample_dur_s)*60;
-
 
     % Plot signal
     myfig = figure;
     t = (0:N_samples-1) / fs;
-    plot(t, squeeze(ekg_sig(1,:,1)), 'k-', 'LineWidth', 0.5);
+    plot(t, squeeze(ekg_sig(1,:,1)), 'k-', 'LineWidth', 1);
     hold on;
     plot(t(locs), pks, 'rv', 'MarkerFaceColor', 'r');
     xlabel('Time (s)'); ylabel('EKG (\muV)');
     title(sprintf('EKG Rate: %1.0f BPM — Confirm Signal Quality', ekg_rate));
     grid on; xlim([0 t(end)]); drawnow;
 
-
-    if strcmp(ex.info.experiment.exp_type,'Adaptive') || init_check || strcmp(ex.info.experiment.exp_type,'Static trial count')
+    % Make decison
+    if strcmp(ex.info.experiment.exp_type,'Adaptive') || init_check ...
+            || strcmp(ex.info.experiment.exp_type,'Static trial count')
         % Alert experimenter
-        [y, Fs] = audioread('step.mp3'); sound(y, Fs);
+        [y, Fs] = audioread('user_input.mp3'); sound(y, Fs);
         % Ask experimenter to confirm or redo
         resp = input('Press Enter to confirm, or type "r" to remeasure: ', 's');
         close(myfig);
@@ -57,9 +73,8 @@ end
 
 % Downsample concatenated signal
 ekg_sig_ds = decimate(ekg_sig,3);
-
+ekg_fs_ds = fs/ds_rate;
 end
-
 
 function [rec_data_mV, ekg_sig] = run_ekg(stimulus_block, input_channels, output_channels, ...
     electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V)

@@ -12,16 +12,11 @@ iamp = ex.counter.iamp;
 rejection_threshold_microV = ex.info.signal_quality.rejection_threshold_microV;
 reject_threshold_sd = ex.info.signal_quality.rejection_threshold_sd;
 N_channels = ex.info.channels.n_channels;
+analysis_channel = ex.info.channels.analysis_channel;
 trials_per_block = ex.info.adaptive.trials_per_block; %# In test make sure trials_per_block*iblock calculations meet expectation on total length of trials below
 N_trials_presented = ex.trial_count(iamp);
 current_amplitude = ex.info.stimulus.amplitude_spl;
 mad_to_std = ex.info.analysis.mad_to_std;
-
-% Make channel labels
-all_channel_label = [];
-for ichan = 1:N_channels
-    all_channel_label = [all_channel_label ; ones(trials_per_block*iblock,1)*ichan];
-end
 
 %% Get all available data
 % Account for different sizes
@@ -46,39 +41,43 @@ for ii = 1:iblock
     row_idx = row_idx + trials_per_block;
 end
 
-%% Identify artefactual trials
+%% Identify artefactual trials across ALL CHANNELS
 rejected_trials = [];
 for ichan = 1:N_channels
     cur_chan_data_raw = squeeze(all_trials(:, :, ichan));
-    cur_chan_data = sqrt(mean(cur_chan_data.^2, 2, 'omitnan'));
+    cur_chan_data = sqrt(mean(cur_chan_data_raw.^2, 2, 'omitnan'));
     cur_median = median(cur_chan_data);
     cur_mad = median(abs(cur_median-cur_chan_data))*mad_to_std;
     rej_thresh = cur_median + cur_mad*reject_threshold_sd;
-    rejected_trials = [rejected_trials find(cur_chan_data >= rej_thresh)];
+    rejected_trials = [rejected_trials find(cur_chan_data >= rej_thresh)'];
 end
 all_chan_rejected_trials = unique(rejected_trials);
 
 % Save # of rejected trials to allow more trials to be collected
 if strcmp(ex.info.experiment.exp_type,'Static trial count') || strcmp(ex.info.experiment.exp_type,'Adaptive')
     n_trials_collected = size(squeeze(all_trials(:,:,1)),1);
+    if isempty(all_chan_rejected_trials)
+        n_trials_rejected = 0;
+    else
     n_trials_rejected = length(all_chan_rejected_trials);
+    end
     n_valid_trials = n_trials_collected - n_trials_rejected;
     ex.valid_trials(iamp) = n_valid_trials;
-    reject_rate = n_trials_rejected / n_trials_collected;
-
+    ex.rejected_trials{iamp} = all_chan_rejected_trials;
+    reject_rate = n_trials_rejected/n_trials_collected;
     %% Report rejection rate
     if reject_rate > 0.5
         uialert(app.UIFigure, 'More than half of the trials have been rejected.', 'Warning', 'Icon', 'warning');
     end
-    app.Label_rejection_rate.Text = sprintf('%.0f%%', reject_rate * 100);
+    app.Label_rejection_rate.Text = sprintf('%d', n_valid_trials);
 end
 
+%% ADAPTIVE: Select only the analysis channel and reject trials based on this channel only
 if strcmp(ex.info.experiment.exp_type,'Adaptive')
-    %% Collapse data across channels
     all_trials_chan = permute(all_trials, [1 3 2]); % Now: [trials × channels × timepoints]
-    all_trials_chan = reshape(all_trials_chan, [], size(all_trials,2)); % Now: [(trials*channels) × timepoints]
-    all_phases_chan = reshape(all_phases,[],1);
-    all_jitter_chan = reshape(all_jitter,[],1);
+    all_trials_chan = squeeze(all_trials_chan(:,analysis_channel,:));
+    all_phases_chan = all_phases(:,analysis_channel);
+    all_jitter_chan = all_jitter(:,analysis_channel);
 
     [kept_trials_idx, kept_trials_phases, rel_reject_threshold] = ...
         reject_and_balance_trials(all_trials_chan, all_phases_chan, ...
@@ -86,12 +85,9 @@ if strcmp(ex.info.experiment.exp_type,'Adaptive')
 
     %% Save kept trials
     kept_trials = all_trials_chan(kept_trials_idx,:);
-    kept_trials_channels = all_channel_label(kept_trials_idx); % Kept_trials_channels the labels for the channels
     kept_jitter = all_jitter_chan(kept_trials_idx);
-    reject_rate = ((N_trials_presented*N_channels)-size(kept_trials,1))/(N_trials_presented*N_channels);
+    reject_rate = ((N_trials_presented)-size(kept_trials,1))/(N_trials_presented);
     fprintf('\nArtifact rejection rate: %.1f%%\n', reject_rate * 100);
-
-end
 
 %% Save to ex structure
 ex.preprocess(iblock).rel_reject_threshold = rel_reject_threshold; % (1 x # iterations of preprocessing) saved in structure for every iamp
@@ -99,4 +95,4 @@ ex.preprocess(iblock).reject_rate = reject_rate;  % (1 x # iterations of preproc
 ex.kept.trials = kept_trials; % Don't need to save every iteration's data, so just save to first 
 ex.kept.phases = kept_trials_phases;
 ex.kept.jitter = kept_jitter;
-ex.kept.channels = kept_trials_channels;
+end

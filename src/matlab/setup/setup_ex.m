@@ -26,6 +26,7 @@ ex.no_valid_trials = 0;
 for iamp = 1:100
     ex.trial_count(iamp) = 0;
     ex.valid_trials(iamp) = NaN;
+    ex.rejected_trials{iamp} = NaN;
     ex.decision(iamp).resp_found = 0; 
     ex.decision(iamp).current_amplitude = NaN; %# have this assigned when resp_found is assigned as well in separate, subtract, bootstrap etc. etc.!
     ex.decision(iamp).amp_done = 0;
@@ -33,9 +34,5 @@ for iamp = 1:100
 end
 
 % Setup health
-for ihealth = 1:100
-    ex.health(ihealth).electrodes_microV= NaN;
-    ex.health(ihealth).time_stamp = NaN;
-    ex.health(ihealth).ekg_rate = NaN;
-end
+ex = setup_health(ex);
 end

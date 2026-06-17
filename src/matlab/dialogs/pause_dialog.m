@@ -1,6 +1,6 @@
 function [action, ex] = pause_dialog(ex,app)
-[y, Fs] = audioread('step.mp3');
-sound(y, Fs)
+[y, Fs] = audioread('user_input.mp3'); sound(y, Fs);
+
 fprintf('\n========================================\n');
 fprintf('  Experiment Paused\n');
 fprintf('========================================\n');
@@ -17,7 +17,7 @@ while true
             return;
         case 'c'
             action = 'change';
-            ex = save_raw_data(ex, app);
+            ex = save_raw_data(ex, app, false);
             ex.decision(ex.counter.iamp).amp_done = 1;
             ex.decision(ex.counter.iamp).current_amplitude = ex.info.stimulus.amplitude_spl;
             ex.decision(ex.counter.iamp).amp_done_reason = 'User override';
@@ -25,7 +25,7 @@ while true
             return;
         case 'e'
             action = 'stop';
-            ex = save_raw_data(ex,app);
+            ex = save_raw_data(ex,app,false);
             fprintf('\nExperiment stopped by user\n');
             ex.decision(ex.counter.iamp).amp_done = 1;
             ex.decision(ex.counter.iamp).current_amplitude = ex.info.stimulus.amplitude_spl;

@@ -1,6 +1,5 @@
 function ex = make_decision_dialog(ex,app)
-    [y, Fs] = audioread('step.mp3');
-    sound(y, Fs)
+    [y, Fs] = audioread('user_input.mp3'); sound(y, Fs);
 
     reason = ex.decision(ex.counter.iamp).amp_done_reason;
     

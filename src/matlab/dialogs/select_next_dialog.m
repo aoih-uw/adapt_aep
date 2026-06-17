@@ -1,6 +1,6 @@
 function ex = select_next_dialog(ex)
-[y, Fs] = audioread('step.mp3');
-sound(y, Fs)
+[y, Fs] = audioread('user_input.mp3'); sound(y, Fs);
+
 fprintf('\n========================================\n');
 fprintf('  Set Stimulus Amplitude\n');
 fprintf('========================================\n');

@@ -3,9 +3,8 @@ function ex = separate_subtract_bootstrap(ex,app)
 % differences
 fs = ex.info.recording.sampling_rate_hz;
 iamp = ex.counter.iamp;
-trials_presented = ex.trial_count(iamp);
-
 kept_trials_filtered = ex.kept.trials_filtered;
+N_valid_trials = size(ex.kept.trials_filtered,1);
 kept_jitter = ex.kept.jitter;
 
 latency_samples = ex.info.recording.latency_samples;
@@ -51,7 +50,7 @@ starting_rms = ex.noise.starting_rms;
 current_rms = rms(mean(stim_OFF));
 rms_ratio = current_rms/starting_rms;
 app.Label_RMS_ratio.Text = sprintf('%.2f', rms_ratio);
-fprintf('\nRMS ratio: %1.2f\nTrials in average: %1.0f\n',rms_ratio,trials_presented*N_channels)
+fprintf('\nRMS ratio: %1.2f\nTrials in average: %1.0f\n',rms_ratio,N_valid_trials)
 
 %% Calculate ffts and subtract
 N_stim_OFF = zeros(size(stim_OFF,1),1);
@@ -151,10 +150,10 @@ drawnow
 if diff_2f_mean > within_diff_criteria 
     run_bootstrap = 1;
     gate_type = 1;
-elseif rms_ratio <= 0.8 && trials_presented > min_trials_for_analysis
+elseif rms_ratio <= 0.8 && N_valid_trials > min_trials_for_analysis
     run_bootstrap = 1;
     gate_type = 2;
-elseif trials_presented == max_trials
+elseif N_valid_trials == max_trials
     run_bootstrap = 1;
     gate_type = 3;
 end
@@ -247,7 +246,7 @@ if run_bootstrap
     end
 
     % Save values
-    if ex.decision(ex.counter.iamp).resp_found == 1 || trials_presented >= max_trials
+    if ex.decision(ex.counter.iamp).resp_found == 1 || N_valid_trials >= max_trials
         ex.model.stim_ON_2f_vec = [ex.model.stim_ON_2f_vec {stim_ON_2f_vec}]; % (trials x stimulus amplitude)
         ex.model.stim_OFF_2f_vec = [ex.model.stim_OFF_2f_vec {stim_OFF_2f_vec}]; % (trials x stimulus amplitude)
         ex.model.diff_2f_vec = [ex.model.diff_2f_vec {diff_2f_vec}];
