@@ -1,5 +1,5 @@
 function ex = plan_save_raw(ex,app)
-every_min = 1;
+every_min = 15;
 
 if isempty(ex.last_autosave_time)
     ex.last_autosave_time = ex.info.experiment.exp_time_start;

@@ -4,12 +4,12 @@ if iblock == 1
     my_2f = []; my_2f_std = [];
 end
 n_points = size(my_2f,2);
-channels    = [2, 3];
-channel_name = {'Skin', 'Cranial'};
+channels    = [2, 3, 4];
+channel_name = {'2 mm', '4 mm', 'Skin'};
 target_freq = ex.info.stimulus.frequency_hz * 2;
 fft_ax = app.UIAxes_live_fft;
 bin_ax = app.UIAxes_funfetti;
-colors = {tableau_10('blue'), tableau_10('orange')};
+colors = {tableau_10('blue'), tableau_10('orange'), tableau_10('green')};
 n_ch   = numel(channels);
 
 % fft_ax
