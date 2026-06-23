@@ -17,6 +17,7 @@ trials_per_block = ex.info.adaptive.trials_per_block; %# In test make sure trial
 N_trials_presented = ex.trial_count(iamp);
 current_amplitude = ex.info.stimulus.amplitude_spl;
 mad_to_std = ex.info.analysis.mad_to_std;
+clipping_threshold = 450; % microV
 
 %% Get all available data
 % Account for different sizes
@@ -32,7 +33,7 @@ for ii = 1:iblock
     cur_jitter = ex.block(ii).jitter;
     n_samples = size(cur_block, 2);
     
-    for ichan = 1:N_channels
+    for ichan = 2:N_channels
         temp = cur_block(:,:,ichan);
         all_trials(row_idx:row_idx+trials_per_block-1, 1:n_samples, ichan) = temp;
         all_phases(row_idx:row_idx+trials_per_block-1, ichan) = cur_phase;
@@ -43,13 +44,14 @@ end
 
 %% Identify artefactual trials across ALL CHANNELS
 rejected_trials = [];
-for ichan = 1:N_channels
+for ichan = 2:N_channels
     cur_chan_data_raw = squeeze(all_trials(:, :, ichan));
+    rejected_trials = [rejected_trials find(any(abs(cur_chan_data_raw) >= clipping_threshold,2))'];
     cur_chan_data = sqrt(mean(cur_chan_data_raw.^2, 2, 'omitnan'));
     cur_median = median(cur_chan_data);
     cur_mad = median(abs(cur_median-cur_chan_data))*mad_to_std;
-    rej_thresh = cur_median + cur_mad*reject_threshold_sd;
-    rejected_trials = [rejected_trials find(cur_chan_data >= rej_thresh)'];
+    rel_rej_thresh = cur_median + cur_mad*reject_threshold_sd;
+    rejected_trials = [rejected_trials find(cur_chan_data >= rel_rej_thresh | cur_chan_data >= 60)'];
 end
 all_chan_rejected_trials = unique(rejected_trials);
 

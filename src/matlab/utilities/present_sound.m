@@ -1,10 +1,10 @@
-function rec_data_mV = present_sound(stimulus, ...
+function [rec_data_mV, ex] = present_sound(stimulus, ...
     input_channels, output_channels, ...
     electrode_idx, hydrophone_idx, ...
     electrode_voltage_scaling_factor_V, ...
-    hydrophone_voltage_scaling_factor_V)
+    hydrophone_voltage_scaling_factor_V, ex, app)
 %% Here we actually present and measure sounds
-signal_clip_threshold = 4850; %mv
+signal_clip_threshold = 4.5; % V
 %% Pre-allocate for efficiency
 rec_data_mV = zeros(size(stimulus,2), ...
     length(input_channels), size(stimulus,1)); % # of samples x # of channels x # of trials
@@ -37,8 +37,17 @@ for itrial = 1:height(stimulus)
     try
         ipage = playrec('playrec', current_waveform, output_channels, -1, input_channels);
 
-        % Wait for recording to complete
-        playrec('block', ipage);
+        t0 = tic;
+        while ~playrec('isFinished', ipage)
+            if toc(t0) > 60
+                playrec('delPage', ipage);
+                if isfield(ex.info.experiment,'amp_time_start')
+                ex = save_raw_data(ex, app, false);
+                end
+                keyboard
+            end
+            pause(0.05);
+        end
 
         % Get recorded data
         rec_data = double(playrec('getRec', ipage));
@@ -60,22 +69,20 @@ for itrial = 1:height(stimulus)
         error('Audio recording failed for stimulus %d: %s', itrial, ME.message);
     end
 
-    % Convert digital values to millivolts - ALL channels
-    rec_data_mV(:,:,itrial) = rec_data;
-
-    % Apply specific scaling factors and convert to mV
-    rec_data_mV(:,electrode_idx,itrial) = 1e3.*(rec_data(:,electrode_idx).*electrode_voltage_scaling_factor_V);
-    rec_data_mV(:,hydrophone_idx,itrial) = 1e3.*(rec_data(:,hydrophone_idx).*hydrophone_voltage_scaling_factor_V);
-
-    % Check for clipped signals
-    for ichan = 1:length(input_channels)
-        cur_sig = rec_data_mV(:,ichan,itrial);
-        if any(cur_sig >= signal_clip_threshold)
-            fprintf('Possible clipping. Inspect signal.')
+    % Check for clipped hydrophone signals
+        cur_sig = rec_data(:,hydrophone_idx); % rec_data is in Volts
+        post_bioamp_sig = cur_sig.*hydrophone_voltage_scaling_factor_V; % Undo the scaling that the DAC did to understand what values it recieved
+        if any(abs(post_bioamp_sig) >= signal_clip_threshold)
+            [y, Fs] = audioread('error.mp3');
+            sound(y, Fs)
+            fprintf('Possible clipping in hydrophone signal. Inspect signal.')
             keyboard
         end
 
-    end
+    % Apply specific scaling factors and convert to mV
+    rec_data_mV(:,:,itrial) = rec_data;
+    rec_data_mV(:,electrode_idx,itrial) = 1e3.*(rec_data(:,electrode_idx).*electrode_voltage_scaling_factor_V);
+    rec_data_mV(:,hydrophone_idx,itrial) = 1e3.*(rec_data(:,hydrophone_idx).*hydrophone_voltage_scaling_factor_V);
 
     % Check for absurdly large electrode signals
     if any(abs(rec_data_mV(:)) > 1e4)

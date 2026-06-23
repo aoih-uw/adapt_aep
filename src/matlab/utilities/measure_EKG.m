@@ -18,7 +18,7 @@ while redo
     fprintf('Please wait %d seconds ...',sample_dur_s)
     [~, ekg_sig] = run_ekg(stimulus_block, input_channels, output_channels, ...
         electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, ...
-        hydrophone_voltage_scaling_factor_V);
+        hydrophone_voltage_scaling_factor_V,ex);
 
     ekg_sig = bandpassfilter(ekg_sig, 0.5, 150, 4, fs);
     
@@ -76,9 +76,9 @@ ekg_sig_ds = decimate(ekg_sig,3);
 ekg_fs_ds = fs/ds_rate;
 end
 
-function [rec_data_mV, ekg_sig] = run_ekg(stimulus_block, input_channels, output_channels, ...
-    electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V)
-rec_data_mV = present_sound(stimulus_block, input_channels, output_channels, ...
-    electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V);
+function [rec_data_mV, ekg_sig, ex] = run_ekg(stimulus_block, input_channels, output_channels, ...
+    electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V,ex)
+[rec_data_mV, ex]  = present_sound(stimulus_block, input_channels, output_channels, ...
+    electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V, ex, []);
 ekg_sig = rec_data_mV(:,:,electrode_idx(1)).*1e3;
-end
+end 
