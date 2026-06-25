@@ -1,6 +1,6 @@
 function ex = model_response(ex,app)
 iamp = ex.counter.iamp;
-max_trial_lim = ex.info.adaptive.max_trials;
+max_trial_lim = ex.info.trials.max_trials;
 mad_to_std = ex.info.analysis.mad_to_std;
 stim_ON_2f_mean  = cellfun(@mean,ex.model.stim_ON_2f_vec(1:iamp)); % (trials x tested_amps)
 stim_ON_2f_std  = cellfun(@std,ex.model.stim_ON_2f_vec(1:iamp));

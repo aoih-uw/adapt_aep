@@ -1,6 +1,6 @@
-function ex = setup_info(ex)
+function ex = setup_info(ex, app)
 
-t = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyy-MM-dd HH:mm:ss');
+my_time = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyy-MM-dd HH:mm:ss');
 rng('default')
 
 % Experiment information
@@ -8,7 +8,7 @@ ex.info.experiment = struct( ...
     'path_root',            'C:\Users\AEP\Desktop\adapt_aep\src\matlab', ...
     'facility_name',         'Sisneros Laboratory', ...
     'experimenter_name',     'Aoi Hunsaker', ...
-    'exp_date',              datestr(t, 'yyyymmdd'), ...
+    'exp_date',              datestr(my_time, 'yyyymmdd'), ...
     'exp_time_start',        NaN, ...
     'exp_time_end',          NaN, ...
     'total_time_elapsed',    NaN, ...
@@ -26,6 +26,8 @@ ex.info.experiment = struct( ...
     'tank_dimensions',        'X liter circular tank (X mm inside diameter)', ...
     'tank_material',          'High density polyethelene', ...
     'tank_isolation_method',  'Floating table', ...
+    'response_feature',       'double_frequency_response', ...
+    'target_response_frequency',   ex.info.stimulus.frequency_hz*2, ...
     'random_seed',            "default", ...
     'notes',                  [] ...
     );
@@ -59,9 +61,9 @@ ex.info.stimulus = struct( ...
     'waveform',                             NaN, ...
     'ramp_type',                            'cosine', ...
     'full_amplitude_cycle_num',             6, ...
-    'full_amplitude_duration_ms',           NaN, ... 
-     'ramp_duration_cycles',                6, ... 
-     'ramp_duration_ms',                    NaN, ... 
+    'full_amplitude_duration_ms',           NaN, ...
+    'ramp_duration_cycles',                6, ...
+    'ramp_duration_ms',                    NaN, ...
     'ramp_freq_weight',                     NaN, ...
     'speaker_model',                        'UW-30 Lubell Labs Inc., Columbus, OH, USA Serial #', ...
     'max_amplitude_limit',                  160, ...
@@ -84,30 +86,27 @@ ex.info.channels = struct( ...
     );
 
 % Recording parameters
-    ex.info.recording.sampling_rate_hz = 44100; % (highest presented stimulus)*(nyquist)*(signal quality)
-    ex.info.recording.ADC_bit_depth = NaN;
-    ex.info.recording.latency_samples = NaN;
-    ex.info.recording.DAC_model_serial = 'USB D/A Converter, Fireface UCX, RME, Frankfurt, Germany';
-    ex.info.recording.DAC_conversion_factor = 5.1045; % Previously 1/0.2044;  Multiply by this factor to recover true Volt value
-    ex.info.recording.DAC_output_channels = [1 4];
-    ex.info.recording.DAC_output_channel_names = {'UW30', 'Loopback'};
-    ex.info.recording.DAC_input_channels = [3:8];
-    ex.info.recording.DAC_input_channel_names = {'Hydrophone', 'Loopback', 'Ch1', 'Ch2','Ch3','Ch4'};
-    ex.info.recording.hydrophone_model = 'Type 8103, Bruel & Kjaer, Nærum, Denmark, Serial #: ';
-    ex.info.recording.hydrophone_gain_mV_per_Pa = 3.16; % or 10 mV/Pa
-    ex.info.recording.bioamplifier_model_serial = 'BMA-400, CWE Inc. Ardmore, PA, USA';
-    ex.info.recording.bioamp_gain = 10000;
-    ex.info.recording.hydrophone_voltage_scaling_factor_V = ex.info.recording.DAC_conversion_factor;
-    ex.info.recording.electrode_voltage_scaling_factor_V = ex.info.recording.DAC_conversion_factor/ ex.info.recording.bioamp_gain;
-    ex.info.recording.audio_amplifier = 'Power amplifier, Crown D75-A, Harman, Northridge, CA, USA';
-    ex.info.recording.amplifier_gain = 'Need to measure';
+ex.info.recording.sampling_rate_hz = 44100; % (highest presented stimulus)*(nyquist)*(signal quality)
+ex.info.recording.ADC_bit_depth = NaN;
+ex.info.recording.latency_samples = NaN;
+ex.info.recording.DAC_model_serial = 'USB D/A Converter, Fireface UCX, RME, Frankfurt, Germany';
+ex.info.recording.DAC_conversion_factor = 5.1045; % Previously 1/0.2044;  Multiply by this factor to recover true Volt value
+ex.info.recording.DAC_output_channels = [1 4];
+ex.info.recording.DAC_output_channel_names = {'UW30', 'Loopback'};
+ex.info.recording.DAC_input_channels = [3:8];
+ex.info.recording.DAC_input_channel_names = {'Hydrophone', 'Loopback', 'Ch1', 'Ch2','Ch3','Ch4'};
+ex.info.recording.hydrophone_model = 'Type 8103, Bruel & Kjaer, Nærum, Denmark, Serial #: ';
+ex.info.recording.hydrophone_gain_mV_per_Pa = 3.16; % or 10 mV/Pa
+ex.info.recording.bioamplifier_model_serial = 'BMA-400, CWE Inc. Ardmore, PA, USA';
+ex.info.recording.bioamp_gain = 10000;
+ex.info.recording.hydrophone_voltage_scaling_factor_V = ex.info.recording.DAC_conversion_factor;
+ex.info.recording.electrode_voltage_scaling_factor_V = ex.info.recording.DAC_conversion_factor/ ex.info.recording.bioamp_gain;
+ex.info.recording.audio_amplifier = 'Power amplifier, Crown D75-A, Harman, Northridge, CA, USA';
+ex.info.recording.amplifier_gain = 'Need to measure';
 
-% Adaptive testing parameters
-ex.info.adaptive = struct( ...
-    'response_feature',                   'double_frequency_response', ... % Make this an if statement so it will generate which frequency to look for in the response
-    'target_response_frequency',           ex.info.stimulus.frequency_hz*2, ... % Auto populate
+% Trial Count testing parameters
+ex.info.trials = struct( ...
     'trials_per_block',                    10, ... % Must be an even number of equal number of stimulus +/- polarities in block
-    'min_trials_for_analysis',             30, ... 
     'max_trials',                          NaN ... % Set in GUI
     );
 
@@ -118,15 +117,6 @@ ex.info.signal_quality = struct( ...
     'artifact_detection_method', 'standard deviation', ...
     'rejection_threshold_microV',    10,...
     'rejection_threshold_sd',    3 ...
-    );
-
-% Signal analysis parameters
-ex.info.analysis = struct( ... % These values will be updated by prepare_next_amplitude when new amplitude is selected
-    'n_bootstrap',         5000, ... % See if I need to reduce this...
-    'range_2f_hz',      3, ... % +/- 3 Hz above and below the double frequency response point
-    'mad_criteria',            1, ... % How many mad above median in order to do boostrapping
-    'mad_to_std',              1.4826, ...% to convert mad to a std like value
-    'peak_mult',           5 ... % immediately confirm response if 2f diff peak is 5x the height of the largest peaks
     );
 
 % Response modeling parameters
@@ -142,3 +132,51 @@ ex.info.calibration = struct( ... % These values will be updated by prepare_next
     );
 
 
+%% Experiment type specific info
+if strcmp(app.DropDown_test_mode.Value,'Mixed stimuli')
+    ex.info.mixed = struct( ...
+        'stim_name',              {{'trim','ONOFF'}}, ... % Make this an if statement so it will generate which frequency to look for in the response
+        'max_trials',             [1030 130], ... % Auto populate
+        'test_amplitudes',        140:-3:95, ... % Must be an even number of equal number of stimulus +/- polarities in block
+        'N_trials_per_file',      500 ...
+        );
+
+    total_trials = sum(ex.info.mixed.max_trials*size(ex.info.mixed.test_amplitudes,2));
+    rounded_total_trials = ceil(total_trials/ex.info.trials.trials_per_block)*ex.info.trials.trials_per_block;
+    rounded_total_batches = rounded_total_trials/ex.info.trials.trials_per_block;
+    test_schedule = zeros(rounded_total_batches, 3); % rows = total_N_batches columns: stim_type, stim_amp, N_trials_needed
+
+    % Create mixed stimuli testing schedule
+    my_idx = 1;
+    for istim = 1:size(ex.info.mixed.stim_name,2)
+       cur_trial_needed_per_amp = ex.info.mixed.max_trials(istim); % ex. 1030 trials
+       cur_batches_needed_per_amp = cur_trial_needed_per_amp/ex.info.trials.trials_per_block; % ex. 103 batches
+       for iamp = 1:size(ex.info.mixed.test_amplitudes,2)
+           cur_amp = ex.info.mixed.test_amplitudes(iamp);
+           cur_batch_params = [istim cur_amp cur_trial_needed_per_amp];
+           cur_batch_repmat = repmat(cur_batch_params, cur_batches_needed_per_amp, 1); % All batches needed for this amplitude and stimulus
+           test_schedule(my_idx:my_idx+size(cur_batch_repmat,1)-1,:) = cur_batch_repmat;
+           my_idx = my_idx + size(cur_batch_repmat,1);
+       end
+    end
+
+    % Randomize the testing order and save to ex.info.mixed.test_schedule
+    rand_idx = randperm(size(test_schedule,1));
+    test_schedule_rand = test_schedule(rand_idx,:);
+    [uniq_vals,~,uniq_idx] = unique(test_schedule_rand,'rows');
+    test_schedule_rand = [test_schedule_rand uniq_idx];
+    ex.info.mixed.test_schedule = test_schedule_rand;
+    ex.info.mixed.uniq_stimuli = uniq_vals;
+    ex.info.mixed.N_unique_stimuli = length(uniq_vals);
+
+elseif strcmp(app.DropDown_test_mode.Value,'Adaptive')
+    % Signal analysis parameters
+    ex.info.analysis = struct( ... % These values will be updated by prepare_next_amplitude when new amplitude is selected
+        'n_bootstrap',         5000, ... % See if I need to reduce this...
+        'min_trials_for_analysis',             30, ...
+        'range_2f_hz',      3, ... % +/- 3 Hz above and below the double frequency response point
+        'mad_criteria',            1, ... % How many mad above median in order to do boostrapping
+        'mad_to_std',              1.4826, ...% to convert mad to a std like value
+        'peak_mult',           5 ... % immediately confirm response if 2f diff peak is 5x the height of the largest peaks
+        );
+end

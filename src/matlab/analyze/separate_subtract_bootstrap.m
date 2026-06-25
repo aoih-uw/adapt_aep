@@ -14,9 +14,9 @@ mad_to_std = ex.info.analysis.mad_to_std;
 mad_criteria = ex.info.analysis.mad_criteria;
 
 N_channels = ex.info.channels.n_channels;
-max_trials = ex.info.adaptive.max_trials;
+max_trials = ex.info.trials.max_trials;
 
-min_trials_for_analysis = ex.info.adaptive.min_trials_for_analysis;
+min_trials_for_analysis = ex.info.analysis.min_trials_for_analysis;
 run_bootstrap = 0;
 gate_type = 0;
 

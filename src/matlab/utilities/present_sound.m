@@ -41,23 +41,23 @@ for itrial = 1:height(stimulus)
         while ~playrec('isFinished', ipage)
             if toc(t0) > 60
                 playrec('delPage', ipage);
-                if isfield(ex.info.experiment,'amp_time_start')
-                ex = save_raw_data(ex, app, false);
+                if strcmp(app.DropDown_test_mode.Value, 'Mixed stimuli')
+                    ex = save_mixed_raw(ex,app);
+                else
+                    if isfield(ex.info.experiment,'amp_time_start')
+                        ex = save_single_raw(ex, app, false);
+                    end
                 end
-                keyboard
             end
-            pause(0.05);
+            keyboard
         end
+        pause(0.05);
 
         % Get recorded data
         rec_data = double(playrec('getRec', ipage));
 
         % Clean up the page
         playrec('delPage', ipage);
-
-        if length(stimulus) < 54*44100/1e3 % Signals less than 40 ms need more time between stimuli
-            pause(0.01)
-        end
 
     catch ME
         % Clean up on error
@@ -70,14 +70,14 @@ for itrial = 1:height(stimulus)
     end
 
     % Check for clipped hydrophone signals
-        cur_sig = rec_data(:,hydrophone_idx); % rec_data is in Volts
-        post_bioamp_sig = cur_sig.*hydrophone_voltage_scaling_factor_V; % Undo the scaling that the DAC did to understand what values it recieved
-        if any(abs(post_bioamp_sig) >= signal_clip_threshold)
-            [y, Fs] = audioread('error.mp3');
-            sound(y, Fs)
-            fprintf('Possible clipping in hydrophone signal. Inspect signal.')
-            keyboard
-        end
+    cur_sig = rec_data(:,hydrophone_idx); % rec_data is in Volts
+    post_bioamp_sig = cur_sig.*hydrophone_voltage_scaling_factor_V; % Undo the scaling that the DAC did to understand what values it recieved
+    if any(abs(post_bioamp_sig) >= signal_clip_threshold)
+        [y, Fs] = audioread('error.mp3');
+        sound(y, Fs)
+        fprintf('Possible clipping in hydrophone signal. Inspect signal.')
+        keyboard
+    end
 
     % Apply specific scaling factors and convert to mV
     rec_data_mV(:,:,itrial) = rec_data;

@@ -5,7 +5,9 @@ pass_band_hz = ex.info.signal_quality.pass_band_hz;
 ex.no_valid_trials = 0;
 
 %% Reject artefacts
-ex = reject_artefacts(ex,app);
+if ~strcmp(ex.info.experiment.exp_type,'Timed')
+    ex = reject_artefacts(ex,app);
+end
 
 %% Adaptive code-specific preprocessing
 if strcmp(ex.info.experiment.exp_type,'Adaptive')
