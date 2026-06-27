@@ -2,6 +2,9 @@
 *:Zone.Identifier
 Thumbs.db
 
+# Ignore data
+data/*
+
 # MATLAB Specific
 *.asv
 *.mat
