@@ -14,6 +14,7 @@ fprintf('\n')
 ex = app.ex;
 ex.info.experiment.exp_time_start = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
 test_schedule = ex.info.mixed.test_schedule;
+batch_completed = 0;
 
 while ex.counter.ischedule < size(test_schedule,1)
     % Increment counters
@@ -41,8 +42,8 @@ while ex.counter.ischedule < size(test_schedule,1)
             ex = setup_experiment_present_sound(ex,app); % Present stimuli and measure signals
 
             % REJECT ARTEFACTS
-            fprintf('\Rejecting artefacts...\n')
-            ex = reject_mixed_artefacts(ex,app);
+            fprintf('\nRejecting artefacts...\n')
+            ex = reject_artefacts_mixed(ex,app);
 
             if ex.counter.N_not_enough_trials > 0
                 fprintf('Insufficient valid trials: Reattempting %d', ex.counter.N_not_enough_trials)

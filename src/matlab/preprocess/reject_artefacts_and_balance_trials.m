@@ -54,7 +54,7 @@ balanced_idx = sort([pos_phase_idx; neg_phase_idx]);
 kept_trials_idx = kept_trials_idx(balanced_idx);
 
 %% Report rejected trials
-n_trials_collected = size(squeeze(all_trials(:,:,1)),1);
+n_trials_collected = size(squeeze(all_trials(:,:,2)),1);
 n_trials_rejected = n_trials_collected - length(kept_trials_idx);
 n_valid_trials = length(kept_trials_idx);
 reject_rate = n_trials_rejected/n_trials_collected;

@@ -22,7 +22,7 @@ gate_type = 0;
 
 % Permutation Variables
 n_permutations = 1000;
-my_alpha = 0.5;
+my_prctile = 99.95;%
 
 if ex.test == 1
     freq_2f_hz  = ex.info.stimulus.frequency_hz;
@@ -208,7 +208,7 @@ if run_bootstrap
         perm_matrix(iperm) = mean(diff_2f_vec.*my_sign);
     end
 
-    sig_thresh = prctile(perm_matrix,100-my_alpha);
+    sig_thresh = prctile(perm_matrix,my_prctile);
     
     % Save to ex
     ex.stats(iboot).perm_test_stat = test_stat;
@@ -216,22 +216,6 @@ if run_bootstrap
     ex.stats(iboot).perm_test_result = test_stat > sig_thresh;
     
     fprintf('\nPermutation test result \nSignificance threshold: %1.3f\n Test statistic: %1.3f\n ',sig_thresh, test_stat)
-    
-    % % Plot bootstrapped distribution on app axes
-    % reset(app.UIAxes_perm)
-    % histogram(app.UIAxes_perm, perm_matrix, 'FaceColor', tableau_10('blue'));
-    % hold(app.UIAxes_perm, 'on');
-    % xline(app.UIAxes_perm, test_stat, 'Color', tableau_10('blue'), 'LineWidth', 1.5)
-    % xline(app.UIAxes_perm, sig_thresh, 'LineStyle', '--', 'Color', tableau_10('red'), 'LineWidth', 1.5)
-    % xlim(app.UIAxes_perm, 'auto');
-    % cur_xlim = xlim(app.UIAxes_perm);
-    % xlim(app.UIAxes_perm, [-max(abs(cur_xlim)), max(abs(cur_xlim))]);
-    % title(app.UIAxes_perm, 'Permutation Distribution');
-    % xlabel(app.UIAxes_perm, 'Difference');
-    % ylabel(app.UIAxes_perm, 'Frequency');
-    % hold(app.UIAxes_perm, 'off');
-
-    drawnow
     
     %% Make decision
     if lower_CI > 0

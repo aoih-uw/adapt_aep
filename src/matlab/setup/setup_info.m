@@ -167,7 +167,7 @@ if strcmp(app.DropDown_test_mode.Value,'Mixed stimuli')
     test_schedule_rand = [test_schedule_rand uniq_idx];
     ex.info.mixed.test_schedule = test_schedule_rand;
     ex.info.mixed.uniq_stimuli = uniq_vals;
-    ex.info.mixed.N_unique_stimuli = length(uniq_vals);
+    ex.info.mixed.N_unique_stimuli = length(uniq_vals,1);
 
 elseif strcmp(app.DropDown_test_mode.Value,'Adaptive')
     % Signal analysis parameters

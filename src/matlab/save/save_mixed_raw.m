@@ -22,16 +22,10 @@ ex_save.info = ex.info; % Basic experiment parameters
 ex_save.counter = ex.counter; % Know how many of each thing we did by the time we finished testing this amplitude
 ex_save.block_level_info = ex.block(1:iblock); % Block level info
 
-% Extract only required fields
-ex_save = struct();
-ex_save.info = ex.info; % Basic experiment parameters
-ex_save.counter = ex.counter; % Know how many of each thing we did by the time we finished testing this amplitude
-ex_save.block_level_info = ex.block(1:iblock); % Block level info
 % Remove stimulus_block from all block entries
 if isfield(ex_save.block_level_info, 'stimulus_block')
     ex_save.block_level_info = rmfield(ex_save.block_level_info, 'stimulus_block');
 end
-ex_save.rejected_trials = ex.rejected_trials(iamp);
 
 % Downsample
 for iiblock = 1:iblock

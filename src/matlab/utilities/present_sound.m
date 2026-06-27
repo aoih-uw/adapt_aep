@@ -48,8 +48,8 @@ for itrial = 1:height(stimulus)
                         ex = save_single_raw(ex, app, false);
                     end
                 end
+                keyboard
             end
-            keyboard
         end
         pause(0.05);
 

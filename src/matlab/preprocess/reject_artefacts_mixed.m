@@ -13,8 +13,8 @@ first_block = iblock - ex.counter.N_not_enough_trials;
 max_samples = max(arrayfun(@(x) size(x.electrodes_microV, 2), ex.raw(first_block:iblock)));
 n_blocks = iblock - first_block + 1;
 all_trials = NaN(trials_per_block * n_blocks, max_samples, N_channels);
-all_phases = zeros(trials_per_block * n_blocks);
-all_jitter = zeros(trials_per_block * n_blocks);
+all_phases = zeros(trials_per_block * n_blocks,1);
+all_jitter = zeros(trials_per_block * n_blocks,1);
 
 % Populate matrices
 row_idx = 1;
