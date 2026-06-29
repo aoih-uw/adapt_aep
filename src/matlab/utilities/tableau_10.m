@@ -1,7 +1,6 @@
 function c = tableau_10(color)
-% TABLEAU10 Get Tableau 10 color palette colors
+%% TABLEAU_10 Get Tableau 10 color palette colors
 %   c = tableau10(color) returns RGB triplet for specified color name
-%   
 %   Example: plot(x, y, 'Color', tableau10('blue'))
 
 colors = struct(...

@@ -1,5 +1,5 @@
 function ex = init_dac(ex)
-% Initialize the Fireface Audio Interface (used here primarily as a D/A converter)
+%% Initialize the Fireface Audio Interface (used here primarily as a D/A converter)
 
 fs = ex.info.recording.sampling_rate_hz;
 % Reset playrec if it is already initialized to start fresh

@@ -1,4 +1,6 @@
 function ex = calculate_hydrophone_sig_quality(ex)
+%% Calculates hydrophone signal SNR
+%% Assign varables
 fs = ex.info.recording.sampling_rate_hz;
 iblock = ex.counter.iblock;
 hydrophone_mV = ex.raw(iblock).hydrophone_mV;
@@ -20,18 +22,21 @@ latency_samples = ex.info.recording.latency_samples;
 stim_ON = stim_ON(:,ramp_duration_samples:end-ramp_duration_samples);
 
 % Filter the stim OFF signal to only include the current stimulus frequency
+stim_OFF_filt = zeros(size(stim_OFF,1), size(stim_OFF,2));
+stim_ON_filt = zeros(size(stim_ON,1), size(stim_ON,2));
+
 for itrial = 1:size(stim_OFF,1)
     cur_sig = stim_OFF(itrial,:);
-    stim_OFF(itrial,:) = bandpassfilter(cur_sig,stimulus_freq-0.5,stimulus_freq+0.5,4,fs);
+    stim_OFF_filt(itrial,:) = bandpassfilter(cur_sig,stimulus_freq-0.5,stimulus_freq+0.5,4,fs);
     cur_sig = stim_ON(itrial,:);
-    stim_ON(itrial,:) = bandpassfilter(cur_sig,stimulus_freq-0.5,stimulus_freq+0.5,4,fs);
+    stim_ON_filt(itrial,:) = bandpassfilter(cur_sig,stimulus_freq-0.5,stimulus_freq+0.5,4,fs);
 end
 
 % Calculate dB RMS re 1 microVolt
 for itrial = 1:size(stim_ON,1)
-[~ , stim_ON_dB(itrial)] = convert_mV_to_dB_spl(stim_ON(itrial,:),hydrophone_gain_mV_per_Pa);
+[~ , stim_ON_dB(itrial)] = convert_mV_to_dB_spl(stim_ON_filt(itrial,:),hydrophone_gain_mV_per_Pa);
 
-[~ , stim_OFF_dB(itrial)] = convert_mV_to_dB_spl(stim_OFF(itrial,:),hydrophone_gain_mV_per_Pa);
+[~ , stim_OFF_dB(itrial)] = convert_mV_to_dB_spl(stim_OFF_filt(itrial,:),hydrophone_gain_mV_per_Pa);
 end
 
 ex.block(iblock).hydrophone.stim_ON_rms_dB_spl = median(stim_ON_dB);

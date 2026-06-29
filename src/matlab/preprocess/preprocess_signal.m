@@ -6,7 +6,7 @@ ex.no_valid_trials = 0;
 
 %% Reject artefacts
 if ~strcmp(ex.info.experiment.exp_type,'Timed')
-    ex = reject_artefacts(ex,app);
+    ex = reject_artefacts_single(ex,app);
 end
 
 %% Adaptive code-specific preprocessing

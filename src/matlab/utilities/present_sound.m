@@ -3,7 +3,12 @@ function [rec_data_mV, ex] = present_sound(stimulus, ...
     electrode_idx, hydrophone_idx, ...
     electrode_voltage_scaling_factor_V, ...
     hydrophone_voltage_scaling_factor_V, ex, app)
-%% Here we actually present and measure sounds
+%% This function calls playrec to simultaneously present and record signals. Presents signals trial by trial, 
+% shows progress for number of trials presented per batch, enters debugging state when playrec gets stuck, 
+% checks for clipped hydrophone signals and absurdly high amplitude values,
+% applies correction factors to recover true mV values from electrodes/hydrophone after being amplified and processed by the DAC
+
+% Assign variables
 signal_clip_threshold = 4.5; % V
 %% Pre-allocate for efficiency
 rec_data_mV = zeros(size(stimulus,2), ...
@@ -20,13 +25,13 @@ for itrial = 1:height(stimulus)
     % Get current trial
     if size(stimulus,3) > 1 % We have signals to present on more than one channel
         current_waveform = squeeze(stimulus(itrial,:,:));
-    else % Only one channel we have signals to present
+    elseif size(stimulus,3) == 1 % Only one channel we have signals to present
         current_waveform = stimulus(itrial,:)';
-        current_waveform = [current_waveform current_waveform]; % Give a signal to loopback too!
+        current_waveform = repmat(current_waveform, 1, length(output_channels)); % Replicate signal to all output channels
     end
 
     % Check amplitude range for safety (prevent speaker/electrode damage)
-    max_amplitude = max(abs(current_waveform));
+    max_amplitude = max(abs(current_waveform(:)));
     amplitude_threshold = 1.0; % Adjust based on your system's safe range
     if max_amplitude > amplitude_threshold
         error('\nStimulus %d amplitude too high (%.3f): exceeds safety threshold (%.3f)\n', ...
@@ -48,7 +53,7 @@ for itrial = 1:height(stimulus)
                         ex = save_single_raw(ex, app, false);
                     end
                 end
-                keyboard
+                keyboard % Don't allow the program to progress further now since ex.block structure has been reset after saving
             end
         end
         pause(0.05);
@@ -61,11 +66,7 @@ for itrial = 1:height(stimulus)
 
     catch ME
         % Clean up on error
-        try
-            playrec('delPage', ipage);
-        catch
-            % Ignore cleanup errors
-        end
+        if exist('ipage','var'), playrec('delPage', ipage); end
         error('Audio recording failed for stimulus %d: %s', itrial, ME.message);
     end
 
@@ -85,11 +86,11 @@ for itrial = 1:height(stimulus)
     rec_data_mV(:,hydrophone_idx,itrial) = 1e3.*(rec_data(:,hydrophone_idx).*hydrophone_voltage_scaling_factor_V);
 
     % Check for absurdly large electrode signals
-    if any(abs(rec_data_mV(:)) > 1e4)
+    if any(abs(rec_data_mV(:,:,itrial)) > 1e3)
         [y, Fs] = audioread('error.mp3');
         sound(y, Fs)
         fprintf('\nUnusually large voltage values detected in sensors (max: %.2f mV)\n', ...
-            max(abs(rec_data_mV(:))));
+            max(abs(rec_data_mV(:,:,itrial))));
         pause(2)
     end
 

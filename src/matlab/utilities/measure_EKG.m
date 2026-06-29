@@ -1,6 +1,11 @@
 function [ex, ekg_sig_ds,ekg_rate, ekg_fs_ds, peak_threshold] = measure_EKG(ex,init_check,input_peak_threshold)
 fs = ex.info.recording.sampling_rate_hz;
+%% This function uses playrec to passively measure the EKG of the subject, 
+% uses findpeaks() to identify BPM rate based on a peak threshold value that the user assigns at the beginning of the experiment. 
+% Depending on the testing mode, measure_EKG will ask for the user's input to inspect the signal, 
+% or just show the EKG and automatically proceeds with testing.
 
+%% Assign Variables
 % Findpeaks vars
 minDist = fs*.75; % at least a quarter of a second between
 sample_dur_s = 12;
@@ -16,7 +21,7 @@ redo = true;
 
 while redo
     fprintf('Please wait %d seconds ...',sample_dur_s)
-    [~, ekg_sig] = run_ekg(stimulus_block, input_channels, output_channels, ...
+    [~, ekg_sig,ex] = run_ekg(stimulus_block, input_channels, output_channels, ...
         electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, ...
         hydrophone_voltage_scaling_factor_V,ex);
 
@@ -47,7 +52,7 @@ while redo
     % Plot signal
     myfig = figure;
     t = (0:N_samples-1) / fs;
-    plot(t, squeeze(ekg_sig(1,:,1)), 'k-', 'LineWidth', 1);
+    plot(t, ekg_sig, 'k-', 'LineWidth', 1);
     hold on;
     plot(t(locs), pks, 'rv', 'MarkerFaceColor', 'r');
     xlabel('Time (s)'); ylabel('EKG (\muV)');

@@ -1,5 +1,5 @@
 function tone_burst = generate_tone_burst(fs, stim_freq, full_amp_stim_ON_ms, ramp_stim_ON_ms)
-%% Here the actual tone burst is created
+%% This function creates the tone burst stimulus with an onramp/offramp
 ms_to_s = 1000; % conversion factor
 
 % Samples

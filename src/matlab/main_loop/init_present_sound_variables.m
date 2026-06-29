@@ -2,7 +2,7 @@ function [ex, n_channels, n_trials, n_samples, output_channels, ...
     input_channels, hydrophone_idx, loopback_idx, electrode_idx, ...
     electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V] ...
         = init_present_sound_variables(ex, stimulus_block)
-
+%% Initializes all of the variables needed for running present_sound function
 n_channels = ex.info.channels.n_channels;
 n_trials = height(stimulus_block);
 n_samples = length(stimulus_block(1,:)');
@@ -15,5 +15,4 @@ hydrophone_voltage_scaling_factor_V = ex.info.recording.hydrophone_voltage_scali
 hydrophone_idx = find(strcmp(input_channel_names, 'Hydrophone'));
 loopback_idx = find(strcmp(input_channel_names, 'Loopback'));
 electrode_idx = find(startsWith(input_channel_names, 'Ch'));
-
 end

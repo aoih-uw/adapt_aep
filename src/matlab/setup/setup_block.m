@@ -1,7 +1,7 @@
 function ex = setup_block(ex)
-%% Setup block-level layers to ex
+%% Setup block-level fields in ex structure
 
-%% Per block metadata
+% Per block metadata
 if ~strcmp(ex.info.experiment.exp_type, 'Mixed stimuli')
     max_block = ceil(ex.info.trials.max_trials / ex.info.trials.trials_per_block);
     if strcmp(ex.info.experiment.exp_type,'Adaptive')

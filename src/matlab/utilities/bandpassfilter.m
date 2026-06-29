@@ -1,7 +1,5 @@
 function sigout = bandpassfilter(sigin,cutofflow,cutoffhigh,order,fs)
-% function sigout = bandpassfilter(sigin,notchfreq)
-%
-% This is a simple bandpass filter. Inputs are self-explanatory.
+%% This is a simple bandpass filter which uses filtfilt. Inputs are self-explanatory.
 
 if cutofflow > cutoffhigh
     error('cutofflow must be less than cutoffhigh');

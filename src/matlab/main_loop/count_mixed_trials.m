@@ -1,5 +1,6 @@
 function ex = count_mixed_trials(ex,app)
-%% test_schedule: rows = n total trials to test, columns stimuli_type, stimulus_amplitude, n_trials_needed, unique_idx
+%% Count which trials in the testing schedule have been presented and plot these counts to a heatmap
+% test_schedule: rows = n total trials to test, columns stimuli_type, stimulus_amplitude, n_trials_needed, unique_idx
 test_schedule = ex.info.mixed.test_schedule;
 ischedule = ex.counter.ischedule;
 uniq_stimuli = ex.info.mixed.uniq_stimuli;
@@ -21,6 +22,8 @@ completion_mat(unique_tested_stimuli(:,4)) = unique_counts ./ unique_tested_stim
 stim_types = unique(uniq_stimuli(:,1));
 amplitudes = unique(uniq_stimuli(:,2));
 
+% Generate 2d heatmap
+heat_2d = zeros(length(stim_types), length(amplitudes));
 for i = 1:N_unique_stimuli
     r = find(stim_types == uniq_stimuli(i,1));
     c = find(amplitudes == uniq_stimuli(i,2));

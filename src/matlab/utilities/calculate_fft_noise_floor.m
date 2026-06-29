@@ -1,6 +1,6 @@
 function noise_distribution = ...
     calculate_fft_noise_floor(target_freq, target_freq_range, input_signal, freq_vec, exclude_harmonics)
-
+%% Extracts magnitude values in fft bins associated with the noise floor (i.e., non target frequency bins)
 if exclude_harmonics
     loc_2f = mod(freq_vec, target_freq) <= target_freq_range | ...
              mod(freq_vec, target_freq) >= (target_freq - target_freq_range);

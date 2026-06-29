@@ -1,15 +1,14 @@
-function [kept_trials_idx, n_valid_trials, rel_rej_thresh_across, my_z_within]  = reject_artefacts_and_balance_trials(ex, app, all_trials, all_phases)
+function [kept_trials_idx, n_valid_trials, rel_rej_thresh_across, my_z_within]  = reject_artefacts_and_balance_trials(ex, app, all_trials, all_phases,valid_channels)
 % Assume all_trials has a 3rd dimension, all_phases only 2
 %% Assign variables
 reject_threshold_sd = ex.info.signal_quality.rejection_threshold_sd;
 mad_to_std = ex.info.analysis.mad_to_std;
 clipping_threshold = 300; % microV
-N_channels = ex.info.channels.n_channels;
 
 % Preallocate before the loop
 my_z_within = NaN(size(all_trials));
 rejected_trials = [];
-for ichan = 2:N_channels
+for ichan = 1:length(valid_channels) % The fisrst channel is excluded because it is the EKG channel
     % Get data
     cur_chan_data_raw = squeeze(all_trials(:, :, ichan));
 

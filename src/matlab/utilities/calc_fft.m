@@ -1,5 +1,5 @@
 function [N, freq_vec, fft_vals] = calc_fft(stimulus, fs)
-% calculate the fft and save only the 1st half of the results (i.e., the
+%% Calculate the fft and save only the 1st half of the results (i.e., the
 % positive values.)
 
 stimulus = stimulus(:)'; % force row
@@ -13,7 +13,7 @@ P2 = abs(Y/N); % normalized magnitude spectrum, have to divide by the number of 
 
 P1 = P2(1:K+1); % 1 = DC, N/2 + 1 = Nyquist, include both
 
-%% UNDERSTAND THIS!?
+%% Double values based on nyquist bin existence
 % Handle nyquist depending on N is even or not, double since we removed the negative part of the spectrum
 if mod(N,2) == 0
     P1(2:end-1) = 2*P1(2:end-1); % nyquist bin does exist at fs/2

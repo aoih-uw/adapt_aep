@@ -1,5 +1,5 @@
 function ex = setup_model(ex)
-
+%% Setup model field of ex structure
 % Model
 ex.model.stim_ON_2f_vec = []; 
 ex.model.stim_OFF_2f_vec = []; 

@@ -1,6 +1,6 @@
 function ex = plan_save_single_raw(ex,app)
+%% Plan how raw data will be saved in single stimulus mode
 every_min = 15;
-
 if isempty(ex.last_autosave_time)
     ex.last_autosave_time = ex.info.experiment.exp_time_start;
 end

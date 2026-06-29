@@ -1,5 +1,5 @@
 function ex = test_latency(ex)
-% Calculate system latency using loopback system to know how long it takes
+%% Calculate system latency using loopback system to know how long it takes
 % for stimulus to get sent ot to the DAC and receive the signal back from the DAC
 % playrec(command, output signal, 4 output channels, -1 record same number of samples in output signal, 4 input channels)
 % playrec('playrec') returns pageNumber, which you need to get by using 'getRec'

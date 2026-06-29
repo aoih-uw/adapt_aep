@@ -1,5 +1,15 @@
 function ex = setup_health(ex)
-% Setup health
+%% Setup health field of ex structure
+% If we have already measured health of subject once in this experiment
+% we need to reset and include values from the last health check
+
+% Set maximum block numbers to be preallocated
+if ~strcmp(ex.info.experiment.exp_type, 'Mixed stimuli')
+    max_block = ceil(ex.info.trials.max_trials / ex.info.trials.trials_per_block);
+else
+    max_block = ex.info.mixed.N_trials_per_file;
+end
+
 if ex.counter.ihealth > 0
     if isfield(ex.health(ex.counter.ihealth), 'time_stamp')
         ex.health(1).time_stamp = ex.health(ex.counter.ihealth).time_stamp;
@@ -7,7 +17,7 @@ if ex.counter.ihealth > 0
         ex.health(1).ekg_rate =  ex.health(ex.counter.ihealth).ekg_rate;
         ex.health(1).ekg_fs_ds =  ex.health(ex.counter.ihealth).ekg_fs_ds;
         ex.health(1).peak_threshold =  ex.health(ex.counter.ihealth).peak_threshold;
-        for ihealth = 2:100
+        for ihealth = 2:max_block
             ex.health(ihealth).time_stamp = NaN;
             ex.health(ihealth).electrodes_microV= NaN;
             ex.health(ihealth).ekg_rate = NaN;
@@ -15,8 +25,8 @@ if ex.counter.ihealth > 0
             ex.health(ihealth).peak_threshold = NaN;
         end
     end
-else 
-    for ihealth = 1:100
+else % We are setting up the health field for the first time, so we need to build it from scratch
+    for ihealth = 1:max_block
         ex.health(ihealth).time_stamp = NaN;
         ex.health(ihealth).electrodes_microV= NaN;
         ex.health(ihealth).ekg_rate = NaN;

@@ -22,8 +22,10 @@ switch data_type
         % Are there any full colums of NaNs that are between two columns of
         % values?
         if ~isempty(non_nan_idx)
-            sandwiched = nan_cols & (1:size(input_var,2)) > non_nan_idx(1) & ...
-                         (1:size(input_var,2)) < non_nan_idx(end);
+            sandwiched = nan_cols & ...
+             (1:size(input_var,2)) > non_nan_idx(1) & ...   % after first good column
+             (1:size(input_var,2)) < non_nan_idx(end);      % before last good column
+            
             if any(sandwiched)
                 keyboard
             end

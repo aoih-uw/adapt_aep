@@ -1,4 +1,5 @@
 function ex = save_single_raw(ex, app, is_autosave)
+%% Saves raw data for single stimulus mode
 if nargin < 3, is_autosave = false; end
 fprintf('\nSaving current amplitude data...\n');
 
@@ -101,7 +102,6 @@ elseif strcmp(ex.info.experiment.exp_type,'Static trial count') % Reset only whe
         ex.counter.iblock = 0;
     end
 end
-
 end
 
 function y = dec_rows(x, r)
