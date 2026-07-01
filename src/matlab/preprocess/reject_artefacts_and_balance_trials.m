@@ -2,7 +2,7 @@ function [kept_trials_idx, n_valid_trials, rel_rej_thresh_across, my_z_within]  
 % Assume all_trials has a 3rd dimension, all_phases only 2
 %% Assign variables
 reject_threshold_sd = ex.info.signal_quality.rejection_threshold_sd;
-mad_to_std = ex.info.analysis.mad_to_std;
+mad_to_std = ex.info.signal_quality.mad_to_std;
 clipping_threshold = 300; % microV
 
 % Preallocate before the loop
@@ -53,7 +53,7 @@ balanced_idx = sort([pos_phase_idx; neg_phase_idx]);
 kept_trials_idx = kept_trials_idx(balanced_idx);
 
 %% Report rejected trials
-n_trials_collected = size(squeeze(all_trials(:,:,2)),1);
+n_trials_collected = size(squeeze(all_trials(:,:,1)),1);
 n_trials_rejected = n_trials_collected - length(kept_trials_idx);
 n_valid_trials = length(kept_trials_idx);
 reject_rate = n_trials_rejected/n_trials_collected;

@@ -10,7 +10,7 @@ kept_jitter = ex.kept.jitter;
 latency_samples = ex.info.recording.latency_samples;
 period_length_samples = length(ex.info.stimulus.waveform);
 
-mad_to_std = ex.info.analysis.mad_to_std;
+mad_to_std = ex.info.signal_quality.mad_to_std;
 mad_criteria = ex.info.analysis.mad_criteria;
 
 N_channels = ex.info.channels.n_channels;

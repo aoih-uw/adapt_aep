@@ -115,6 +115,7 @@ ex.info.signal_quality = struct( ...
     'filter_type',               'butterworth', ...
     'pass_band_hz',               35, ...
     'artifact_detection_method', 'standard deviation', ...
+    'mad_to_std',              1.4826, ...% to convert mad to a std like value
     'rejection_threshold_microV',    10,...
     'rejection_threshold_sd',    3 ...
     );
@@ -167,7 +168,7 @@ if strcmp(app.DropDown_test_mode.Value,'Mixed stimuli')
     test_schedule_rand = [test_schedule_rand uniq_idx];
     ex.info.mixed.test_schedule = test_schedule_rand;
     ex.info.mixed.uniq_stimuli = uniq_vals;
-    ex.info.mixed.N_unique_stimuli = length(uniq_vals,1);
+    ex.info.mixed.N_unique_stimuli = size(uniq_vals,1);
 
 elseif strcmp(app.DropDown_test_mode.Value,'Adaptive')
     % Signal analysis parameters
@@ -176,7 +177,6 @@ elseif strcmp(app.DropDown_test_mode.Value,'Adaptive')
         'min_trials_for_analysis',             30, ...
         'range_2f_hz',      3, ... % +/- 3 Hz above and below the double frequency response point
         'mad_criteria',            1, ... % How many mad above median in order to do boostrapping
-        'mad_to_std',              1.4826, ...% to convert mad to a std like value
         'peak_mult',           5 ... % immediately confirm response if 2f diff peak is 5x the height of the largest peaks
         );
 end

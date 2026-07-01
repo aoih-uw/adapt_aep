@@ -6,10 +6,10 @@ channel_names = ex.info.channels.names;
 valid_channels = find(~strcmp(channel_names, 'EKG'));
 trials_per_block = ex.info.trials.trials_per_block; %# In test make sure trials_per_block*iblock calculations meet expectation on total length of trials below
 
-% Get all iblocks that are relevant for the current stimulus type we are
-% working with
+% Get all iblocks that are relevant for the current stimulus type we are working with
 if ex.counter.N_not_enough_trials > iblock
     keyboard
+    error('error')
 else
     first_block = iblock - ex.counter.N_not_enough_trials;
 end
@@ -28,8 +28,9 @@ for ii = first_block:iblock
     cur_phase = ex.block(ii).phase_vec;
     cur_jitter = ex.block(ii).jitter;
     n_samples = size(cur_block, 2);
-
-    for ichan = 1:length(valid_channels) % The first channel is excluded because it is the EKG channel
+    
+    % The first channel is excluded because it is the EKG channel
+    for ichan = 1:length(valid_channels) 
         cur_chan = valid_channels(ichan);
         temp = cur_block(:,:,cur_chan);
         all_trials(row_idx:row_idx+trials_per_block-1, 1:n_samples, ichan) = temp;
