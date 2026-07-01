@@ -2,9 +2,9 @@ clearvars
 addpath(genpath('\\wsl.localhost\ubuntu\home\aoih\adapt_aep\src\matlab'))
 
 % Set data location
-cd 'F:\2026\Research\May Midshipman\2026_06_02\porichthys_notatus_16_20260602\benzo'
-subjid_vec = {16};
-stim_freq = 110;
+cd 'F:\2026\Research\May Midshipman\2026_06_19\porichthys_notatus_20_20260619\1024_trial'
+subjid_vec = {20};
+stim_freq = 100;
 stim_amp = [];
 file_type = 'raw_data';
 
@@ -19,12 +19,21 @@ for isubj = 1:length(subjid_vec)
     if isempty(subjid),    subjid    = '*'; else subjid    = num2str(subjid);    end
 
     files = dir(sprintf('*%s_%s_%s_%s*', subjid, stim_freq, stim_amp, file_type));
+    if isempty(files)
+        fprintf('No files found')
+    else
     my_names{isubj} = {files.name};
+    end
+
+    % Sort by amplitude order
+    amps = cellfun(@(f) str2double(regexp(f,'(\d+)dBSPL','tokens','once')), my_names{isubj});
+    [~, sortIdx] = sort(amps);
+    my_names{isubj} = my_names{isubj}(sortIdx);
 
     % Load in files
     for iname = 1:length(my_names{isubj})
         current_file = my_names{isubj}{iname};
-        fprintf('Loading file for subject %s, %d/%d\n', subjid, iname, length(my_names{isubj}))
+        fprintf('Loading %s for subject %s, %d/%d\n',current_file, subjid, iname, length(my_names{isubj}))
         S = load(current_file);
         ex = S.ex_save;
         cur_amp = ex.info.stimulus.amplitude_spl;
