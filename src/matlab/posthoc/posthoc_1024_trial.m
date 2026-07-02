@@ -1,9 +1,9 @@
 %% Load your data first with load_my_file
-clearvars my_mean_set my_std_set a_fit k_fit x0_fit my_thresh_0 my_thresh_noise chi2_red grand_fft_vec grand_sorted amp_sorted sorted_idx dy d2y my_snr
+clearvars my_mean_set my_std_set a_fit k_fit x0_fit my_thresh_0 my_thresh_noise chi2_red grand_fft_vec grand_sorted amp_sorted sorted_idx dy d2y my_snr noise_floor
 
 % 1024 trial specific variables
-% trials_vec = [16 32 64 128 256 512 1024];
-trials_vec = [1024];
+trials_vec = [16 32 64 128 256 512 1024];
+% trials_vec = [1024];
 n_it = 1000;
 my_chans = [2,3,4]; % 3 = skull pierce, 2 = skin, 1 = EKG , 4 = forebrain
 my_mean_set = [];
@@ -11,14 +11,20 @@ my_std_set = [];
 
 % My functions
 dsoftplus_dx = @(p,x) p(1) ./ (1 + exp(-p(2).*(x - p(3))));
-f_water = figure;
-tiledlayout(f_water,'flow','TileSpacing','tight','Padding','tight')
+
+% Waterfall plot initialize
+f_water = figure; hold on
+tiledlayout(3,1)
 
 % Extract 1024 related data
 for isubj = 1:length(subjid_list)
     f_1 = figure('Visible','off'); t1 = tiledlayout(length(my_chans), length(trials_vec), 'TileSpacing','tight','Padding','tight');
     clipped = [];
     for ichan = 1:length(my_chans)
+        figure(f_water)
+        nexttile
+        offset_step = 5;   % vertical spacing between traces - adjust to your data scale
+        wcount = 0;
         % Assign channel related vars
         cur_chan = my_chans(ichan);
         if ichan == 1
@@ -61,25 +67,30 @@ for isubj = 1:length(subjid_list)
                     end
                 end
 
-                if any(fft_sig(:,:,ibatch) ~= 0, 'all')
-                    [~, min_idx] = min(abs(freq_vec(1,:,ibatch)-freq_2f(iname,isubj)));
-                    diffs_vec = [diffs_vec; fft_sig(:,min_idx,ibatch)]; % 2f magnitude vector across all batches for a single save file
-                else
-                    fprintf('all trials in bath %d, file %d rejected\n',ibatch,iname)
+                if ~all(any(isnan(fft_sig(:,:,ibatch)),2))
+                    valid_rows = ~any(isnan(fft_sig(:,:,ibatch)),2);
+                    if ~isempty(find(valid_rows))
+                        valid_freq_vec = freq_vec(find(valid_rows,1,'first'),:,ibatch);
+                        [~, min_idx] = min(abs(valid_freq_vec-freq_2f(iname,isubj)));
+                        diffs_vec = [diffs_vec; fft_sig(valid_rows,min_idx,ibatch)]; % 2f magnitude vector across all batches for a single save file
+                    else
+                        fprintf('all trials in batch %d, file %d rejected\n',ibatch,iname)
+                    end
                 end
             end
 
-            % Plot waterfalls
+            %Plot waterfalls
             figure(f_water);
-            nexttile
-            plot(freq_vec(1,:,1),mean(mean(fft_sig, 1,'omitnan'), 3,'omitnan'),'LineWidth',2)
-            title(string(my_amp(iname)))
+            hold on;
+            wcount = wcount + 1;
+            y_dat = mean(mean(fft_sig, 1,'omitnan'), 3,'omitnan') + offset_step*wcount;
+            plot(valid_freq_vec, y_dat, 'LineWidth',2,'Color',cur_color)
+            text(305, offset_step*wcount, string(my_amp(iname)))
             xlim([100,300])
             xline(my_freq(1)*2)
-            linkaxes
 
             if ~isempty(diffs_vec)
-                grand_fft_vec{iname} = diffs_vec(diffs_vec ~= 0); % Collection of all 2f magnitude vectors across all save files
+                grand_fft_vec{iname} = diffs_vec(~any(isnan(diffs_vec),2)); % Collection of all 2f magnitude vectors across all save files
             end
         end
 
@@ -117,11 +128,12 @@ for isubj = 1:length(subjid_list)
 
             % Fit and Plot
             for i_it = 1:n_it
-                cur_mean = my_mean_set(i_it,:,i_tri,ichan,isubj);
+                cur_mean_non_trans = my_mean_set(i_it,:,i_tri,ichan,isubj);
+                noise_floor(i_it,i_tri,ichan,isubj) = cur_mean_non_trans(1);
+                cur_mean = sqrt(max(cur_mean_non_trans.^2 - noise_floor(i_it,i_tri,ichan,isubj).^2, 0));
                 cur_std = my_std_set(i_it,:,i_tri,ichan,isubj);
-                noise_floor(i_it,i_tri,ichan,isubj) = cur_mean(1);
 
-                softplus = @(p,x) (p(1)/p(2))*(log1p(exp(p(2).*(x-p(3))))) + noise_floor(i_it,i_tri,ichan,isubj) ;
+                softplus = @(p,x) (p(1)/p(2))*(log1p(exp(p(2).*(x-p(3))))) + cur_mean(1) ;
 
                 % Find where the signal first exceeds the noise_floor by a
                 % fraction of the total range
@@ -151,11 +163,8 @@ for isubj = 1:length(subjid_list)
                 x_vec = linspace(min(amp_sorted),max(amp_sorted),200);
                 y_vec = softplus(p,x_vec);
 
-                % Calculate fit
-                y_fit = softplus(p, amp_sorted');
-                sem = cur_std / sqrt(cur_trial);
-                dof = numel(cur_mean) - length(p);
-                chi2_red(i_it,i_tri,ichan,isubj) = sum(((y_fit - cur_mean)./sem).^2) / dof;
+                slope_frac = 0.05; % fraction of max slope defining "end of lower asymptote"
+                x_lower_end(i_it,i_tri,ichan,isubj) = p(3) + (1/p(2))*log(slope_frac/(1-slope_frac));
 
                 % Only look at x_vec where the curve has started rising
                 rise_mask = y_vec > noise_floor(i_it,i_tri,ichan,isubj)  + 0.1 * (max(y_vec) - noise_floor(i_it,i_tri,ichan,isubj) );
@@ -195,19 +204,23 @@ for isubj = 1:length(subjid_list)
                     title(sprintf('%d trials', cur_trial))
                     xlabel('Stimulus Amplitude (dB)')
                     ylabel('2f Magnitude (\muV)')
-                    xline(my_thresh_noise(i_it,i_tri,ichan,isubj),'-','Color',tableau_10('red'))
-                    xline(my_thresh_0(i_it,i_tri,ichan,isubj),'--','Color',tableau_10('red'))
-                    xline(x_t,'-','Color',tableau_10('grey'))
+                    xline(x0_fit(i_it,i_tri,ichan,isubj), '--', 'Color',tableau_10('green'))
+                    % xline(my_thresh_noise(i_it,i_tri,ichan,isubj),'-','Color',tableau_10('red'))
+                    xline(x_lower_end(i_it,i_tri,ichan,isubj),'--','Color',tableau_10('red'))
+                    % xline(x_t,'-','Color',tableau_10('grey'))
                     yline(noise_floor(i_it,i_tri,ichan,isubj) ,'--')
                 end
             end
         end
+        figure(f_water);
+    title(string(cur_chan))
     end
     % Set titles
     figure(f_1);
     sgtitle('Threshold estimate varied by N trials included in average')
 
     set([f_1],'Visible','on')
+    
     % Plot variance of threshold estimates per channel
     figure;
     for ichan = 1:length(my_chans)
@@ -218,7 +231,7 @@ for isubj = 1:length(subjid_list)
         elseif ichan == 3
             cur_color = tableau_10('purple');
         end
-        cur_data = my_thresh_0(:,:,ichan,isubj);
+        cur_data = x_lower_end(:,:,ichan,isubj);
         tmp_mean = mean(cur_data,1,'omitnan');
         tmp_std = std(cur_data,[],1,'omitnan');
         errorbar(trials_vec,tmp_mean,tmp_std,'o-','LineWidth',2,'Color',cur_color)
