@@ -1,6 +1,7 @@
 function ex = count_mixed_trials(ex,app)
 %% Count which trials in the testing schedule have been presented and plot these counts to a heatmap
 % test_schedule: rows = n total trials to test, columns stimuli_type, stimulus_amplitude, n_trials_needed, unique_idx
+% Assign variables
 test_schedule = ex.info.mixed.test_schedule;
 ischedule = ex.counter.ischedule;
 uniq_stimuli = ex.info.mixed.uniq_stimuli;

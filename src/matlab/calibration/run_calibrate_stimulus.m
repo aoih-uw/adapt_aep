@@ -1,4 +1,5 @@
 function ex  = run_calibrate_stimulus(app, ex)
+%% Main calibration script for adapt_aep
 %% Information
 % Fireface Correction Factor
 % Stimulus sound pressure (Pa) -> Hydrophone measurement -> Amplifier (100 mV/Pa or 0.1 V/Pa) -> Fireface (signal*0.2044) -> Recorded voltage

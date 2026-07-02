@@ -1,5 +1,5 @@
 function ex = run_single(app)
-%% run_single presents stimuli of a single type (Stimulus ON/OFF or Trimmed)
+%% Main experiment function for presenting stimuli of a single type (Stimulus ON/OFF or Trimmed)
 
 % DO YOUR BEST!
 fprintf('  \n')

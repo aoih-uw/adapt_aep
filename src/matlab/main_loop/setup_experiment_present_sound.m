@@ -1,5 +1,6 @@
 function ex = setup_experiment_present_sound(ex,app)
-%% OUTPUT = ex.raw.electrodes_microV(N_trials x N_samples x N_channels)
+%% Handles setup of variables needed for running present_sound()
+% OUTPUT = ex.raw.electrodes_microV(N_trials x N_samples x N_channels)
 % ex.trial_count gets updated here
 
 % Load in variables

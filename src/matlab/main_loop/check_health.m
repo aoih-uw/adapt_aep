@@ -1,6 +1,6 @@
 function ex = check_health(ex, app, init_check)
-%% Present stimulus and measure response
-% Load variables
+%% Handles variables needed to call measure_EKG and saves EKG signals to ex.health structure
+% Assign Variables
 ex.counter.ihealth = ex.counter.ihealth + 1;
 ihealth = ex.counter.ihealth;
 EKG_idx = 3; % 3rd channel in the output. 

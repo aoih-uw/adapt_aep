@@ -1,7 +1,7 @@
 function [hydrophone_rms_dB, rec_data_mV, mean_hydrophone_sig, ex] = ...
     measure_calibration_stimuli(ex, calibration_stim, trigger_stim, waveform,...
     stimulus_freq, fs)
-
+%% Handles calibration-related variables needed to run present_sound()
 % Create block of calibration stimuli
 calibration_stim = repmat(calibration_stim,10,1);
 trigger_stim = repmat(trigger_stim,10,1);

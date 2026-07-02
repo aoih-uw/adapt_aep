@@ -1,5 +1,5 @@
 function ex = run_mixed(app)
-%% run_single presents stimuli of both types (Stimulus ON/OFF and Trimmed)
+%% Main experiment function for presenting stimuli of multiple types (Stimulus ON/OFF AND Trimmed)
 
 % DO YOUR BEST!
 fprintf('  \n')

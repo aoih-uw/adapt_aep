@@ -1,6 +1,6 @@
 function ex = create_new_stimuli_block(ex,app)
-
-%% Assign variables
+%% Handles assignment of variables to make_scaled_jittered_stim_block depending on test type (single stimulus vs. mixed)
+% Assign variables
 iblock = ex.counter.iblock;
 waveform = ex.info.stimulus.waveform;
 trials_per_block = ex.info.trials.trials_per_block;
