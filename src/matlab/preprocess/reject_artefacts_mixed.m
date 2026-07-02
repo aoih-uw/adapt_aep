@@ -45,6 +45,7 @@ end
     across_trial_thresh, within_trial_thresh]  = ...
     reject_artefacts_and_balance_trials(ex, app, all_trials, all_phases, valid_channels);
 
+% Save values to ex.block field
 ex.block(iblock).kept_trials_idx = kept_trials_idx;
 ex.block(iblock).collection_attempts = ex.counter.N_not_enough_trials;
 ex.block(iblock).across_trial_thresh = across_trial_thresh;

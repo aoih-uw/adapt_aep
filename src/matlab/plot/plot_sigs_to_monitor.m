@@ -1,5 +1,6 @@
 function plot_sigs_to_monitor(data_type, ex,app, N_samples, N_trials, N_channels)
-%% Plot signals
+%% Plot hydrophone and electrode signals to the adapt_aep GUI
+% Assign variables
 fs = ex.info.recording.sampling_rate_hz;
 color_names = {'red', 'blue', 'orange', 'teal', 'green', 'yellow', 'purple', 'pink', 'brown', 'grey'};
 time_s = (0:N_samples-1) / fs;
@@ -27,8 +28,8 @@ hold(app.UIAxes_hydrophone, 'on');
 plot(app.UIAxes_hydrophone, time_s_ds, hydrophone_data(randperm(N_trials,1), plot_idx), ...
     'Color', tableau_10('purple'), 'LineWidth', 1.5);
 hold(app.UIAxes_hydrophone, 'off');
-if strcmp(data_type, 'raw') & strcmp(ex.info.experiment.exp_type,'Adaptive')
-    title(app.UIAxes_hydrophone, sprintf('Hydrophone; Stimulus amplitude: %.0f', ex.block(iblock).hydrophone.stim_ON_rms_dB_spl));
+if strcmp(data_type, 'raw') && strcmp(ex.info.experiment.exp_type,'Adaptive')
+    title(app.UIAxes_hydrophone, sprintf('Hydrophone; Stimulus amplitude: %.0f dB SPL', ex.block(iblock).hydrophone.stim_ON_rms_dB_spl));
 else
     title(app.UIAxes_hydrophone, sprintf('Hydrophone'));
 end
@@ -73,9 +74,9 @@ end
 % Set y lim
 data_mean_all = mean(electrode_data(:, plot_idx, :), 1);
 pad = range(data_mean_all(:)) * 0.2;
-ylim(electrode_axes{1}, [min(data_mean_all(:)) - pad, max(data_mean_all(:)) + pad]);
-
+pad = max(pad,eps);
 linkaxes([electrode_axes{:}], 'xy');
+ylim(electrode_axes{1}, [min(data_mean_all(:)) - pad, max(data_mean_all(:)) + pad]);
 
 drawnow
 

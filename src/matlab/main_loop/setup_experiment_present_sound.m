@@ -61,8 +61,6 @@ end
 if strcmp(app.DropDown_test_mode.Value, 'Adaptive')
     %% Calculate hydrophone RMS dB SPL
     ex = calculate_hydrophone_sig_quality(ex);
-    % Display RMS Noise floor and stimulus amplitude onto the GUI
-    app.UIAxes_hydrophone.Title.String = sprintf('Hydrophone: %.0f dB SPL',ex.block(iblock).hydrophone.stim_ON_rms_dB_spl);
 end
 
 %% Plot signals

@@ -1,7 +1,7 @@
 function ex = setup_info(ex, app)
 
 my_time = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyy-MM-dd HH:mm:ss');
-rng('default')
+rng("default")
 
 % Experiment information
 ex.info.experiment = struct( ...
@@ -161,7 +161,7 @@ if strcmp(app.DropDown_test_mode.Value,'Mixed stimuli')
        end
     end
 
-    % Randomize the testing order and save to ex.info.mixed.test_schedule
+    Randomize the testing order and save to ex.info.mixed.test_schedule
     rand_idx = randperm(size(test_schedule,1));
     test_schedule_rand = test_schedule(rand_idx,:);
     [uniq_vals,~,uniq_idx] = unique(test_schedule_rand,'rows');

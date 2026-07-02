@@ -1,6 +1,6 @@
 function [kept_trials_idx, n_valid_trials, rel_rej_thresh_across, my_z_within]  = reject_artefacts_and_balance_trials(ex, app, all_trials, all_phases,valid_channels)
-% Assume all_trials has a 3rd dimension, all_phases only 2
-%% Assign variables
+%% Here you actually reject trials and balance the kept trials to include even numbers of both stimulus phases
+% Assign variables
 reject_threshold_sd = ex.info.signal_quality.rejection_threshold_sd;
 mad_to_std = ex.info.signal_quality.mad_to_std;
 clipping_threshold = 300; % microV
@@ -8,7 +8,8 @@ clipping_threshold = 300; % microV
 % Preallocate before the loop
 my_z_within = NaN(size(all_trials));
 rejected_trials = [];
-for ichan = 1:length(valid_channels) % The fisrst channel is excluded because it is the EKG channel
+rel_rej_thresh_across = NaN(1, length(valid_channels));
+for ichan = 1:length(valid_channels)
     % Get data
     cur_chan_data_raw = squeeze(all_trials(:, :, ichan));
 
@@ -16,8 +17,8 @@ for ichan = 1:length(valid_channels) % The fisrst channel is excluded because it
     rejected_trials = [rejected_trials find(any(abs(cur_chan_data_raw) >= clipping_threshold,2))'];
 
     % Reject by comparing time sample amplitude within trials
-    median_vals = median(cur_chan_data_raw, 2);
-    mad_vals = median(abs(cur_chan_data_raw - repmat(median_vals, 1, size(cur_chan_data_raw, 2))), 2);
+    median_vals = median(cur_chan_data_raw, 2,'omitnan');
+    mad_vals = median(abs(cur_chan_data_raw - repmat(median_vals, 1, size(cur_chan_data_raw, 2))), 2, 'omitnan');
     my_z_within(:, :, ichan) = (cur_chan_data_raw - repmat(median_vals, 1, size(cur_chan_data_raw, 2))) ...
         ./ (repmat(mad_vals, 1, size(cur_chan_data_raw, 2)) * mad_to_std);    
     bad = any(abs(my_z_within(:, :, ichan)) > reject_threshold_sd, 2);
@@ -25,10 +26,10 @@ for ichan = 1:length(valid_channels) % The fisrst channel is excluded because it
 
     % Reject by comparing RMS across trials
     cur_chan_data = sqrt(mean(cur_chan_data_raw.^2, 2, 'omitnan'));
-    cur_median = median(cur_chan_data);
-    cur_mad = median(abs(cur_median-cur_chan_data))*mad_to_std;
+    cur_median = median(cur_chan_data,'omitnan');
+    cur_mad = median(abs(cur_median-cur_chan_data),[],'omitnan')*mad_to_std;
     rel_rej_thresh_across(ichan) = cur_median + cur_mad*reject_threshold_sd;
-    rejected_trials = [rejected_trials find(cur_chan_data >= rel_rej_thresh_across(ichan) | cur_chan_data >= 60)'];
+    rejected_trials = [rejected_trials find(cur_chan_data >= rel_rej_thresh_across(ichan))'];
 end
 all_chan_rejected_trials = unique(rejected_trials);
 

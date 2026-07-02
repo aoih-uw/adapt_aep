@@ -1,4 +1,5 @@
 function plot_funfetti(ex, iblock, fs, app)
+%% Plot the current block's 2f response magnitude persistently throughout experiment
 persistent my_2f my_2f_std
 if iblock == 1
     my_2f = []; my_2f_std = [];
@@ -16,20 +17,30 @@ n_ch   = numel(channels);
 delete(allchild(fft_ax)); hold(fft_ax, 'on')
 for ic = 1:n_ch
     sig = ex.raw(iblock).electrodes_microV(:,:,channels(ic));
-    [~, f, fft_val] = calc_fft(mean(sig, 1), fs);
-    [~, ~, fft_std] = calc_fft(std(sig, [], 1), fs);
     c = colors{ic};
 
-    % Get 2f bin (do this on the FULL vector, before trimming)
+    % Compute per-trial FFTs, then derive mean spectrum and per-bin std
+    n_trials = size(sig, 1);
+    for it = 1:n_trials
+        [~, f, v] = calc_fft(sig(it,:), fs);
+        if it == 1
+            trial_ffts = zeros(n_trials, numel(f));
+        end
+        trial_ffts(it,:) = v;
+    end
+    fft_val = mean(trial_ffts, 1);
+    fft_std = std(trial_ffts, [], 1);
+
+    % Get 2f bin on the full vector, before trimming
     [~, loc_2f] = min(abs(f - target_freq));
     my_2f(ic,n_points+1)     = fft_val(loc_2f);
     my_2f_std(ic,n_points+1) = fft_std(loc_2f);
 
-    % Trim to the display window
+    % Trim to display window
     m  = f <= target_freq*2;
     ff = f(m);  vv = fft_val(m);  ss = fft_std(m);
 
-    fill(fft_ax, [ff, fliplr(ff)], [vv + ss, fliplr(vv - ss)], ...
+    fill(fft_ax, [ff, fliplr(ff)], [vv+ss, fliplr(vv-ss)], ...
         c, 'FaceAlpha', 0.3, 'EdgeColor', 'none', 'HandleVisibility', 'off');
     plot(fft_ax, ff, vv, 'Color', c, 'LineWidth', 1.5);
 end
@@ -38,7 +49,7 @@ ylabel(fft_ax, 'Magnitude (\muV)');
 title(fft_ax, 'Live FFT Monitor');
 xlim(fft_ax, [0, target_freq*2]);
 xline(fft_ax, target_freq,'HandleVisibility', 'off');
-legend(fft_ax,channel_name)
+legend(fft_ax, channel_name) 
 hold(fft_ax, 'off')
 
 % bin_ax
@@ -47,6 +58,7 @@ for ic = 1:n_ch
 errorbar(bin_ax, my_2f(ic,:), my_2f_std(ic,:), '-o', ...
     'Color', colors{ic}, 'MarkerFaceColor', colors{ic});
 end
+legend(bin_ax,channel_name,'Location','best')
 hold(bin_ax, 'off');
 xlabel(bin_ax, 'Iteration');
 ylabel(bin_ax, '2f Magnitude (\muV)');
