@@ -1,5 +1,5 @@
 function ex = setup_experiment_present_sound(ex,app)
-%% Handles setup of variables needed for running present_sound()
+%% Handles setup of variables needed for running present_sound() and saves raw signals to ex structure
 % OUTPUT = ex.raw.electrodes_microV(N_trials x N_samples x N_channels)
 % ex.trial_count gets updated here
 
@@ -8,12 +8,16 @@ iblock = ex.counter.iblock;
 trials_per_block = ex.info.trials.trials_per_block;
 stimulus_block = ex.block(iblock).stimulus_block;
 fs = ex.info.recording.sampling_rate_hz;
-N_trials_presented = iblock*trials_per_block;
+if strcmp(app.DropDown_test_mode.Value, 'Mixed stimuli') || strcmp(app.DropDown_test_mode.Value, 'Timed') 
+    N_trials_presented = ex.counter.grand_iblock*trials_per_block;
+else
+    N_trials_presented = iblock*trials_per_block;
+end
 if ~strcmp(app.DropDown_test_mode.Value, 'Mixed stimuli')
 iamp = ex.counter.iamp;
 end
 
-% Get necessary variables for present_sound()
+% Get necessary metadata for present_sound()
 [ex, N_channels, N_trials, N_samples, output_channels, ...
     input_channels, hydrophone_idx, loopback_idx, electrode_idx, ...
     electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V] ...
@@ -23,27 +27,24 @@ end
 if ex.test
     rec_data_mV = ex.mock_data;
     N_samples = size(rec_data_mV,2);
-    % Preallocate variables
-    ex.raw(iblock).hydrophone_mV= zeros(N_trials, N_samples);
-    ex.raw(iblock).loopback = zeros(N_trials, N_samples);
-    ex.raw(iblock).electrodes_microV = zeros(N_trials, N_samples, N_channels);
 else
     [rec_data_mV, ex] = present_sound(stimulus_block, ...
         input_channels, output_channels, ...
         electrode_idx, hydrophone_idx, ...
         electrode_voltage_scaling_factor_V, ...
         hydrophone_voltage_scaling_factor_V, ex, app);
-    % Preallocate variables
-    ex.raw(iblock).hydrophone_mV= zeros(N_trials, N_samples);
-    ex.raw(iblock).loopback = zeros(N_trials, N_samples);
-    ex.raw(iblock).electrodes_microV = zeros(N_trials, N_samples, N_channels);
 end
 
 % Save values to ex
-ex.raw(iblock).hydrophone_mV = squeeze(rec_data_mV(:,:,hydrophone_idx));
-ex.raw(iblock).loopback  = squeeze(rec_data_mV(:,:,loopback_idx));
-ex.raw(iblock).electrodes_microV  = rec_data_mV(:,:,electrode_idx).*1e3; % N_trials, N_samples, N_channels
-ex.raw(iblock).time_stamp = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
+if size(rec_data_mV,1) > 1
+    ex.raw(iblock).hydrophone_mV = squeeze(rec_data_mV(:,:,hydrophone_idx));
+    ex.raw(iblock).loopback  = squeeze(rec_data_mV(:,:,loopback_idx));
+    ex.raw(iblock).electrodes_microV  = rec_data_mV(:,:,electrode_idx).*1e3; % N_trials, N_samples, N_channels
+    ex.raw(iblock).time_stamp = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
+else
+    keyboard
+    error('Only 1 or less trials included in present_sound() output')
+end
 
 % Assign trial counts
 if ~strcmp(app.DropDown_test_mode.Value, 'Mixed stimuli')
@@ -59,10 +60,8 @@ for ich = 1:size(ex.raw(iblock).electrodes_microV, 3)
     check_for_nans(ex.raw(iblock).electrodes_microV(:,:,ich), 'signal')
 end
 
-if strcmp(app.DropDown_test_mode.Value, 'Adaptive')
-    %% Calculate hydrophone RMS dB SPL
-    ex = calculate_hydrophone_sig_quality(ex);
-end
+%% Calculate hydrophone RMS dB SPL
+ex = calculate_hydrophone_sig_quality(ex);
 
 %% Plot signals
 plot_sigs_to_monitor('raw',ex,app,N_samples,N_trials,N_channels)
@@ -83,7 +82,7 @@ else
     app.Label_grand_total.Text = string(grand_total_N_trials);
 end
 
-%% Play sound after every batch has been completed
+%% Play sound after every present_sound() attempt has been completed
 [y, Fs] = audioread('batch.mp3');
 sound(y, Fs)
 

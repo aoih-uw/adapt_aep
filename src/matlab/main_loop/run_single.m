@@ -50,6 +50,9 @@ while ~ex.exp_done % While testing current stimulus frequency
         %% CREATE BLOCK OF TRIALS
         fprintf('\nCreating trial block...\n')
         ex.counter.iblock = ex.counter.iblock + 1;
+        if strcmp(app.DropDown_test_mode.Value, 'Timed')
+            ex.counter.grand_iblock = ex.counter.grand_iblock + 1;
+        end
         ex = create_new_stimuli_block(ex,app);
 
         %% DATA COLLECTION

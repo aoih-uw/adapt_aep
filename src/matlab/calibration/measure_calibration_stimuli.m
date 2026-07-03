@@ -1,6 +1,6 @@
 function [hydrophone_rms_dB, rec_data_mV, mean_hydrophone_sig, ex] = ...
     measure_calibration_stimuli(ex, calibration_stim, trigger_stim, waveform,...
-    stimulus_freq, fs)
+    stimulus_freq, fs, app)
 %% Handles calibration-related variables needed to run present_sound()
 % Create block of calibration stimuli
 calibration_stim = repmat(calibration_stim,10,1);
@@ -21,7 +21,7 @@ hydrophone_gain_mV_per_Pa = ex.info.recording.hydrophone_gain_mV_per_Pa;
     input_channels, output_channels, ...
     electrode_idx, hydrophone_idx, ...
     electrode_V, ...
-    hydrophone_V, ex, []);
+    hydrophone_V, ex, app);
 
 mean_loopback_sig = mean(squeeze(rec_data_mV(:,:,loopback_idx)),1);
 mean_hydrophone_sig = mean(squeeze(rec_data_mV(:,:,hydrophone_idx)),1);

@@ -32,7 +32,7 @@ for ic = 1:n_ch
     fft_std = std(trial_ffts, [], 1);
 
     % Get 2f bin on the full vector, before trimming
-    [~, loc_2f] = min(abs(f - target_freq));
+    [~, loc_2f] = min(abs(f - target_freq));  %#%# Change so it uses find_fft_bins_code
     my_2f(ic,n_points+1)     = fft_val(loc_2f);
     my_2f_std(ic,n_points+1) = fft_std(loc_2f);
 

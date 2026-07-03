@@ -2,6 +2,8 @@ function ex = setup_analysis(ex)
 %% Setup analysis level fields to ex, kept and model 
 % Kept trials
 ex.kept.trials = [];
+
+if strcmp(ex.info.experiment.exp_type,'Adaptive')
 ex.kept.phases = [];
 ex.kept.jitter = [];
 ex.kept.channels = [];
@@ -27,5 +29,4 @@ ex.stats(iboot).perm_test_stat = [];
 ex.stats(iboot).perm_sig_threshold = [];
 ex.stats(iboot).perm_test_result = [];
 end
-
-
+end

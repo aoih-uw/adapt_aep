@@ -22,6 +22,10 @@ elseif strcmp(app.DropDown_test_mode.Value,'Mixed stimuli')
     ex.counter.N_not_enough_trials = 0;
 end
 
+if strcmp(app.DropDown_test_mode.Value,'Mixed stimuli') || strcmp(app.DropDown_test_mode.Value,'Timed')
+        ex.counter.grand_iblock = 0;
+end
+
 % Experiment State Markers
 ex.exp_done = 0;
 ex.test = 0;

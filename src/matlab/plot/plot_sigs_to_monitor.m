@@ -28,26 +28,20 @@ hold(app.UIAxes_hydrophone, 'on');
 plot(app.UIAxes_hydrophone, time_s_ds, hydrophone_data(randperm(N_trials,1), plot_idx), ...
     'Color', tableau_10('purple'), 'LineWidth', 1.5);
 hold(app.UIAxes_hydrophone, 'off');
-if strcmp(data_type, 'raw') && strcmp(ex.info.experiment.exp_type,'Adaptive')
-    title(app.UIAxes_hydrophone, sprintf('Hydrophone; Stimulus amplitude: %.0f dB SPL', ex.block(iblock).hydrophone.stim_ON_rms_dB_spl));
-else
-    title(app.UIAxes_hydrophone, sprintf('Hydrophone'));
-end
+title(app.UIAxes_hydrophone, sprintf('Hydrophone; Stimulus amplitude: %.0f dB SPL', ex.block(iblock).hydrophone.stim_ON_rms_dB_spl));
 
-if strcmp(app.DropDown_test_mode.Value, 'Adaptive')
-    if strcmp(data_type, 'raw')
-        cla(app.UIAxes_tank_noise_floor)
-        cla(app.UIAxes_signal_SNR)
-        rms_vec = arrayfun(@(b) b.hydrophone.stim_OFF_rms_dB_spl, ex.block(1:iblock));
-        snr_vec = arrayfun(@(b) b.hydrophone.stim_ON_snr,        ex.block(1:iblock));
+if strcmp(data_type, 'raw')
+    cla(app.UIAxes_tank_noise_floor)
+    cla(app.UIAxes_signal_SNR)
+    rms_vec = arrayfun(@(b) b.hydrophone.stim_OFF_rms_dB_spl, ex.block(1:iblock));
+    snr_vec = arrayfun(@(b) b.hydrophone.stim_ON_snr,        ex.block(1:iblock));
 
-        plot(app.UIAxes_tank_noise_floor, rms_vec, 'o-', 'Color', tableau_10('green'), 'MarkerFaceColor', tableau_10('green'));
-        plot(app.UIAxes_signal_SNR,       snr_vec, 'o-', 'Color', tableau_10('orange'), 'MarkerFaceColor', tableau_10('orange'));
+    plot(app.UIAxes_tank_noise_floor, rms_vec, 'o-', 'Color', tableau_10('green'), 'MarkerFaceColor', tableau_10('green'));
+    plot(app.UIAxes_signal_SNR,       snr_vec, 'o-', 'Color', tableau_10('orange'), 'MarkerFaceColor', tableau_10('orange'));
 
-        pad = 0.5;  % or whatever margin makes sense
-        ylim(app.UIAxes_tank_noise_floor, [min(rms_vec)-pad, max(rms_vec)+pad]);
-        ylim(app.UIAxes_signal_SNR,       [min(snr_vec)-pad,  max(snr_vec)+pad]);
-    end
+    pad = 0.5;  % or whatever margin makes sense
+    ylim(app.UIAxes_tank_noise_floor, [min(rms_vec)-pad, max(rms_vec)+pad]);
+    ylim(app.UIAxes_signal_SNR,       [min(snr_vec)-pad,  max(snr_vec)+pad]);
 end
 
 % Plot electrode channels

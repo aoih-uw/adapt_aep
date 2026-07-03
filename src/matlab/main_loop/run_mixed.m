@@ -35,7 +35,8 @@ while ex.counter.ischedule < size(test_schedule,1)
         while ~batch_completed
             %% CREATE BLOCK OF TRIALS
             fprintf('\nCreating trial block...\n')
-            ex.counter.iblock = ex.counter.iblock + 1;
+            ex.counter.iblock = ex.counter.iblock + 1; % iblock resets after every saved batch of data
+            ex.counter.grand_iblock = ex.counter.grand_iblock + 1; % grand_iblock never resets
             ex = create_new_stimuli_block(ex,app);
 
             fprintf('\nPresenting stimulus...\n')

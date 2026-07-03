@@ -10,16 +10,26 @@ ramp_duration_samples = ceil(ramp_duration_ms*(1/1000)*fs);
 period_length_samples = length(ex.info.stimulus.waveform);
 stimulus_freq = ex.info.stimulus.frequency_hz;
 target_freq_range = ex.info.analysis.range_2f_hz;
-
+waveform = ex.info.stimulus.waveform;
+trim_stim_pre_dur_ms = ex.info.stimulus.trim_stim_pre_dur_ms;
 jitter_vec = ex.block(iblock).jitter;
 phase_vec = ex.block(iblock).phase_vec;
 latency_samples = ex.info.recording.latency_samples;
 
-[stim_ON , stim_OFF] = extract_stim_ON_OFF(latency_samples, period_length_samples, jitter_vec, hydrophone_mV);
+if (isfield(ex.info,'mixed') && ex.info.mixed.test_schedule(1) == 1) || ...
+        strcmp(ex.info.experiment.exp_type, 'Timed') ||  strcmp(ex.info.experiment.exp_type, 'Static trial count')
+    for itrial = 1:size(hydrophone_mV,1)
+        stim_start = latency_samples + jitter_vec(itrial) + (trim_stim_pre_dur_ms/1e3*fs); % 5 ms offset as assigned in
+        stim_OFF(itrial,:) = hydrophone_mV(itrial,1:stim_start-1-jitter_vec(itrial)); % Jitter duration will be different for each trial so just remove it
+        stim_ON(itrial,:) = hydrophone_mV(itrial,stim_start: stim_start+length(waveform)-1);
+    end
+elseif strcmp(ex.info.experiment.exp_type, 'Adaptive') || (isfield(ex.info,'mixed') && ex.info.mixed.test_schedule(1) == 2)
+    [stim_ON , stim_OFF] = extract_stim_ON_OFF(latency_samples, period_length_samples, jitter_vec, hydrophone_mV);
+end
 
 % Remove the onramp/offramp samples from stim_ON to get full amplitude
 % portion of signal to get best sense of stimulus amplitude
-stim_ON = stim_ON(:,ramp_duration_samples:end-ramp_duration_samples);
+stim_ON = stim_ON(:,ramp_duration_samples+1:end-ramp_duration_samples);
 
 % Filter the stim OFF signal to only include the current stimulus frequency
 stim_OFF_filt = zeros(size(stim_OFF,1), size(stim_OFF,2));

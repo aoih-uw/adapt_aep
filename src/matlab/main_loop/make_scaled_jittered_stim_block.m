@@ -1,5 +1,5 @@
 function [ex, selected_cycle_samples, stimulus, phase_vec] = ...
-    make_scaled_jittered_stim_block(ex, waveform, current_amplitude, trials_per_block, is_ONOFF)
+    make_scaled_jittered_stim_block(ex, waveform, current_amplitude, trials_per_block, trim_stim_pre_dur_ms, is_ONOFF)
 %% Creates a block of amplitude scaled stimuli with pre/post, jitter, and latency periods included 
 % Assign variables
 fs = ex.info.recording.sampling_rate_hz;
@@ -23,7 +23,7 @@ end
 if is_ONOFF
     stim_OFF = zeros(1, length(waveform)); % Same length as stim ON
 else
-    stim_OFF = zeros(1,round(fs*5/1e3)); % 5 ms
+    stim_OFF = zeros(1,round(fs*trim_stim_pre_dur_ms/1e3)); % 5 ms pause before
 end
 stim_ON = waveform;
 

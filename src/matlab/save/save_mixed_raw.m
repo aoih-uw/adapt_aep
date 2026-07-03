@@ -47,6 +47,7 @@ sound(y, Fs)
 
 % Reset block, health, and counters
 ex = setup_block(ex);
+ex = setup_analysis(ex);
 ex = setup_health(ex);
 ex.counter.ihealth = 1;
 ex.counter.iblock = 0;
