@@ -1,8 +1,7 @@
-function my_snr = calculate_fft_snr(signal, freq_vec, target_freq, target_freq_range, exclude_harmonics, is_bio_sig)
+function my_snr = calculate_fft_snr(signal, freq_vec, target_freq, target_freq_range, exclude_harmonics)
 %% Calculate SNR within the same fft vector
 % Get signal fft bin value
-[target_freq_range, signal_fft_bin] = ...
-    find_fft_bins(target_freq, target_freq_range, signal, freq_vec,is_bio_sig);
+signal_fft_bin = find_fft_bins(target_freq, target_freq_range, signal, freq_vec);
 
 % Get noise floor fft bin values
 noise_distribution = ...

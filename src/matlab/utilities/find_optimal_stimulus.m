@@ -8,7 +8,7 @@ ex.info.stimulus.type = 'Tone Burst';
 ex.info.experiment.response_feature = 'Double Frequency';
 ex.info.trials.max_trials = 300;
 ex = setup_hardware(ex);
-target_freq_range = ex.info.analysis.range_2f_hz;
+target_freq_range = ex.info.stimulus.range_2f_hz;
 test_cycles = 1;
 fs = 44100;
 % Select which frequencies and durations to test
@@ -89,7 +89,7 @@ for ifreq = 1:length(freqs_hz)
                 figure(fig_t); nexttile; plot(time_vec, time_sig); title(sprintf('%g Hz', cur_freq)); xlabel('Time (s)'); ylabel('Amplitude');
                 linkaxes
                 
-                score_mean(idur,iramp,ifreq) = calculate_fft_snr(fft_vals, freq_vec, cur_freq, target_freq_range, 0, 0);
+                score_mean(idur,iramp,ifreq) = calculate_fft_snr(fft_vals, freq_vec, cur_freq, target_freq_range, 0);
             else
                 figure(fig_t); nexttile; title(sprintf('%g Hz (failed)', cur_freq));
                 linkaxes

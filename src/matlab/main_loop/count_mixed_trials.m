@@ -10,7 +10,10 @@ N_unique_stimuli = ex.info.mixed.N_unique_stimuli;
 trials_per_block = ex.info.trials.trials_per_block;
 target_freq = ex.info.stimulus.frequency_hz * 2;
 fs = ex.info.recording.sampling_rate_hz;
-analysis_channel = ex.info.channels.analysis_channel; % idx = 2, 4mm subcranial electrode
+channel_names = ex.info.channels.names;
+valid_channels = find(~strcmp(channel_names, 'EKG'));
+analysis_channel = ex.info.channels.analysis_channel;
+analysis_channel_idx = find(strcmp(channel_names(valid_channels),analysis_channel));
 if ex.counter.grand_iblock == 1, mag_2f = []; end
 
 % Clear axes
@@ -44,7 +47,7 @@ imagesc(app.UIAxes_funfetti,heat_2d);
 
 %% Overlay 2f magnitude trace per cell
 if numel(mag_2f) < ischedule
-    sig = ex.kept.trials(:,:,analysis_channel); % Only plot valid set of trials
+    sig = ex.kept.trials(:,:,analysis_channel_idx); % Only plot valid set of trials
     v = zeros(size(sig,1),1);
     for it = 1:size(sig,1)
         [~, f, vv] = calc_fft(sig(it,:), fs);

@@ -36,6 +36,9 @@ elseif cur_freq >= 200 && cur_freq <= 800
     post_stim = zeros(1,round(fs*40/1e3)); % 40 ms
 elseif  cur_freq > 800
     post_stim = zeros(1,round(fs*20/1e3)); % 20 ms
+else
+    keyboard
+    error('Unexpected stimulus frequency')
 end
 latency = zeros(1,latency_samples);
 

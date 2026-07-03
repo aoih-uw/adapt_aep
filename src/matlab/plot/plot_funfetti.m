@@ -13,7 +13,7 @@ fft_ax = app.UIAxes_live_fft;
 bin_ax = app.UIAxes_funfetti;
 colors = {tableau_10('blue'), tableau_10('orange'), tableau_10('green')};
 n_ch   = numel(channels);
-target_freq_range = ex.info.analysis.range_2f_hz;
+target_freq_range = ex.info.stimulus.range_2f_hz;
 
 % fft_ax
 delete(allchild(fft_ax)); hold(fft_ax, 'on')

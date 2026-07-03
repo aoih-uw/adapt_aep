@@ -41,7 +41,8 @@ for itrial = 1:height(stimulus)
     % Rip it
     try
         ipage = playrec('playrec', current_waveform, output_channels, -1, input_channels);
-
+        
+        % Timeout guard
         t0 = tic;
         while ~playrec('isFinished', ipage)
             if toc(t0) > 60
@@ -77,7 +78,7 @@ for itrial = 1:height(stimulus)
     if any(abs(post_bioamp_sig) >= signal_clip_threshold)
         [y, Fs] = audioread('error.mp3');
         sound(y, Fs)
-        fprintf('Possible clipping in hydrophone signal. Inspect signal.')
+        fprintf('Possible clipping in hydrophone signal. Inspect signal.\n')
         keyboard % Inspect signal and progress when issue is solved
     end
 
@@ -87,12 +88,12 @@ for itrial = 1:height(stimulus)
     rec_data_mV(:,hydrophone_idx,itrial) = 1e3.*(rec_data(:,hydrophone_idx).*hydrophone_voltage_scaling_factor_V);
 
     % Check for absurdly large electrode signals
-    if any(abs(rec_data_mV(:,:,itrial)) > 1e3)
+    if any(abs(rec_data_mV(:,:,itrial)) > 1e3, 'all')
         [y, Fs] = audioread('error.mp3');
         sound(y, Fs)
         fprintf('\nUnusually large voltage values detected in sensors (max: %.2f mV)\n', ...
-            max(abs(rec_data_mV(:,:,itrial))));
-        pause(2)
+        max(abs(rec_data_mV(:,:,itrial)), [], 'all'));
+        keyboard
     end
 
     if itrial == height(stimulus), fprintf('\n  Finished\n'); end

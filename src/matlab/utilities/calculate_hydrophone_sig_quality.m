@@ -9,7 +9,7 @@ ramp_duration_ms = ex.info.stimulus.ramp_duration_ms;
 ramp_duration_samples = ceil(ramp_duration_ms/1000*fs);
 period_length_samples = length(ex.info.stimulus.waveform);
 stimulus_freq = ex.info.stimulus.frequency_hz;
-target_freq_range = ex.info.analysis.range_2f_hz;
+target_freq_range = ex.info.stimulus.range_2f_hz;
 waveform = ex.info.stimulus.waveform;
 trim_stim_pre_dur_ms = ex.info.stimulus.trim_stim_pre_dur_ms;
 jitter_vec = ex.block(iblock).jitter;
@@ -63,4 +63,4 @@ selected_idx = freq_vec > 1 & freq_vec < 5000;
 freq_vec = freq_vec(selected_idx);
 fft_ON = fft_ON(selected_idx);
 ex.block(iblock).hydrophone.stim_ON_snr  = ...
-    calculate_fft_snr(fft_ON, freq_vec, stimulus_freq, target_freq_range, 0, 0);
+    calculate_fft_snr(fft_ON, freq_vec, stimulus_freq, target_freq_range, 0);

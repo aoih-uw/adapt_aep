@@ -44,7 +44,4 @@ if ~strcmp(app.DropDown_test_mode.Value,'Mixed stimuli')
         ex.decision(iamp).amp_done_reason = NaN;
     end
 end
-
-% Setup health
-ex = setup_health(ex);
 end

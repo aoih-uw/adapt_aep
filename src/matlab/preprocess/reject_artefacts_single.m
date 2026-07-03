@@ -10,9 +10,10 @@ function ex = reject_artefacts_single(ex,app)
 iblock = ex.counter.iblock;
 first_block = 1;
 iamp = ex.counter.iamp;
-channel_names = ex.info.channels.names;
+channel_names = ex.info.channels.names; 
 valid_channels = find(~strcmp(channel_names, 'EKG'));
 analysis_channel = ex.info.channels.analysis_channel;
+analysis_channel_idx = find(strcmp(channel_names(valid_channels),analysis_channel));
 trials_per_block = ex.info.trials.trials_per_block;
 N_trials_presented = ex.trial_count(iamp);
 
@@ -41,7 +42,7 @@ ex.block(iblock).within_trial_thresh = within_trial_thresh;
 
 %% ADAPTIVE: Select only the analysis channel keep those trials
 if strcmp(ex.info.experiment.exp_type,'Adaptive')
-    kept_trials = all_trials(kept_trials_idx,:,analysis_channel); % Only keep the analysis channel
+    kept_trials = all_trials(kept_trials_idx,:,analysis_channel_idx); % Only keep the analysis channel
     kept_phases = all_phases(kept_trials_idx);
     kept_jitter = all_jitter(kept_trials_idx);
     reject_rate = ((N_trials_presented)-size(kept_trials,1))/(N_trials_presented);

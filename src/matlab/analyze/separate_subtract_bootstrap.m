@@ -32,7 +32,7 @@ if ex.test == 1
 else
     freq_2f_hz  = ex.info.stimulus.frequency_hz*2;
 end
-range_2f_hz = ex.info.analysis.range_2f_hz;
+range_2f_hz = ex.info.stimulus.range_2f_hz;
 
 %% Clear axes
 cla(app.UIAxes_boot)

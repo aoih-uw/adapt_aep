@@ -37,7 +37,6 @@ ex_save.block_level_info = ex.block(1:iblock); % Block level info
 if isfield(ex_save.block_level_info, 'stimulus_block')
     ex_save.block_level_info = rmfield(ex_save.block_level_info, 'stimulus_block');
 end
-ex_save.rejected_trials = ex.rejected_trials(iamp);
 
 % Downsample
 for iiblock = 1:iblock

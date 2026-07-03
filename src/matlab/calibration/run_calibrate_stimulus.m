@@ -10,7 +10,7 @@ function ex  = run_calibrate_stimulus(app, ex)
 
 %% Define variables
 fs = ex.info.recording.sampling_rate_hz;
-target_freq_range = ex.info.analysis.range_2f_hz;
+target_freq_range = ex.info.stimulus.range_2f_hz;
 
 cal = ex.info.calibration;
 stimulus_freq = ex.info.stimulus.frequency_hz;
@@ -72,7 +72,7 @@ xlim(app.ax_hydrophone_spectra, [0, 1000])
 selected_idx = freq_vec > 1 & freq_vec < 5000;
 freq_vec = freq_vec(selected_idx);
 fft_vals = fft_vals(selected_idx);
-my_snr = calculate_fft_snr(fft_vals, freq_vec, stimulus_freq, target_freq_range, 0, 0);
+my_snr = calculate_fft_snr(fft_vals, freq_vec, stimulus_freq, target_freq_range, 0);
 app.label_snr.Text = string(my_snr);
 
 drawnow;
@@ -109,7 +109,7 @@ plot(app.ax_hydrophone_spectra, freq_vec,fft_vals)
 selected_idx = freq_vec > 1 & freq_vec < 5000;
 freq_vec = freq_vec(selected_idx);
 fft_vals = fft_vals(selected_idx);
-my_snr = calculate_fft_snr(fft_vals, freq_vec, stimulus_freq, target_freq_range, 0,0);
+my_snr = calculate_fft_snr(fft_vals, freq_vec, stimulus_freq, target_freq_range, 0);
 app.label_snr.Text = string(my_snr);
 
 drawnow;
