@@ -3,8 +3,6 @@ function ex = check_health(ex, app, init_check)
 % Assign Variables
 ex.counter.ihealth = ex.counter.ihealth + 1;
 ihealth = ex.counter.ihealth;
-EKG_idx = 3; % 3rd channel in the output. 
-manual_select = 0; % Marker for manually selecting peak_threshold
 
 % Alert experimenter will do health check
 [y, Fs] = audioread('button_press.mp3');
@@ -28,7 +26,7 @@ end
 
 
 % Measure EKG
-[ex, ekg_sig, ekg_rate, ekg_fs_ds, peak_threshold] = measure_EKG(ex,init_check,input_peak_threshold);
+[ex, ekg_sig, ekg_rate, ekg_fs_ds, peak_threshold] = measure_EKG(ex,init_check,input_peak_threshold,app);
 
 % Save values to ex
 ex.health(ihealth).electrodes_microV = ekg_sig; % N_trials, N_samples, N_channels

@@ -1,4 +1,4 @@
-function [ex, ekg_sig_ds,ekg_rate, ekg_fs_ds, peak_threshold] = measure_EKG(ex,init_check,input_peak_threshold)
+function [ex, ekg_sig_ds,ekg_rate, ekg_fs_ds, peak_threshold] = measure_EKG(ex,init_check,input_peak_threshold, app)
 fs = ex.info.recording.sampling_rate_hz;
 %% This function uses playrec to passively measure the EKG of the subject, 
 % uses findpeaks() to identify BPM rate based on a peak threshold value that the user assigns at the beginning of the experiment. 
@@ -7,7 +7,7 @@ fs = ex.info.recording.sampling_rate_hz;
 
 %% Assign Variables
 % Findpeaks vars
-minDist = fs*.75; % at least a quarter of a second between
+minDist = fs*.25;
 sample_dur_s = 12;
 stimulus_block = zeros(1,fs*sample_dur_s); % Take 1 6 second reading of the EKG
 ds_rate = 3;
@@ -23,7 +23,7 @@ while redo
     fprintf('Please wait %d seconds ...',sample_dur_s)
     [~, ekg_sig,ex] = run_ekg(stimulus_block, input_channels, output_channels, ...
         electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, ...
-        hydrophone_voltage_scaling_factor_V,ex);
+        hydrophone_voltage_scaling_factor_V,ex,app);
 
     ekg_sig = bandpassfilter(ekg_sig, 0.5, 150, 4, fs);
     
@@ -82,8 +82,8 @@ ekg_fs_ds = fs/ds_rate;
 end
 
 function [rec_data_mV, ekg_sig, ex] = run_ekg(stimulus_block, input_channels, output_channels, ...
-    electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V,ex)
+    electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V,ex,app)
 [rec_data_mV, ex]  = present_sound(stimulus_block, input_channels, output_channels, ...
-    electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V, ex, []);
+    electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V, ex, app);
 ekg_sig = rec_data_mV(:,:,electrode_idx(1)).*1e3;
 end 

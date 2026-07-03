@@ -7,6 +7,7 @@ stim_ON_2f_std  = cellfun(@std,ex.model.stim_ON_2f_vec(1:iamp));
 
 per_amp_noise  = cellfun(@median,ex.model.stim_OFF_2f_vec(1:iamp)); % (trials x tested_amps)
 per_amp_noise_mad = cellfun(@(x) mad(x,1)*mad_to_std, ex.model.stim_OFF_2f_vec(1:iamp));
+min_amplitude_limit = ex.info.stimulus.min_amplitude_limit;
 
 if ex.test == 1
     amplitude_vec = ex.snr_vec;
@@ -44,7 +45,7 @@ resp_found_sorted = resp_found(sort_idx);
 trial_count_sorted = trial_count(sort_idx);
 
 % Add the noise floor value at 90 dB
-amplitude_sorted = [90 amplitude_sorted];
+amplitude_sorted = [min_amplitude_limit amplitude_sorted];
 response_sorted = [noise_floor_median response_sorted];
 response_std_sorted = [noise_floor_mad response_std_sorted];
 per_amp_noise_sorted = [noise_floor_median per_amp_noise_sorted];

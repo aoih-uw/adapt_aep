@@ -13,7 +13,7 @@ if strcmp(app.DropDown_test_mode.Value, 'Mixed stimuli')
     cur_stim_name = ex.info.mixed.stim_name{cur_parameters(1)};
     current_amplitude = cur_parameters(2);
     if strcmp(cur_stim_name, 'trim')
-        is_ONOFF = 0;
+        is_ONOFF = 0;e
     elseif strcmp(cur_stim_name, 'ONOFF')
         is_ONOFF = 1;
     else
