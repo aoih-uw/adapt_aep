@@ -54,12 +54,8 @@ ex_save.health = ex.health(1:ihealth);
 
 % Adaptive program specific
 if strcmp(ex.info.experiment.exp_type,'Adaptive')
-    ex_save.kept = ex.kept; % Save the latest round of preprocessed signals
-    ex_save.kept = rmfield(ex_save.kept, 'trials'); % Don't need these
-    ex_save.kept = rmfield(ex_save.kept, 'trials_weighted');
     ex_save.fft = ex.fft;
-    ex_save.bootstrap = ex.stats(1:iboot);
-    ex_save.preprocessing_stats = ex.preprocess(1:iblock); % Preprocessing statistics
+    ex_save.bootstrap = ex.bootstrap(1:iboot);
     ex_save.decision = ex.decision(iamp); % Decisions related to this specific stimulus amplitude and frequency
 end
 

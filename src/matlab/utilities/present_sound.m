@@ -54,6 +54,7 @@ for itrial = 1:height(stimulus)
                     end
                 end
                 keyboard % Don't allow the program to progress further now since ex.block structure has been reset after saving
+            error('Playrec timed out. Check USB cord connection')
             end
         end
         pause(0.05);
@@ -77,7 +78,7 @@ for itrial = 1:height(stimulus)
         [y, Fs] = audioread('error.mp3');
         sound(y, Fs)
         fprintf('Possible clipping in hydrophone signal. Inspect signal.')
-        keyboard
+        keyboard % Inspect signal and progress when issue is solved
     end
 
     % Apply specific scaling factors and convert to mV

@@ -32,6 +32,7 @@ my_latency_sample = ceil(my_threshold_sample);
 
 if my_latency_sample ~= 2118
     keyboard
+    error('Unexpected latency sample number measured')
 end
 
 % Display results to command window

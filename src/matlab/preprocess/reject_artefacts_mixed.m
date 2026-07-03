@@ -9,7 +9,7 @@ trials_per_block = ex.info.trials.trials_per_block; %# In test make sure trials_
 % Get all iblocks that are relevant for the current stimulus type we are working with
 if ex.counter.N_not_enough_trials > iblock
     keyboard
-    error('error')
+    error('N_not_enough_trials is larger than iblock, which should not happen')
 else
     first_block = iblock - ex.counter.N_not_enough_trials;
 end
@@ -21,24 +21,10 @@ all_trials = NaN(trials_per_block * n_blocks, max_samples, length(valid_channels
 all_phases = zeros(trials_per_block * n_blocks,1);
 all_jitter = zeros(trials_per_block * n_blocks,1);
 
-% Populate matrices
-row_idx = 1;
-for ii = first_block:iblock
-    cur_block = ex.raw(ii).electrodes_microV;
-    cur_phase = ex.block(ii).phase_vec;
-    cur_jitter = ex.block(ii).jitter;
-    n_samples = size(cur_block, 2);
-    
-    % The first channel is excluded because it is the EKG channel
-    for ichan = 1:length(valid_channels) 
-        cur_chan = valid_channels(ichan);
-        temp = cur_block(:,:,cur_chan);
-        all_trials(row_idx:row_idx+trials_per_block-1, 1:n_samples, ichan) = temp;
-    end
-    all_phases(row_idx:row_idx+trials_per_block-1) = cur_phase;
-    all_jitter(row_idx:row_idx+trials_per_block-1) = cur_jitter;
-    row_idx = row_idx + trials_per_block;
-end
+% Collapse raw data across all available batches
+[all_trials, all_phases, all_jitter] = ...
+    collapse_raw_data(all_trials, all_phases, all_jitter, iblock, first_block, ...
+    trials_per_block, valid_channels, ex);
 
 % Reject trials here
 [kept_trials_idx, n_valid_trials, ...
@@ -46,6 +32,10 @@ end
     reject_artefacts_and_balance_trials(ex, app, all_trials, all_phases, valid_channels);
 
 % Save values to ex.block field
+ex.kept.trials = all_trials(kept_trials_idx,:,:);
+ex.kept.phases = all_phases(kept_trials_idx);
+ex.kept.jitter = all_jitter(kept_trials_idx);
+
 ex.block(iblock).kept_trials_idx = kept_trials_idx;
 ex.block(iblock).collection_attempts = ex.counter.N_not_enough_trials;
 ex.block(iblock).across_trial_thresh = across_trial_thresh;

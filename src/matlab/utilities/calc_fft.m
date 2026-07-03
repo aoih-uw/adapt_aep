@@ -1,6 +1,7 @@
 function [N, freq_vec, fft_vals] = calc_fft(stimulus, fs)
-%% Calculate the fft and save only the 1st half of the results (i.e., the
-% positive values.)
+%% Calculate the fft and save only the 1st half of the results (i.e., the positive values.)
+% Ensure there are no NaNs prior to 
+check_for_nans(stimulus,'signal')
 
 stimulus = stimulus(:)'; % force row
 N = numel(stimulus);

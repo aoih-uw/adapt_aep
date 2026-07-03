@@ -17,4 +17,5 @@ noise_distribution = input_signal(~loc_2f & ~loc_60_multiples);
 
 if any(isnan(noise_distribution)) || length(noise_distribution) < 10
     keyboard
+    error('noise distribution vector has less than 10 values in it')
 end

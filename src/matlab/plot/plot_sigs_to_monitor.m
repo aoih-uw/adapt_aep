@@ -40,9 +40,8 @@ if strcmp(data_type, 'raw')
     plot(app.UIAxes_signal_SNR,       snr_vec, 'o-', 'Color', tableau_10('orange'), 'MarkerFaceColor', tableau_10('orange'));
 
     pad = 0.5;  % or whatever margin makes sense
-    ylim(app.UIAxes_tank_noise_floor, [min(rms_vec)-pad, max(rms_vec)+pad]);
-    ylim(app.UIAxes_signal_SNR,       [min(snr_vec)-pad,  max(snr_vec)+pad]);
-end
+    safe_ylim(app.UIAxes_tank_noise_floor, min(rms_vec,[],'omitnan')-pad, max(rms_vec,[],'omitnan')+pad);
+    safe_ylim(app.UIAxes_signal_SNR,       min(snr_vec,[],'omitnan')-pad, max(snr_vec,[],'omitnan')+pad);end
 
 % Plot electrode channels
 electrode_axes = {app.UIAxes_ch1, app.UIAxes_ch2, app.UIAxes_ch3, app.UIAxes_ch4};
@@ -70,7 +69,12 @@ data_mean_all = mean(electrode_data(:, plot_idx, :), 1);
 pad = range(data_mean_all(:)) * 0.2;
 pad = max(pad,eps);
 linkaxes([electrode_axes{:}], 'xy');
-ylim(electrode_axes{1}, [min(data_mean_all(:)) - pad, max(data_mean_all(:)) + pad]);
+lo = min(data_mean_all(:),[],'omitnan');
+hi = max(data_mean_all(:),[],'omitnan');
+linkaxes([electrode_axes{:}], 'xy');
+safe_ylim(electrode_axes{1}, lo - pad, hi + pad);
 
 drawnow
+end
+
 

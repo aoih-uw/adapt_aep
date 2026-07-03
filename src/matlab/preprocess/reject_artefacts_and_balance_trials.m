@@ -27,7 +27,7 @@ for ichan = 1:length(valid_channels)
     % Reject by comparing RMS across trials
     cur_chan_data = sqrt(mean(cur_chan_data_raw.^2, 2, 'omitnan'));
     cur_median = median(cur_chan_data,'omitnan');
-    cur_mad = median(abs(cur_median-cur_chan_data),[],'omitnan')*mad_to_std;
+    cur_mad = median(abs(cur_median-cur_chan_data),'omitnan')*mad_to_std;
     rel_rej_thresh_across(ichan) = cur_median + cur_mad*reject_threshold_sd;
     rejected_trials = [rejected_trials find(cur_chan_data >= rel_rej_thresh_across(ichan))'];
 end

@@ -10,7 +10,7 @@ N_unique_stimuli = ex.info.mixed.N_unique_stimuli;
 trials_per_block = ex.info.trials.trials_per_block;
 target_freq = ex.info.stimulus.frequency_hz * 2;
 fs = ex.info.recording.sampling_rate_hz;
-analysis_channel = 2; % 4mm subcranial electrode
+analysis_channel = ex.info.channels.analysis_channel; % idx = 2, 4mm subcranial electrode
 if ex.counter.grand_iblock == 1, mag_2f = []; end
 
 % Clear axes

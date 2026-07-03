@@ -1,5 +1,6 @@
 function plot_funfetti(ex, iblock, fs, app)
 %% Plot the current block's 2f response magnitude persistently throughout experiment
+% Assign Variables
 persistent my_2f my_2f_std
 if iblock == 1
     my_2f = []; my_2f_std = [];
@@ -12,6 +13,7 @@ fft_ax = app.UIAxes_live_fft;
 bin_ax = app.UIAxes_funfetti;
 colors = {tableau_10('blue'), tableau_10('orange'), tableau_10('green')};
 n_ch   = numel(channels);
+target_freq_range = ex.info.analysis.range_2f_hz;
 
 % fft_ax
 delete(allchild(fft_ax)); hold(fft_ax, 'on')
@@ -22,23 +24,28 @@ for ic = 1:n_ch
     % Compute per-trial FFTs, then derive mean spectrum and per-bin std
     n_trials = size(sig, 1);
     for it = 1:n_trials
-        [~, f, v] = calc_fft(sig(it,:), fs);
+        [~, freq_vec, fft_vals] = calc_fft(sig(it,:), fs);
         if it == 1
-            trial_ffts = zeros(n_trials, numel(f));
+            trial_ffts = zeros(n_trials, numel(freq_vec));
         end
-        trial_ffts(it,:) = v;
+        trial_ffts(it,:) = fft_vals;
     end
     fft_val = mean(trial_ffts, 1);
     fft_std = std(trial_ffts, [], 1);
 
+    mean_target_bin_mag_vec = ...
+    find_fft_bins(target_freq, target_freq_range, fft_val, freq_vec);
+
+    std_target_bin_mag_vec = ...
+    find_fft_bins(target_freq, target_freq_range, fft_std, freq_vec);
+
     % Get 2f bin on the full vector, before trimming
-    [~, loc_2f] = min(abs(f - target_freq));  %#%# Change so it uses find_fft_bins_code
-    my_2f(ic,n_points+1)     = fft_val(loc_2f);
-    my_2f_std(ic,n_points+1) = fft_std(loc_2f);
+    my_2f(ic,n_points+1)     = mean_target_bin_mag_vec;
+    my_2f_std(ic,n_points+1) = std_target_bin_mag_vec;
 
     % Trim to display window
-    m  = f <= target_freq*2;
-    ff = f(m);  vv = fft_val(m);  ss = fft_std(m);
+    my_mask  = freq_vec <= target_freq*2;
+    ff = freq_vec(my_mask);  vv = fft_val(my_mask);  ss = fft_std(my_mask);
 
     fill(fft_ax, [ff, fliplr(ff)], [vv+ss, fliplr(vv-ss)], ...
         c, 'FaceAlpha', 0.3, 'EdgeColor', 'none', 'HandleVisibility', 'off');

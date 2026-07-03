@@ -6,7 +6,6 @@ iblock = ex.counter.iblock;
 ihealth = ex.counter.ihealth;
 fs = ex.info.recording.sampling_rate_hz;
 downsamp_rate = 2;
-N_chan = ex.info.channels.n_channels;
 
 ex.info.experiment.exp_time_end = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
 ex.info.experiment.exp_duration = char(ex.info.experiment.exp_time_end - ex.info.experiment.exp_time_start);

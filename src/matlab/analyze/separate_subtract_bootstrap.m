@@ -1,21 +1,23 @@
 function ex = separate_subtract_bootstrap(ex,app)
-%% Separate STIM ON (stim_ON) and STIM OFF (stim_OFF) periods and calculate
-% differences
+%% Separate STIM ON (stim_ON) and STIM OFF (stim_OFF) periods and calculate differences
+% Assign variables
 fs = ex.info.recording.sampling_rate_hz;
-iamp = ex.counter.iamp;
+current_amplitude = ex.info.stimulus.amplitude_spl;
 kept_trials_filtered = ex.kept.trials_filtered;
 N_valid_trials = size(ex.kept.trials_filtered,1);
 kept_jitter = ex.kept.jitter;
-
-latency_samples = ex.info.recording.latency_samples;
-period_length_samples = length(ex.info.stimulus.waveform);
-
-mad_to_std = ex.info.signal_quality.mad_to_std;
-mad_criteria = ex.info.analysis.mad_criteria;
-
-N_channels = ex.info.channels.n_channels;
 max_trials = ex.info.trials.max_trials;
 
+% Sample variables
+latency_samples = ex.info.recording.latency_samples;
+period_length_samples = length(ex.info.stimulus.waveform);
+ramp_duration_ms = ex.info.stimulus.ramp_duration_ms;
+ramp_duration_samples = ceil(ramp_duration_ms/1000*fs);
+
+% Median absolute deviation variables
+mad_to_std = ex.info.signal_quality.mad_to_std;
+
+% Gate variables
 min_trials_for_analysis = ex.info.analysis.min_trials_for_analysis;
 run_bootstrap = 0;
 gate_type = 0;
@@ -24,22 +26,21 @@ gate_type = 0;
 n_permutations = 1000;
 my_prctile = 99.95;%
 
+% Assign target frequency
 if ex.test == 1
     freq_2f_hz  = ex.info.stimulus.frequency_hz;
 else
     freq_2f_hz  = ex.info.stimulus.frequency_hz*2;
 end
-
 range_2f_hz = ex.info.analysis.range_2f_hz;
-current_amplitude = ex.info.stimulus.amplitude_spl;
 
-% Clear axes
+%% Clear axes
 cla(app.UIAxes_boot)
 % cla(app.UIAxes_perm)
 cla(app.UIAxes_gate)
 
 % Extract Stim ON and OFF Periods
-[stim_ON , stim_OFF] = extract_stim_ON_OFF(latency_samples, period_length_samples, kept_jitter, kept_trials_filtered);
+[stim_ON , stim_OFF] = extract_stim_ON_OFF(latency_samples, period_length_samples, kept_jitter, ramp_duration_samples, kept_trials_filtered);
 
 %% See if noise has averaged down enough to do analysis
 if isnan(ex.noise.starting_rms)
@@ -52,48 +53,51 @@ rms_ratio = current_rms/starting_rms;
 app.Label_RMS_ratio.Text = sprintf('%.2f', rms_ratio);
 fprintf('\nRMS ratio: %1.2f\nTrials in average: %1.0f\n',rms_ratio,N_valid_trials)
 
-%% Calculate ffts and subtract
+%% Calculate FFTs
+% Preallocate
 N_stim_OFF = zeros(size(stim_OFF,1),1);
 N_stim_ON = zeros(size(stim_OFF,1),1);
 
+% Nyquist Shannon Theorem 
+% You can only represent frequencies up to half of the sampling rate
 freq_vec_stim_OFF = zeros(size(stim_OFF,1),floor(size(stim_OFF,2)/2)+1);
 freq_vec_stim_ON = zeros(size(stim_OFF,1),floor(size(stim_OFF,2)/2)+1);
 
-fft_vals_stim_OFF = zeros(size(stim_OFF,1),floor(size(stim_OFF,2)/2)+1); % Nyquist shannon theorem you can only represent frequencies up to half of the sampling rate
+fft_vals_stim_OFF = zeros(size(stim_OFF,1),floor(size(stim_OFF,2)/2)+1);
 fft_vals_stim_ON = zeros(size(stim_OFF,1),floor(size(stim_OFF,2)/2)+1);
 
+% Calculate FFTs
 for itrial = 1:size(stim_OFF,1)
-    [N_stim_OFF(itrial), freq_vec_stim_OFF(itrial,:), fft_vals_stim_OFF(itrial,:)] = calc_fft(stim_OFF(itrial,:),fs); %# Will calc_fft handle NaNs? Actually this shouldn't be a problem because we are selecting the periods
-    [N_stim_ON(itrial), freq_vec_stim_ON(itrial,:), fft_vals_stim_ON(itrial,:)] = calc_fft(stim_ON(itrial,:),fs);
+    [N_stim_OFF(itrial), freq_vec_stim_OFF(itrial,:), fft_vals_stim_OFF(itrial,:)] ...
+        = calc_fft(stim_OFF(itrial,:),fs);
+    [N_stim_ON(itrial), freq_vec_stim_ON(itrial,:), fft_vals_stim_ON(itrial,:)] ...
+        = calc_fft(stim_ON(itrial,:),fs);
 end
 
+% Just pick one freq_vec for ease
 freq_vec = freq_vec_stim_ON(1,:);
 
 %% Extract Stim ON 2f bins
-[range_2f_hz,stim_ON_2f_vec] = ...
-    find_fft_bins(freq_2f_hz, range_2f_hz, fft_vals_stim_ON, freq_vec,1);
+stim_ON_2f_vec = ...
+    find_fft_bins(freq_2f_hz, range_2f_hz, fft_vals_stim_ON, freq_vec);
 
 %% Extract Stim OFF 2f bins (i.e., noise floor)
 % Get the magnitude value at 2f in the stim OFF period to compare to stim ON period for the model
-    [range_2f_hz, stim_OFF_2f_vec] = ...
-    find_fft_bins(freq_2f_hz, range_2f_hz, fft_vals_stim_OFF, freq_vec,1);
-
-stim_OFF_2f_median = median(stim_OFF_2f_vec);
-stim_OFF_2f_mad = mad(stim_OFF_2f_vec, 1);  
-stim_OFF_criteria = stim_OFF_2f_median + stim_OFF_2f_mad*mad_criteria*mad_to_std;
+    stim_OFF_2f_vec = ...
+    find_fft_bins(freq_2f_hz, range_2f_hz, fft_vals_stim_OFF, freq_vec);
 
 %% Calculate DIFF: Subtract ON - OFF for bootstrap
-diffs = fft_vals_stim_ON - fft_vals_stim_OFF;
-[~, diff_2f_vec] = ...
-    find_fft_bins(freq_2f_hz, range_2f_hz, diffs, freq_vec,1);
+diffs = fft_vals_stim_ON - fft_vals_stim_OFF; % Subtract across full freq_vec range
+diff_2f_vec = ...
+    find_fft_bins(freq_2f_hz, range_2f_hz, diffs, freq_vec);
 
-% Calculate mean diff 2f magnitude to compare to other peaks in diff
+%% Calculate mean diff 2f magnitude to compare to other peaks in diff
 diff_2f_mean = mean(diff_2f_vec); % Collapse 2f diff bin means across trials
 
 % Calculate distribution of values at non 2f bins for comparison
 other_freq_diff_mean_distribution = ...
     calculate_fft_noise_floor(freq_2f_hz/2, range_2f_hz, mean(diffs), freq_vec,1); % freq_2f_hz/2 is used so we can also account for stimulus artefact
-top_percent_peak_num = ceil(length(other_freq_diff_mean_distribution)*0.05);
+top_percent_peak_num = ceil(length(other_freq_diff_mean_distribution)*0.05); % Compare to top 5% of the noise floor distribution
 max_vals = maxk(other_freq_diff_mean_distribution,top_percent_peak_num);
 within_diff_criteria = median(max_vals)+mad(max_vals,1)*3*mad_to_std;
 
@@ -125,19 +129,20 @@ xlim(app.UIAxes_diff_fft, xl);
 % Y-limits: focus on the 2f bin
 in_2f = f_diffs >= (freq_2f_hz - range_2f_hz) & f_diffs <= (freq_2f_hz + range_2f_hz);
 y_lo = min(mean_diffs(in_2f) - s_diffs(in_2f));
-y_hi = max([mean_diffs(in_2f) + s_diffs(in_2f), stim_OFF_criteria]);
+y_hi = max(mean_diffs(in_2f) + s_diffs(in_2f));
 pad  = 0.15 * (y_hi - y_lo);
 ylim(app.UIAxes_diff_fft, [y_lo - pad, y_hi + pad]);
 
+% Add labels
 title(app.UIAxes_diff_fft, 'Difference FFT');
 yline(app.UIAxes_diff_fft, 0, '--');
 xline(app.UIAxes_diff_fft, freq_2f_hz,'--')
-yline(app.UIAxes_diff_fft, stim_OFF_criteria ,'-','Color',tableau_10('pink'),'LineWidth',1.5)
 xlabel(app.UIAxes_diff_fft,'Frequency (Hz)')
 ylabel(app.UIAxes_diff_fft,'Amplitude (\muV)')
 hold(app.UIAxes_diff_fft, 'off');
 
 drawnow
+
 %% Decision Logic
 % Run bootstrap if...
 % 1. When mean difference FFT @2f bin is x MAD greater than the median of the 5% greatest peaks at the other frequency bins in the difference fft
@@ -153,11 +158,10 @@ if diff_2f_mean > within_diff_criteria
 elseif rms_ratio <= 0.8 && N_valid_trials > min_trials_for_analysis
     run_bootstrap = 1;
     gate_type = 2;
-elseif N_valid_trials == max_trials
+elseif N_valid_trials >= max_trials
     run_bootstrap = 1;
     gate_type = 3;
 end
-
 
 % Run the bootstrap
 if run_bootstrap
@@ -168,10 +172,10 @@ if run_bootstrap
     fprintf('\nBootstrapping CI range: [ %.3f , %.3f ]',lower_CI, upper_CI)
     
     % Save to boot
-    ex.stats(iboot).bootstat = bootstat;
-    ex.stats(iboot).gate_type = gate_type;
-    ex.stats(iboot).lower_CI = lower_CI;
-    ex.stats(iboot).upper_CI = upper_CI;
+    ex.bootstrap(iboot).bootstat = bootstat;
+    ex.bootstrap(iboot).gate_type = gate_type;
+    ex.bootstrap(iboot).lower_CI = lower_CI;
+    ex.bootstrap(iboot).upper_CI = upper_CI;
 
     % Plot bootstrapped distribution on app axes
     reset(app.UIAxes_boot)
@@ -189,7 +193,7 @@ if run_bootstrap
     hold(app.UIAxes_boot, 'off');
 
     % Plot gate type count
-    gate_types = [ex.stats(1:iboot).gate_type];
+    gate_types = [ex.bootstrap(1:iboot).gate_type];
     counts = histcounts(gate_types, 1:4);
     b = bar(app.UIAxes_gate, counts);
     b.FaceColor = tableau_10('pink');
@@ -211,9 +215,9 @@ if run_bootstrap
     sig_thresh = prctile(perm_matrix,my_prctile);
     
     % Save to ex
-    ex.stats(iboot).perm_test_stat = test_stat;
-    ex.stats(iboot).perm_sig_threshold = sig_thresh;
-    ex.stats(iboot).perm_test_result = test_stat > sig_thresh;
+    ex.bootstrap(iboot).perm_test_stat = test_stat;
+    ex.bootstrap(iboot).perm_sig_threshold = sig_thresh;
+    ex.bootstrap(iboot).perm_test_result = test_stat > sig_thresh;
     
     fprintf('\nPermutation test result \nSignificance threshold: %1.3f\n Test statistic: %1.3f\n ',sig_thresh, test_stat)
     

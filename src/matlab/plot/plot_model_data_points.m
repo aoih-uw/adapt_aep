@@ -21,8 +21,8 @@ for i = 1:length(amplitude_sorted)
         'MarkerFaceColor', color, 'MarkerEdgeColor', color, 'Color', color);
 end
 
-y_low  = [min(per_amp_noise_sorted)-max(per_amp_noise_mad_sorted)];
-y_high = [max(response_sorted)      + max(response_std_sorted)];
+y_low  = min(per_amp_noise_sorted,[],'omitnan') - max(per_amp_noise_mad_sorted,[],'omitnan');
+y_high = max(response_sorted,[],'omitnan')      + max(response_std_sorted,[],'omitnan');
+safe_ylim(myaxes, y_low - 0.1, y_high + 0.1);
 
-ylim(myaxes, [y_low - 0.1, y_high + 0.1])
 xlim(myaxes, [min(amplitude_sorted)-5, max(amplitude_sorted)+5])

@@ -42,7 +42,7 @@ base_level = calculate_base_level(target_level);
 calibration_stim = base_level.*calibration_stim; % start 40 dB down from fs, but ensure that 0.01 associated voltage is waaay below the max output of the speaker
 
 % Measure calibration stimuli
-[hydrophone_rms_dB, rec_data_mV, mean_hydrophone_sig, ex] = ...
+[hydrophone_rms_dB, ~, mean_hydrophone_sig, ex] = ...
     measure_calibration_stimuli(ex, calibration_stim, trigger_stim, waveform,...
     stimulus_freq, fs, app);
 
@@ -133,15 +133,6 @@ if cal.corrected_level >= target_level-correction_tolerance_dB && ...
     cal.check_passed = 1;
     fprintf('\nTarget level = %.1f +/- %.1f \nCorrected level = %.3f \nEffective calibration factor identified. Calibration complete.\n', ...
         target_level, correction_tolerance_dB, hydrophone_rms_dB)
-
-
-    % Save calibration file
-    filename_root = ex.info.animal.filename_root;
-    [~, filename_root] = fileparts(filename_root); % extract just the base name
-    time_stamp = datestr(now, 'yyyymmdd_HHMMSS');
-    filename = fullfile('..', '..', 'data', 'calibration', strcat(filename_root, '_calibration_', time_stamp));
-
-    calibration = cal;
 
 else
     fprintf(['\nTarget level = %.1f +/- %.1f \nCorrected level = %.1f\n Correction factor ineffective.' ...

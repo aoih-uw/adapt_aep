@@ -1,10 +1,14 @@
-function [stim_ON , stim_OFF] = extract_stim_ON_OFF(latency_samples, period_length_samples, jitter_vec, signal)
-% Signal = time-domain (trials x samples)
+function [stim_ON , stim_OFF] = extract_stim_ON_OFF(latency_samples, period_length_samples, jitter_vec, ramp_duration_samples, signal)
+%% Extract stimulus OFF and ON periods in the time domain signal and remove on/off ramp portion from both periods
+% Requires that stim OFF and stim ON periods are of equal duration
+% Signal = time-domain (n_trials x n_samples)
 % Latency_samples = self explanatory
 % jitter_vec = number of jitter samples used on trial basis (trial x 1)
 
-stim_OFF_start = latency_samples + jitter_vec + 1; % Each trial has different jitter, and thus will have different starting points
+% Each trial has different jitter, and thus will have different starting points
+stim_OFF_start = latency_samples + jitter_vec + 1;
 
+% Preallocate
 stim_OFF = zeros(size(signal,1), period_length_samples); % (N_trials x time samples)
 stim_ON = zeros(size(signal,1), period_length_samples);
 
@@ -15,3 +19,7 @@ for itrial = 1:size(signal,1) % Extract periods by trial
     stim_ON_start = cur_stim_OFF_start+period_length_samples;
     stim_ON(itrial,:) = signal(itrial,stim_ON_start:stim_ON_start+period_length_samples-1);
 end
+
+% Remove the onramp/offramp samples from stim_ON to get steady state portion of signal
+stim_OFF = stim_OFF(:,ramp_duration_samples+1:end-ramp_duration_samples);
+stim_ON = stim_ON(:,ramp_duration_samples+1:end-ramp_duration_samples);
