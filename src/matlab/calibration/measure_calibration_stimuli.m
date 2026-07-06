@@ -27,7 +27,11 @@ mean_loopback_sig = mean(squeeze(rec_data_mV(:,:,loopback_idx)),1);
 mean_hydrophone_sig = mean(squeeze(rec_data_mV(:,:,hydrophone_idx)),1);
 
 latency_samples = find(mean_loopback_sig > 0.5,1,'first');
-filtered_mean_hydrophone_sig = bandpassfilter(mean_hydrophone_sig,stimulus_freq, stimulus_freq+0.1, 4, fs);
+d = designfilt('bandpassfir', 'FilterOrder', 4, ...
+    'CutoffFrequency1', stimulus_freq-0.5, 'CutoffFrequency2', stimulus_freq+0.5, ...
+    'SampleRate', fs);
+
+filtered_mean_hydrophone_sig = bandpassfilter(mean_hydrophone_sig, d);
 
 ramp_samples = ceil((ramp_duration_ms/1000)*fs);
 start_idx = latency_samples + ramp_samples + 1;

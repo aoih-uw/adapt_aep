@@ -28,7 +28,7 @@ all_jitter = zeros(trials_per_block * n_blocks,1);
 
 % Reject trials here
 [kept_trials_idx, n_valid_trials, ...
-    across_trial_thresh, within_trial_thresh]  = ...
+    across_trial_thresh]  = ...
     reject_artefacts_and_balance_trials(ex, app, all_trials, all_phases, valid_channels);
 
 % Save values to ex.block field
@@ -39,7 +39,6 @@ ex.kept.jitter = all_jitter(kept_trials_idx);
 ex.block(iblock).kept_trials_idx = kept_trials_idx;
 ex.block(iblock).collection_attempts = ex.counter.N_not_enough_trials;
 ex.block(iblock).across_trial_thresh = across_trial_thresh;
-ex.block(iblock).within_trial_thresh = within_trial_thresh;
 
 if n_valid_trials < trials_per_block
     ex.counter.N_not_enough_trials = ex.counter.N_not_enough_trials + 1;

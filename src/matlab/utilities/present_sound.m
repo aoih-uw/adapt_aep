@@ -20,7 +20,7 @@ for itrial = 1:height(stimulus)
     pct = itrial / height(stimulus);
     bar = repmat('█', 1, round(pct * 20));
     gap = repmat('░', 1, 20 - round(pct * 20));
-    fprintf('\r  %s%s %d/%d', bar, gap, itrial, height(stimulus));
+    fprintf('\r  %s%s %d/%d\n', bar, gap, itrial, height(stimulus));
 
     % Get current trial
     if size(stimulus,3) > 1 % We have signals to present on more than one channel

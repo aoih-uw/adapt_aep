@@ -31,14 +31,13 @@ all_jitter = zeros(trials_per_block*iblock,1);
 
 %% Reject artefacts
 [kept_trials_idx, n_valid_trials, ...
-    across_trial_thresh, within_trial_thresh]  = ...
+    across_trial_thresh]  = ...
     reject_artefacts_and_balance_trials(ex, app, all_trials, all_phases,valid_channels);
 ex.valid_trials(iamp) = n_valid_trials;
 
 % Add threshold to block structure
 ex.block(iblock).kept_trials_idx = kept_trials_idx;
 ex.block(iblock).across_trial_thresh = across_trial_thresh;
-ex.block(iblock).within_trial_thresh = within_trial_thresh;
 
 %% ADAPTIVE: Select only the analysis channel keep those trials
 if strcmp(ex.info.experiment.exp_type,'Adaptive')

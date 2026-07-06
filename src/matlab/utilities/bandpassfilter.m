@@ -1,16 +1,6 @@
-function sigout = bandpassfilter(sigin,cutofflow,cutoffhigh,order,fs)
-%% This is a simple bandpass filter which uses filtfilt. Inputs are self-explanatory.
-
-if cutofflow > cutoffhigh
-    error('cutofflow must be less than cutoffhigh');
+function sigout = bandpassfilter(sigin, d)
+sigout = filtfilt(d, sigin);
 end
-
-% set up filter; 
-d = designfilt('bandpassfir', 'FilterOrder', order, ...
-             'CutoffFrequency1', cutofflow, 'CutoffFrequency2', cutoffhigh,...
-             'SampleRate', fs); 
-         
-sigout = filtfilt(d,sigin); 
 
 %% About filtfilt
 % Filters the signal twice, once forward, once backward and combines the

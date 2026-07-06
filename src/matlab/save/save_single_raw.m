@@ -9,7 +9,6 @@ ihealth = ex.counter.ihealth;
 iamp = ex.counter.iamp;
 fs = ex.info.recording.sampling_rate_hz;
 downsamp_rate = 2;
-N_chan = ex.info.channels.n_channels;
 if strcmp(ex.info.experiment.exp_type,'Adaptive')
     iboot = ex.counter.iboot;
 end
@@ -38,15 +37,16 @@ if isfield(ex_save.block_level_info, 'stimulus_block')
     ex_save.block_level_info = rmfield(ex_save.block_level_info, 'stimulus_block');
 end
 
-% Downsample
-for iiblock = 1:iblock
-    cur = ex.raw(iiblock);
-    ex_save.raw_signals(iiblock).hydrophone_ds        = dec_rows(cur.hydrophone_mV,    downsamp_rate);
-    ex_save.raw_signals(iiblock).loopback_ds          = dec_rows(cur.loopback,         downsamp_rate);
-    ex_save.raw_signals(iiblock).time_stamp_ds        = cur.time_stamp(:,1:downsamp_rate:end);
-    ex_save.raw_signals(iiblock).electrodes_microV_ds = dec_rows(cur.electrodes_microV, downsamp_rate);
-end
-ex_save.ds_fs = fs/downsamp_rate;
+ex_save.raw_signals = ex.raw;
+% % Downsample raw signals
+% for iiblock = 1:iblock
+%     cur = ex.raw(iiblock);
+%     ex_save.raw_signals(iiblock).hydrophone_ds        = dec_rows(cur.hydrophone_mV,    downsamp_rate);
+%     ex_save.raw_signals(iiblock).loopback_ds          = dec_rows(cur.loopback,         downsamp_rate);
+%     ex_save.raw_signals(iiblock).time_stamp_ds        = cur.time_stamp(:,1:downsamp_rate:end);
+%     ex_save.raw_signals(iiblock).electrodes_microV_ds = dec_rows(cur.electrodes_microV, downsamp_rate);
+% end
+% ex_save.ds_fs = fs/downsamp_rate;
 
 % Save health data
 ex_save.health = ex.health(1:ihealth);

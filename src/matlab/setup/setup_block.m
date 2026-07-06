@@ -1,23 +1,16 @@
 function ex = setup_block(ex)
 %% Setup block-level fields in ex structure
-
 % Per block metadata
 if ~strcmp(ex.info.experiment.exp_type, 'Mixed stimuli')
     max_block = ceil(ex.info.trials.max_trials / ex.info.trials.trials_per_block);
-    if strcmp(ex.info.experiment.exp_type,'Adaptive')
-        for iblock = 1:max_block
-            ex.block(iblock).hydrophone.stim_ON_rms_dB_spl = NaN;
-            ex.block(iblock).hydrophone.stim_OFF_rms_dB_spl = NaN;
-        end
-    end
+    ex.info.trials.max_block = max_block;
 else
-    max_block = ex.info.mixed.N_trials_per_file;
+    max_block = ceil(ex.info.mixed.N_trials_per_file/ ex.info.trials.trials_per_block)*10; % Add some extra slots in case we need more since we are stuck collecting more and more trials due to rejection
+    ex.info.trials.max_block = max_block;
     for iblock = 1:max_block
         ex.block(iblock).stim_type = NaN;
-        ex.block(iblock).stim_freq = NaN;
         ex.block(iblock).stim_amp = NaN;
         ex.block(iblock).collection_attempts = 0;
-        ex.block(iblock).collect_all_valid_trials = 0;
     end
 end
 
@@ -29,8 +22,13 @@ for iblock = 1:max_block
     ex.block(iblock).phase_vec = NaN;
     ex.block(iblock).stimulus_block = NaN; % Created in make_scaled_jittered_stim_block, presented via playrec
     ex.block(iblock).across_trial_thresh = NaN;
-    ex.block(iblock).within_trial_thresh = NaN;
     ex.block(iblock).kept_trials_idx = NaN;
+    ex.block(iblock).hydrophone.stimulus_rms = NaN;
+    ex.block(iblock).hydrophone.tank_nf_rms = NaN;
+    ex.block(iblock).hydrophone.stimulus_rms_mad = NaN;
+    ex.block(iblock).hydrophone.tank_nf_rms_mad = NaN;
+    ex.block(iblock).hydrophone.stim_ON_snr_median = NaN;
+    ex.block(iblock).hydrophone.stim_ON_snr_mad = NaN;
 
     %% Raw data
     ex.raw(iblock).hydrophone_mV= NaN;
@@ -41,3 +39,7 @@ end
 
 % Setup noise
 ex.noise.starting_rms = NaN;
+
+% Create a template of the raw and block fields
+ex.template.block = ex.block(1);
+ex.template.raw = ex.raw(1);

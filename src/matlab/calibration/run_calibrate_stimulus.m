@@ -55,8 +55,8 @@ cal.correction_factor_linear = 10.^(correction_factor_dB/20);
 
 %% Update GUI PLots
 % Update labels
-app.label_uncorr_level.Text = string(hydrophone_rms_dB);
-app.label_corr_factor.Text = string(correction_factor_dB);
+app.label_uncorr_level.Text = sprintf('%1.1f',hydrophone_rms_dB);
+app.label_corr_factor.Text = sprintf('%1.1f',correction_factor_dB);
 
 % Time domain
 n_samples = length(mean_hydrophone_sig);
@@ -73,7 +73,7 @@ selected_idx = freq_vec > 1 & freq_vec < 5000;
 freq_vec = freq_vec(selected_idx);
 fft_vals = fft_vals(selected_idx);
 my_snr = calculate_fft_snr(fft_vals, freq_vec, stimulus_freq, target_freq_range, 0);
-app.label_snr.Text = string(my_snr);
+app.label_snr.Text = sprintf('%1.1f',my_snr);
 
 drawnow;
 
@@ -94,7 +94,7 @@ cal.corrected_level = hydrophone_rms_dB;
 
 %% Update GUI
 % Update labels
-app.label_corr_level.Text = string(hydrophone_rms_dB);
+app.label_corr_level.Text = sprintf('%1.1f',hydrophone_rms_dB);
 
 % Time domain
 n_samples = length(mean_hydrophone_sig);
@@ -110,7 +110,7 @@ selected_idx = freq_vec > 1 & freq_vec < 5000;
 freq_vec = freq_vec(selected_idx);
 fft_vals = fft_vals(selected_idx);
 my_snr = calculate_fft_snr(fft_vals, freq_vec, stimulus_freq, target_freq_range, 0);
-app.label_snr.Text = string(my_snr);
+app.label_snr.Text = sprintf('%1.1f',my_snr);
 
 drawnow;
 

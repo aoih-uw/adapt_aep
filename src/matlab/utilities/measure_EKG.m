@@ -10,7 +10,7 @@ fs = ex.info.recording.sampling_rate_hz;
 minDist = fs*.25;
 sample_dur_s = 12;
 stimulus_block = zeros(1,fs*sample_dur_s); % Take 1 6 second reading of the EKG
-ds_rate = 3;
+ds_rate = 10;
 
 % Get present_sound_variables
 [ex, ~, ~, N_samples, output_channels, input_channels, ...
@@ -25,7 +25,10 @@ while redo
         electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, ...
         hydrophone_voltage_scaling_factor_V,ex,app);
 
-    ekg_sig = bandpassfilter(ekg_sig, 0.5, 150, 4, fs);
+    d = designfilt('bandpassfir', 'FilterOrder', 4, ...
+    'CutoffFrequency1', 1, 'CutoffFrequency2', 100, ...
+    'SampleRate', fs);
+    ekg_sig = bandpassfilter(ekg_sig, d);
     
     % Manually select peak_threshold value if it doesn't exist
     if isempty(input_peak_threshold)
@@ -68,7 +71,7 @@ while redo
         resp = input('Press Enter to confirm, or type "r" to remeasure: ', 's');
         close(myfig);
         redo = strcmpi(strtrim(resp), 'r');
-    elseif strcmp(ex.info.experiment.exp_type,'Timed')
+    elseif strcmp(ex.info.experiment.exp_type,'Timed') || strcmp(ex.info.experiment.exp_type,'Mixed stimuli')
         [y, Fs] = audioread('step.mp3'); sound(y, Fs);
         pause(3)
         close(myfig);

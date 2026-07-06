@@ -9,11 +9,13 @@ uniq_stimuli = ex.info.mixed.uniq_stimuli;
 N_unique_stimuli = ex.info.mixed.N_unique_stimuli;
 trials_per_block = ex.info.trials.trials_per_block;
 target_freq = ex.info.stimulus.frequency_hz * 2;
+target_freq_range = ex.info.stimulus.range_2f_hz;
 fs = ex.info.recording.sampling_rate_hz;
 channel_names = ex.info.channels.names;
 valid_channels = find(~strcmp(channel_names, 'EKG'));
 analysis_channel = ex.info.channels.analysis_channel;
 analysis_channel_idx = find(strcmp(channel_names(valid_channels),analysis_channel));
+iblock = ex.counter.iblock;
 if ex.counter.grand_iblock == 1, mag_2f = []; end
 
 % Clear axes
@@ -28,6 +30,9 @@ completed_schedule = test_schedule(1:ischedule,:); % Get list of stimuli we have
 unique_counts = accumarray(idx, 1); % Here are the counts
 
 completion_mat(unique_tested_stimuli(:,4)) = (unique_counts*trials_per_block) ./ unique_tested_stimuli(:,3);
+
+%% Plot live fft
+plot_live_fft(ex,iblock,fs,app);
 
 %% Plot heatmap
 % Reshape completion_mat into 2D: rows = stim_type, cols = amplitude
@@ -44,6 +49,8 @@ end
 
 % Draw the 2d heatmap
 imagesc(app.UIAxes_funfetti,heat_2d);
+xlim(app.UIAxes_funfetti,[0.5, length(amplitudes)+0.5]);
+ylim(app.UIAxes_funfetti,[0.5, length(stim_types)+0.5]);
 
 %% Overlay 2f magnitude trace per cell
 if numel(mag_2f) < ischedule
@@ -51,8 +58,7 @@ if numel(mag_2f) < ischedule
     v = zeros(size(sig,1),1);
     for it = 1:size(sig,1)
         [~, f, vv] = calc_fft(sig(it,:), fs);
-        [~, loc] = min(abs(f - target_freq));
-        v(it) = vv(loc);
+        v(it) = find_fft_bins(target_freq,target_freq_range, vv, f);
     end
     mag_2f(ischedule) = mean(v);
 end
@@ -67,7 +73,7 @@ for i = 1:N_unique_stimuli
     my_c = find(amplitudes == uniq_stimuli(i,2));
     x = linspace(my_c-0.4, my_c+0.4, numel(trace));
     plot(app.UIAxes_funfetti, x, (my_r+0.4) - (trace/ymax)*0.6, '-o', ...
-        'Color','k', 'MarkerSize',2, 'MarkerFaceColor','k', 'LineWidth',1);
+        'Color',tableau_10('grey'), 'MarkerSize',2, 'Color',tableau_10('grey'), 'LineWidth',1);
 end
 hold(app.UIAxes_funfetti,'off')
 

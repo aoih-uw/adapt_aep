@@ -5,9 +5,11 @@ function ex = setup_health(ex)
 
 % Set maximum block numbers to be preallocated
 if ~strcmp(ex.info.experiment.exp_type, 'Mixed stimuli')
-    max_block = ceil(ex.info.trials.max_trials / ex.info.trials.trials_per_block);
+    max_block_health = ceil(ex.info.trials.max_trials / ex.info.trials.trials_per_block);
+    ex.info.trial.max_block_health = max_block_health;
 else
-    max_block = ex.info.mixed.N_trials_per_file;
+    max_block_health = ceil(ex.info.mixed.N_trials_per_file/ ex.info.trials.trials_per_block);
+    ex.info.trial.max_block_health = max_block_health;
 end
 
 if ex.counter.ihealth > 0
@@ -33,4 +35,5 @@ else % We are setting up the health field for the first time, so we need to buil
         ex.health(ihealth).ekg_fs_ds = NaN;
         ex.health(ihealth).peak_threshold = NaN;
     end
+    ex.template.health = ex.health(1);
 end

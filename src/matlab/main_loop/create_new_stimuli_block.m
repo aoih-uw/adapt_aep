@@ -13,13 +13,17 @@ if strcmp(app.DropDown_test_mode.Value, 'Mixed stimuli')
     cur_stim_name = ex.info.mixed.stim_name{cur_parameters(1)};
     current_amplitude = cur_parameters(2);
     if strcmp(cur_stim_name, 'trim')
-        is_ONOFF = 0;e
+        is_ONOFF = 0;
     elseif strcmp(cur_stim_name, 'ONOFF')
         is_ONOFF = 1;
     else
         keyboard
         error('Unrecognized stimulus type!')
     end
+
+    ex.block(iblock).stim_type = cur_stim_name;
+    ex.block(iblock).stim_amp = current_amplitude;
+    app.Label_current_amp.Text = string(current_amplitude);
 elseif strcmp(app.DropDown_test_mode.Value, 'Adaptive')
     is_ONOFF = 1;
     current_amplitude = ex.info.stimulus.amplitude_spl;
