@@ -6,6 +6,14 @@ waveform = ex.info.stimulus.waveform;
 trials_per_block = ex.info.trials.trials_per_block;
 trim_stim_pre_dur_ms = ex.info.stimulus.trim_stim_pre_dur_ms;
 
+% Check if there are enough slots in ex.raw
+if iblock > ex.info.trials.max_block
+    idx = ex.info.trials.max_block + (1:10); % Add 10 more slots
+    [ex.block(idx)] = deal(ex.template.block);
+    [ex.raw(idx)] = deal(ex.template.raw);
+    ex.info.trials.max_block = idx(end);
+end
+
 %% Select which stimuli type we will use
 if strcmp(app.DropDown_test_mode.Value, 'Mixed stimuli')
     % Get current test_schedule batch

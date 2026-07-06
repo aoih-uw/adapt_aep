@@ -80,7 +80,7 @@ while redo
 end
 
 % Downsample concatenated signal
-ekg_sig_ds = decimate(ekg_sig,3);
+ekg_sig_ds = decimate(ekg_sig,ds_rate);
 ekg_fs_ds = fs/ds_rate;
 end
 

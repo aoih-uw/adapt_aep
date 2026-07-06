@@ -24,7 +24,7 @@ end
 [ex, N_channels, N_trials, N_samples, output_channels, ...
     input_channels, hydrophone_idx, loopback_idx, electrode_idx, ...
     electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V] ...
-        = init_present_sound_variables(ex, stimulus_block);
+    = init_present_sound_variables(ex, stimulus_block);
 
 % Rip it
 if ex.test
@@ -40,18 +40,11 @@ end
 
 % Save values to ex
 if size(rec_data_mV,1) > 1
-    % Check if there are enough slots in ex.raw
-    if iblock > ex.info.trials.max_block
-        idx = ex.info.trials.max_block + (1:10); % Add 10 more slots
-        [ex.block(idx)] = deal(ex.template.block);
-        [ex.raw(idx)] = deal(ex.template.raw);
-        ex.info.trials.max_block = idx(end);
-    end
     ex.raw(iblock).hydrophone_mV = squeeze(rec_data_mV(:,:,hydrophone_idx));
     ex.raw(iblock).loopback  = squeeze(rec_data_mV(:,:,loopback_idx));
     ex.raw(iblock).electrodes_microV  = rec_data_mV(:,:,electrode_idx).*1e3; % N_trials, N_samples, N_channels
     ex.raw(iblock).time_stamp = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
-    else
+else
     keyboard
     error('Only 1 or less trials included in present_sound() output')
 end
@@ -65,13 +58,14 @@ end
 cellfun(@(v,t) check_for_nans(v,t), ...
     {ex.raw(iblock).hydrophone_mV, ex.raw(iblock).loopback}, ...
     {'signal','signal'}, ...
-     'UniformOutput',false); % UniformOutput false = don't collect outputs
+    'UniformOutput',false); % UniformOutput false = don't collect outputs
 for ich = 1:size(ex.raw(iblock).electrodes_microV, 3)
     check_for_nans(ex.raw(iblock).electrodes_microV(:,:,ich), 'signal')
 end
 
 %% Calculate hydrophone RMS dB SPL
-if mod(iblock,10) == 0 || iblock == 1 % Only do this every 10 blocks since this is computationally heavy
+% Only do this every 10 blocks since this is computationally heavy
+if mod(iblock,10) == 0 || iblock == 1
     tic()
     fprintf('Calculating hydrophone SNR and tank noise floor...\n')
     ex = calculate_hydrophone_sig_quality(ex);

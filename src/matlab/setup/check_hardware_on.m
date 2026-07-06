@@ -120,7 +120,9 @@ end
         if all(checks)
             set(okBtn, 'Enable', 'on');
             if ~allCheckedBefore
-                [yc, Fsc] = audioread('C:\Users\AEP\Desktop\adapt_aep\src\matlab\sound_effects\step.mp3');
+                this_dir   = fileparts(mfilename('fullpath'));
+                sound_file = fullfile(this_dir, '..', 'sound_effects', 'step.mp3');
+                [yc, Fsc]  = audioread(sound_file);
                 sound(yc, Fsc);
                 allCheckedBefore = true;
             end

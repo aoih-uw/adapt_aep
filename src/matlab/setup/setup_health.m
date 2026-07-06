@@ -19,7 +19,7 @@ if ex.counter.ihealth > 0
         ex.health(1).ekg_rate =  ex.health(ex.counter.ihealth).ekg_rate;
         ex.health(1).ekg_fs_ds =  ex.health(ex.counter.ihealth).ekg_fs_ds;
         ex.health(1).peak_threshold =  ex.health(ex.counter.ihealth).peak_threshold;
-        for ihealth = 2:max_block
+        for ihealth = 2:max_block_health
             ex.health(ihealth).time_stamp = NaN;
             ex.health(ihealth).electrodes_microV= NaN;
             ex.health(ihealth).ekg_rate = NaN;
@@ -28,7 +28,7 @@ if ex.counter.ihealth > 0
         end
     end
 else % We are setting up the health field for the first time, so we need to build it from scratch
-    for ihealth = 1:max_block
+    for ihealth = 1:max_block_health
         ex.health(ihealth).time_stamp = NaN;
         ex.health(ihealth).electrodes_microV= NaN;
         ex.health(ihealth).ekg_rate = NaN;

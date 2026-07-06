@@ -72,7 +72,7 @@ fft_ON = zeros(N_trials,N_samples);
 
 % Calculate dB SNR of stimulus (compare across other frequencies in same trial)
 for itrial = 1:N_trials
-[~, freq_vec(itrial,:), fft_ON(itrial,:)] = calc_fft(mean_ON,fs);
+[~, freq_vec(itrial,:), fft_ON(itrial,:)] = calc_fft(stim_ON_same_phase(itrial,:),fs);
 end
 selected_idx = freq_vec > 1 & freq_vec < 5000;
 freq_vec = freq_vec(1,selected_idx);
@@ -80,7 +80,7 @@ fft_ON = fft_ON(:,selected_idx);
 
 my_snr = zeros(N_trials,1);
 for itrial = 1:N_trials
-my_snr(itrial) = calculate_fft_snr(fft_ON, freq_vec, stimulus_freq, target_freq_range, 0);
+my_snr(itrial) = calculate_fft_snr(fft_ON(itrial,:), freq_vec, stimulus_freq, target_freq_range, 0);
 end
 ex.block(iblock).hydrophone.stim_ON_snr_median  = median(my_snr);
 ex.block(iblock).hydrophone.stim_ON_snr_mad = median(abs(ex.block(iblock).hydrophone.stim_ON_snr_median - my_snr))*mad_to_std;
