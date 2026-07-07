@@ -4,10 +4,10 @@ function ex = reject_artefacts_mixed(ex,app)
 iblock = ex.counter.iblock;
 channel_names = ex.info.channels.names;
 valid_channels = find(~strcmp(channel_names, 'EKG'));
-trials_per_block = ex.info.trials.trials_per_block; %# In test make sure trials_per_block*iblock calculations meet expectation on total length of trials below
+trials_per_block = ex.info.trials.trials_per_block;
 
 % Get all iblocks that are relevant for the current stimulus type we are working with
-if ex.counter.N_not_enough_trials > iblock
+if ex.counter.N_not_enough_trials >= iblock
     keyboard
     error('N_not_enough_trials is larger than iblock, which should not happen')
 else

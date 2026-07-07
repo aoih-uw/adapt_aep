@@ -19,10 +19,15 @@ for ichan = 1:length(valid_channels)
     % Reject by comparing time sample amplitude within trials
     median_vals = median(cur_chan_data_raw, 2,'omitnan');
     mad_vals = median(abs(cur_chan_data_raw - repmat(median_vals, 1, size(cur_chan_data_raw, 2))), 2, 'omitnan')*mad_to_std;
-    my_z_within(:, :, ichan) = (cur_chan_data_raw - repmat(median_vals, 1, size(cur_chan_data_raw, 2))) ...
-        ./ (repmat(mad_vals, 1, size(cur_chan_data_raw, 2)) );    
-    bad = any(abs(my_z_within(:, :, ichan)) > reject_threshold_sd*5, 2);
-    rejected_trials = [rejected_trials find(bad)'];
+    if mad_vals == 0
+        keyboard
+    else
+        my_z_within(:, :, ichan) = (cur_chan_data_raw - repmat(median_vals, 1, size(cur_chan_data_raw, 2))) ...
+            ./ (repmat(mad_vals, 1, size(cur_chan_data_raw, 2)) );
+        bad = any(abs(my_z_within(:, :, ichan)) > reject_threshold_sd*5, 2);
+        rejected_trials = [rejected_trials find(bad)'];
+    end
+    
 
     % Reject by comparing RMS across trials
     cur_chan_data = sqrt(mean(cur_chan_data_raw.^2, 2, 'omitnan'));

@@ -145,16 +145,16 @@ try
         p = lsqcurvefit(softplus, p0, amplitude_sorted, response_sorted, lb, ub, optimset('Display','off'));
 
         a1_fit = p(1);
-        x0_fit = p(2);
-        k_fit  = p(3);
+        k_fit = p(2);
+        x0_fit  = p(3);
 
         ex.model.x0_fit    = [ex.model.x0_fit    x0_fit];
         ex.model.a1_fit    = [ex.model.a1_fit    a1_fit];
         ex.model.k_fit     = [ex.model.k_fit     k_fit];
-        ex.model.Rsquared  = [ex.model.Rsquared  R_squared];
 
         slope_frac = 0.05; % fraction of max slope defining "end of lower asymptote"
-        x_lower_end(i_it,i_tri,ichan,isubj) = p(3) + (1/p(2))*log(slope_frac/(1-slope_frac));
+        x_lower_end = p(3) + (1/p(2))*log(slope_frac/(1-slope_frac));
+        ex.model.threshold = [ex.model.threshold x_lower_end];
 
         %% Plots
         cla(app.UIAxes_model_3)
@@ -163,7 +163,7 @@ try
         plot(app.UIAxes_model_3, x_plot, softplus(p, x_plot), 'Color', tableau_10('blue'), 'LineWidth', 2);
         plot_model_data_points(app.UIAxes_model_3, amplitude_sorted, per_amp_noise_sorted, ...
             per_amp_noise_mad_sorted, trial_count_sorted, response_sorted, response_std_sorted, resp_found_sorted)
-        xline(app.UIAxes_model_3,  x_lower_end(i_it,i_tri,ichan,isubj), '--');
+        xline(app.UIAxes_model_3,  x_lower_end, '--');
         yline(app.UIAxes_model_3, noise_floor_median, '--');
         yline(app.UIAxes_model_3, 0, '--');
         ylabel(app.UIAxes_model_3, '2f Amplitude (\muV)');
