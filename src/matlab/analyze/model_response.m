@@ -1,4 +1,5 @@
 function ex = model_response(ex,app)
+%% Model the growth function using models
 iamp = ex.counter.iamp;
 max_trial_lim = ex.info.trials.max_trials;
 mad_to_std = ex.info.signal_quality.mad_to_std;
@@ -8,6 +9,8 @@ stim_ON_2f_std  = cellfun(@std,ex.model.stim_ON_2f_vec(1:iamp));
 per_amp_noise  = cellfun(@median,ex.model.stim_OFF_2f_vec(1:iamp)); % (trials x tested_amps)
 per_amp_noise_mad = cellfun(@(x) mad(x,1)*mad_to_std, ex.model.stim_OFF_2f_vec(1:iamp));
 min_amplitude_limit = ex.info.stimulus.min_amplitude_limit;
+
+softplus = @(p,x) (p(1)/p(2))*(log1p(exp(p(2).*(x-p(3))))) + 0; % Fix lower asymptote to 0
 
 if ex.test == 1
     amplitude_vec = ex.snr_vec;
@@ -121,34 +124,37 @@ try
         ylabel(app.UIAxes_model, 'Amplitude')
         title(app.UIAxes_model, 'Gaussian Process')
 
-        %% Softplus
-        softplus = @(p,x) p(1)*log1p(exp(p(3)*(x - p(2))))/p(3) + noise_floor_median;
-        p0 = [(max(response_sorted)-min(response_sorted))/range(amplitude_sorted), ...
-            median(amplitude_sorted), 1];
-        p = lsqcurvefit(softplus, p0, amplitude_sorted, response_sorted, [], [], optimset('Display','off'));
+        %% Fit Softplus 
+        signal_range = max(response_sorted) - noise_floor_median ;
+        amp_range = max(amplitude_sorted) - min(amplitude_sorted);
+
+        rise_idx = find(response_sorted > noise_floor_median  + 0.2*signal_range, 1, 'first'); % Find where the function lifts of 20% from total
+        if isempty(rise_idx)
+            rise_idx = round(length(amplitude_sorted)/2);
+        end
+        x0_init = amplitude_sorted(rise_idx);
+        upper_span = max(max(amplitude_sorted) - x0_init, 0.1*amp_range);
+
+        a_init = (max(response_sorted) - response_sorted(rise_idx)) / upper_span; % Slope of the upper arrm
+        k_init = 4 / upper_span;
+        p0 = [a_init,k_init,x0_init];
+
+        lb = [0, 0.5/upper_span, min(amplitude_sorted)];   % keep k off 0
+        ub = [Inf, 10/upper_span, max(amplitude_sorted)-5];  % cap knee sharpness
+
+        p = lsqcurvefit(softplus, p0, amplitude_sorted, response_sorted, lb, ub, optimset('Display','off'));
 
         a1_fit = p(1);
         x0_fit = p(2);
         k_fit  = p(3);
-        y_int  = noise_floor_median;
-
-        target = a1_fit*0.05;
-        x_10 = x0_fit + log(target/(a1_fit - target)) / k_fit;
-       
-
-        y_predicted = softplus(p, amplitude_sorted);
-        SS_res = sum((response_sorted - y_predicted).^2);
-        SS_tot = sum((response_sorted - mean(response_sorted)).^2);
-        R_squared = 1 - SS_res / SS_tot;
-        good_fit = R_squared > 0.5;
-        fprintf('\n Model Fit R² = %.4f\n', R_squared);
 
         ex.model.x0_fit    = [ex.model.x0_fit    x0_fit];
         ex.model.a1_fit    = [ex.model.a1_fit    a1_fit];
         ex.model.k_fit     = [ex.model.k_fit     k_fit];
-        ex.model.y_int     = [ex.model.y_int     y_int];
-        ex.model.x_10      = [ex.model.x_10      x_10];
         ex.model.Rsquared  = [ex.model.Rsquared  R_squared];
+
+        slope_frac = 0.05; % fraction of max slope defining "end of lower asymptote"
+        x_lower_end(i_it,i_tri,ichan,isubj) = p(3) + (1/p(2))*log(slope_frac/(1-slope_frac));
 
         %% Plots
         cla(app.UIAxes_model_3)
@@ -157,14 +163,15 @@ try
         plot(app.UIAxes_model_3, x_plot, softplus(p, x_plot), 'Color', tableau_10('blue'), 'LineWidth', 2);
         plot_model_data_points(app.UIAxes_model_3, amplitude_sorted, per_amp_noise_sorted, ...
             per_amp_noise_mad_sorted, trial_count_sorted, response_sorted, response_std_sorted, resp_found_sorted)
-        xline(app.UIAxes_model_3, x_10, '--');
+        xline(app.UIAxes_model_3,  x_lower_end(i_it,i_tri,ichan,isubj), '--');
         yline(app.UIAxes_model_3, noise_floor_median, '--');
+        yline(app.UIAxes_model_3, 0, '--');
         ylabel(app.UIAxes_model_3, '2f Amplitude (\muV)');
         title(app.UIAxes_model_3, 'Softplus')
         hold(app.UIAxes_model_3, 'off');
 
         cla(app.UIAxes_thresh_est)
-        plot(app.UIAxes_thresh_est, ex.model.x_10, 'o-', 'Color', tableau_10('teal'), 'LineWidth', 1, 'MarkerFaceColor', tableau_10('teal'));
+        plot(app.UIAxes_thresh_est, x_lower_end(i_it,i_tri,ichan,isubj), 'o-', 'Color', tableau_10('teal'), 'LineWidth', 1, 'MarkerFaceColor', tableau_10('teal'));
         xlabel(app.UIAxes_thresh_est, 'Iteration');
         ylabel(app.UIAxes_thresh_est, 'x0');
         title(app.UIAxes_thresh_est, 'Threshold Estimate');
@@ -175,8 +182,6 @@ try
         ylabel(app.UIAxes_slope_est, 'a1');
         title(app.UIAxes_slope_est, 'Slope Estimate');
         drawnow limitrate
-
-
     end
 
 catch ME

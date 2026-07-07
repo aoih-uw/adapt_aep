@@ -5,12 +5,19 @@ if ~strcmp(ex.info.experiment.exp_type, 'Mixed stimuli')
     max_block = ceil(ex.info.trials.max_trials / ex.info.trials.trials_per_block);
     ex.info.trials.max_block = max_block;
 else
-    max_block = ceil(ex.info.mixed.N_trials_per_file/ ex.info.trials.trials_per_block)*10; % Add some extra slots in case we need more since we are stuck collecting more and more trials due to rejection
+    max_block = ceil(ex.info.mixed.N_trials_per_file/ ex.info.trials.trials_per_block);
     ex.info.trials.max_block = max_block;
     for iblock = 1:max_block
         ex.block(iblock).stim_type = NaN;
         ex.block(iblock).stim_amp = NaN;
         ex.block(iblock).collection_attempts = 0;
+    end
+end
+
+if isfield(ex,'block')
+    if size(ex.block,2) > max_block
+        ex.block = ex.block(:,1:max_block);
+        ex.raw = ex.block(:,1:max_block);
     end
 end
 
@@ -23,6 +30,8 @@ for iblock = 1:max_block
     ex.block(iblock).stimulus_block = NaN; % Created in make_scaled_jittered_stim_block, presented via playrec
     ex.block(iblock).across_trial_thresh = NaN;
     ex.block(iblock).kept_trials_idx = NaN;
+
+    % Hydrophone signal quality
     ex.block(iblock).hydrophone.stimulus_rms = NaN;
     ex.block(iblock).hydrophone.tank_nf_rms = NaN;
     ex.block(iblock).hydrophone.stimulus_rms_mad = NaN;

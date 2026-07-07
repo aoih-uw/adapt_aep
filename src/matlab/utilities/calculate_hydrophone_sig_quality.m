@@ -48,6 +48,9 @@ for itrial = 1:size(stim_OFF,1)
 end
 
 %% Calculate dB RMS of time domain OFF/ON periods re 1 microVolt (Just RMS amplitude by period)
+% Preallocate
+stim_ON_dB = zeros(itrial,1);
+stim_OFF_dB = zeros(itrial,1);
 for itrial = 1:size(stim_ON,1)
 [~ , stim_ON_dB(itrial)] = convert_mV_to_dB_spl(stim_ON_filt(itrial,:),hydrophone_gain_mV_per_Pa);
 

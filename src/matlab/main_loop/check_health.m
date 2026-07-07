@@ -24,18 +24,17 @@ else
     input_peak_threshold = [];
 end
 
-
 % Measure EKG
-[ex, ekg_sig, ekg_rate, ekg_fs_ds, peak_threshold] = measure_EKG(ex,init_check,input_peak_threshold,app);
+[ex, ekg_sig_microV, ekg_rate, ekg_fs_ds, peak_threshold] = measure_EKG(ex,init_check,input_peak_threshold,app);
 
 % Save values to ex
 % Check if we are attempting to fill past preallocated spots
-if ihealth > ex.info.trialsmax_block_health
-    idx = ex.info.trialsmax_block_health + (1:10); % Add 10 more slots
+if ihealth > ex.info.trials.max_block_health
+    idx = ex.info.trials.max_block_health + (1:10); % Add 10 more slots
     [ex.health(idx)] = deal(ex.template.health);
-    ex.info.trialsmax_block_health = idx(end);
+    ex.info.trials.max_block_health = idx(end);
 end
-ex.health(ihealth).electrodes_microV = ekg_sig; % N_trials, N_samples, N_channels
+ex.health(ihealth).electrodes_microV = ekg_sig_microV; % N_trials, N_samples, N_channels
 ex.health(ihealth).time_stamp = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
 ex.health(ihealth).ekg_rate = ekg_rate;
 ex.health(ihealth).ekg_fs_ds = ekg_fs_ds;

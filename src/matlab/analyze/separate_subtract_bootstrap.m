@@ -50,7 +50,6 @@ end
 starting_rms = ex.noise.starting_rms;
 current_rms = rms(mean(stim_OFF));
 rms_ratio = current_rms/starting_rms;
-app.Label_RMS_ratio.Text = sprintf('%.2f', rms_ratio);
 fprintf('\nRMS ratio: %1.2f\nTrials in average: %1.0f\n',rms_ratio,N_valid_trials)
 
 %% Calculate FFTs

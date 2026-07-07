@@ -2,9 +2,18 @@ function plot_live_fft(ex, iblock, fs, app)
 %% Plot the current block's 2f response magnitude persistently throughout experiment
 % Assign Variables
 persistent my_2f my_2f_std
-if iblock == 1
-    my_2f = []; my_2f_std = [];
+% Reset persistent variables
+if strcmp(app.DropDown_test_mode.Value, 'Mixed stimuli')
+    if  ex.counter.ischedule == 1
+        my_2f = []; my_2f_std = [];
+    end
+else
+    if iblock == 1
+        my_2f = []; my_2f_std = [];
+    end
 end
+
+% Assign variables
 n_points = size(my_2f,2);
 channels    = [2, 3, 4];
 channel_name = {'2 mm', '4 mm', 'Skin'};

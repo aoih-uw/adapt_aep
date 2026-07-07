@@ -1,4 +1,4 @@
-function [ex, ekg_sig_ds,ekg_rate, ekg_fs_ds, peak_threshold] = measure_EKG(ex,init_check,input_peak_threshold, app)
+function [ex, ekg_sig_microV_ds,ekg_rate, ekg_fs_ds, peak_threshold] = measure_EKG(ex,init_check,input_peak_threshold, app)
 fs = ex.info.recording.sampling_rate_hz;
 %% This function uses playrec to passively measure the EKG of the subject, 
 % uses findpeaks() to identify BPM rate based on a peak threshold value that the user assigns at the beginning of the experiment. 
@@ -21,14 +21,14 @@ redo = true;
 
 while redo
     fprintf('Please wait %d seconds ...',sample_dur_s)
-    [~, ekg_sig,ex] = run_ekg(stimulus_block, input_channels, output_channels, ...
+    [~, ekg_sig_microV,ex] = run_ekg(stimulus_block, input_channels, output_channels, ...
         electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, ...
         hydrophone_voltage_scaling_factor_V,ex,app);
 
     d = designfilt('bandpassfir', 'FilterOrder', 4, ...
     'CutoffFrequency1', 1, 'CutoffFrequency2', 100, ...
     'SampleRate', fs);
-    ekg_sig = bandpassfilter(ekg_sig, d);
+    ekg_sig_microV = bandpassfilter(ekg_sig_microV, d);
     
     % Manually select peak_threshold value if it doesn't exist
     if isempty(input_peak_threshold)
@@ -36,7 +36,7 @@ while redo
         % Show raw signal first so user can pick threshold
         myfig = figure;
         t = (0:N_samples-1) / fs;
-        plot(t, squeeze(ekg_sig(1,:,1)), 'r-', 'LineWidth', 1);
+        plot(t, squeeze(ekg_sig_microV(1,:,1)), 'r-', 'LineWidth', 1);
         xlabel('Time (s)'); ylabel('EKG (\muV)');
         title('Click on the signal to set peak threshold, then press Enter');
         grid on; xlim([0 t(end)]); drawnow;
@@ -47,7 +47,7 @@ while redo
     end
 
     % Find peaks
-    [pks, locs] = findpeaks(ekg_sig, 'MinPeakHeight', peak_threshold, ...
+    [pks, locs] = findpeaks(ekg_sig_microV, 'MinPeakHeight', peak_threshold, ...
         'MinPeakDistance', minDist);
     num_spikes = numel(pks);
     ekg_rate = (num_spikes/sample_dur_s)*60;
@@ -55,7 +55,7 @@ while redo
     % Plot signal
     myfig = figure;
     t = (0:N_samples-1) / fs;
-    plot(t, ekg_sig, 'k-', 'LineWidth', 1);
+    plot(t, ekg_sig_microV, 'k-', 'LineWidth', 1);
     hold on;
     plot(t(locs), pks, 'rv', 'MarkerFaceColor', 'r');
     xlabel('Time (s)'); ylabel('EKG (\muV)');
@@ -80,13 +80,18 @@ while redo
 end
 
 % Downsample concatenated signal
-ekg_sig_ds = decimate(ekg_sig,ds_rate);
+ekg_sig_microV_ds = decimate(ekg_sig_microV,ds_rate);
 ekg_fs_ds = fs/ds_rate;
 end
 
-function [rec_data_mV, ekg_sig, ex] = run_ekg(stimulus_block, input_channels, output_channels, ...
+%% run_ekg helper function
+function [rec_data_mV, ekg_sig_microV, ex] = run_ekg(stimulus_block, input_channels, output_channels, ...
     electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V,ex,app)
+
+% Present sound
 [rec_data_mV, ex]  = present_sound(stimulus_block, input_channels, output_channels, ...
     electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V, ex, app);
-ekg_sig = rec_data_mV(:,:,electrode_idx(1)).*1e3;
+
+% Save measurement
+ekg_sig_microV = rec_data_mV(:,:,electrode_idx(1)).*1e3; % Just get the EKG channel data and convert to microV
 end 

@@ -62,7 +62,7 @@ if numel(mag_2f) < ischedule
         [~, f, vv] = calc_fft(sig(it,:), fs);
         v(it) = find_fft_bins(target_freq,target_freq_range, vv, f);
     end
-    mag_2f(ischedule) = mean(v);
+    mag_2f(ischedule) = mean(v,1,'omitnan');
 end
 
 hold(app.UIAxes_funfetti,'on')

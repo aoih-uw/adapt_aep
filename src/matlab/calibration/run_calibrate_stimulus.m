@@ -66,7 +66,7 @@ plot(app.ax_hydrophone, time_vector, mean_hydrophone_sig)
 % Frequency domain
 [~, freq_vec, fft_vals] = calc_fft(mean_hydrophone_sig,fs);
 plot(app.ax_hydrophone_spectra, freq_vec,fft_vals)
-xlim(app.ax_hydrophone_spectra, [0, 1000])
+xlim(app.ax_hydrophone_spectra, [0, stimulus_freq*3])
 
 % Measure signal quality
 selected_idx = freq_vec > 1 & freq_vec < 5000;

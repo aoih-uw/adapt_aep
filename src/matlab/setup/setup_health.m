@@ -6,12 +6,17 @@ function ex = setup_health(ex)
 % Set maximum block numbers to be preallocated
 if ~strcmp(ex.info.experiment.exp_type, 'Mixed stimuli')
     max_block_health = ceil(ex.info.trials.max_trials / ex.info.trials.trials_per_block);
-    ex.info.trialsmax_block_health = max_block_health;
+    ex.info.trials.max_block_health = max_block_health;
 else
     max_block_health = ceil(ex.info.mixed.N_trials_per_file/ ex.info.trials.trials_per_block);
-    ex.info.trialsmax_block_health = max_block_health;
+    ex.info.trials.max_block_health = max_block_health;
 end
 
+if isfield(ex,'health')
+    if size(ex.health,2) > max_block_health
+        ex.health = ex.health(:,1:max_block_health);
+    end
+end
 if ex.counter.ihealth > 0
     if isfield(ex.health(ex.counter.ihealth), 'time_stamp')
         ex.health(1).time_stamp = ex.health(ex.counter.ihealth).time_stamp;

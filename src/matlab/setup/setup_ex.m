@@ -1,19 +1,10 @@
 function ex = setup_ex(app)
-%% put this in the GUI code first actually
-ex = struct( ...
-    'info', struct(), ...     % static experiment configuration
-    'block', struct(), ...      % per-trial metadata (transient)
-    'raw', struct(), ...   % raw signals
-    'model', struct(), ...
-    'decision', struct(), ...
-    'counter', struct(), ...
-    'health', struct() ...
-    );
-
-%% Iteration Counters
+%% Create ex structure
+% Iteration Counters
 ex.counter.iamp = 0;
 ex.counter.iblock = 0;
 ex.counter.ihealth = 0;
+
 % Experiment mode specific counters
 if strcmp(app.DropDown_test_mode.Value,'Adaptive')
     ex.counter.iboot = 0;
@@ -21,7 +12,6 @@ elseif strcmp(app.DropDown_test_mode.Value,'Mixed stimuli')
     ex.counter.ischedule = 0;
     ex.counter.N_not_enough_trials = 0;
 end
-
 if strcmp(app.DropDown_test_mode.Value,'Mixed stimuli') || strcmp(app.DropDown_test_mode.Value,'Timed')
         ex.counter.grand_iblock = 0;
 end

@@ -5,7 +5,8 @@ every_block = 20; % Save every 20 blocks for timed mode
 if isempty(ex.last_autosave_time)
     ex.last_autosave_time = ex.info.experiment.exp_time_start;
 end
-ex.counter.iblock
+iblock = ex.counter.iblock;
+
 now_time = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
 if strcmp(ex.info.experiment.exp_type,'Adaptive')
     if ex.decision(ex.counter.iamp).amp_done == 1 % Done testing at this amplitude
