@@ -17,4 +17,3 @@ ex.model.x0_fit         = [];
 ex.model.a1_fit         = [];
 ex.model.k_fit          = [];
 ex.model.threshold      = [];
-ex.model.gp_threshold   = [];

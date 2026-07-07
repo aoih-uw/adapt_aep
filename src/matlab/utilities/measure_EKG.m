@@ -9,7 +9,7 @@ fs = ex.info.recording.sampling_rate_hz;
 % Findpeaks vars
 minDist = fs*.25;
 sample_dur_s = 12;
-stimulus_block = zeros(1,fs*sample_dur_s); % Take 1 6 second reading of the EKG
+stimulus_block = zeros(1,fs*sample_dur_s); % Take a 12 second reading of the EKG
 ds_rate = 10;
 
 % Get present_sound_variables

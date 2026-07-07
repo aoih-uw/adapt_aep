@@ -42,11 +42,10 @@ for ic = 1:n_ch
     fft_val = mean(trial_ffts, 1);
     fft_std = std(trial_ffts, [], 1);
 
-    [mean_target_bin_mag_vec, ~] = ...
+    [mean_target_bin_mag_vec, bin_loc] = ...
         find_fft_bins(target_freq, target_freq_range, fft_val, freq_vec);
 
-    [std_target_bin_mag_vec, ~] = ...
-        find_fft_bins(target_freq, target_freq_range, fft_std, freq_vec);
+    std_target_bin_mag_vec = fft_std(bin_loc);
 
     % Get 2f bin on the full vector, before trimming
     my_2f(ic,n_points+1)     = mean_target_bin_mag_vec;

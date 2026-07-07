@@ -47,7 +47,7 @@ per_amp_noise_mad_sorted = per_amp_noise_mad(sort_idx);
 resp_found_sorted = resp_found(sort_idx);
 trial_count_sorted = trial_count(sort_idx);
 
-% Add the noise floor value at 90 dB
+% Add the noise floor value at min_amplitude limit
 amplitude_sorted = [min_amplitude_limit amplitude_sorted];
 response_sorted = [noise_floor_median response_sorted];
 response_std_sorted = [noise_floor_mad response_std_sorted];
@@ -113,13 +113,7 @@ try
         plot_model_data_points(app.UIAxes_model, amplitude_sorted, per_amp_noise_sorted, ...
             per_amp_noise_mad_sorted, trial_count_sorted, response_sorted, response_std_sorted, resp_found_sorted)
         
-        cross_idx = find(diff(sign(mu - noise_floor_median)) ~= 0, 1, 'last');
         yline(app.UIAxes_model, noise_floor_median, '--');
-        thresh_val = xs(cross_idx);
-        if ~isempty(thresh_val)
-            ex.model.gp_threshold = [ex.model.gp_threshold  xs(cross_idx)];
-            xline(app.UIAxes_model,thresh_val, '--')
-        end
         xlabel(app.UIAxes_model, 'Stimulus Level')
         ylabel(app.UIAxes_model, 'Amplitude')
         title(app.UIAxes_model, 'Gaussian Process')
