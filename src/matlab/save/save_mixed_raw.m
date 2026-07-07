@@ -26,7 +26,7 @@ if isfield(ex_save.block_level_info, 'stimulus_block')
     ex_save.block_level_info = rmfield(ex_save.block_level_info, 'stimulus_block');
 end
 
-ex_save.raw_signals = ex.raw;
+ex_save.raw_signals = ex.raw(1:iblock);
 % % Downsample raw signals
 % for iiblock = 1:iblock
 %     cur = ex.raw(iiblock);

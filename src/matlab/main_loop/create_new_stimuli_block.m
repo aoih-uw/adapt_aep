@@ -17,7 +17,7 @@ end
 %% Select which stimuli type we will use
 if strcmp(app.DropDown_test_mode.Value, 'Mixed stimuli')
     % Get current test_schedule batch
-    cur_parameters = ex.info.mixed.test_schedule(ex.counter.ischedule,:); % [stim_name, stim_amp, trials_needed]
+    cur_parameters = ex.info.mixed.test_schedule(ex.counter.ischedule,:); % [stim_name, stim_amp, trials_needed, uniq_idx]
     cur_stim_name = ex.info.mixed.stim_name{cur_parameters(1)};
     current_amplitude = cur_parameters(2);
     if strcmp(cur_stim_name, 'trim')

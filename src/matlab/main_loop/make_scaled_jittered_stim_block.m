@@ -23,7 +23,7 @@ end
 if is_ONOFF
     stim_OFF = zeros(1, length(waveform)); % Same length as stim ON
 else
-    stim_OFF = zeros(1,round(fs*trim_stim_pre_dur_ms/1e3)); % 5 ms pause before
+    stim_OFF = zeros(1,round(fs*trim_stim_pre_dur_ms/1e3));
 end
 stim_ON = waveform;
 

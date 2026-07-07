@@ -5,6 +5,9 @@ function ex = count_mixed_trials(ex,app)
 persistent mag_2f
 test_schedule = ex.info.mixed.test_schedule;
 ischedule = ex.counter.ischedule;
+if ischedule == 1
+    mag_2f = [];
+end
 uniq_stimuli = ex.info.mixed.uniq_stimuli;
 N_unique_stimuli = ex.info.mixed.N_unique_stimuli;
 trials_per_block = ex.info.trials.trials_per_block;
@@ -16,7 +19,6 @@ valid_channels = find(~strcmp(channel_names, 'EKG'));
 analysis_channel = ex.info.channels.analysis_channel;
 analysis_channel_idx = find(strcmp(channel_names(valid_channels),analysis_channel));
 iblock = ex.counter.iblock;
-if ex.counter.grand_iblock == 1, mag_2f = []; end
 
 % Clear axes
 delete(findobj(app.UIAxes_funfetti, 'Type', 'text'));

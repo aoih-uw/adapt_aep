@@ -6,6 +6,12 @@ function ex = select_experiment_stim_params(ex)
 % next nearest full cycle for the current stimulus frequency
 % Only round at the very end 
 
+%% Stimulus parameters 7/6
+% Full amplitude duration = 6 cycles or next nearest full cycle based on minimum samples 
+% needed for 5 Hz frequency resolution, whichever is larger
+% fft
+
+% Ramp duration = 6 cycles or 50 ms rounded to the next full cycle, whichever has more samples
 % Determine full amplitude duration
 fs = ex.info.recording.sampling_rate_hz;
 stim_freq = ex.info.stimulus.frequency_hz;

@@ -23,7 +23,7 @@ if isempty(h) || ~isfield(h,'line') || ~isvalid(h.line)
 else
     set(h.line, 'XData', time_s_ds, 'YData', y);
 end
-if isempty(ex.block(iblock).hydrophone)
+if isempty(ex.block(iblock).hydrophone) || isnan(isempty(ex.block(iblock).hydrophone))
     title(ax, sprintf('Hydrophone'));
 else
     title(ax, sprintf('Hydrophone; Stimulus amplitude: %.0f dB SPL', ex.block(iblock).hydrophone.stimulus_rms));
