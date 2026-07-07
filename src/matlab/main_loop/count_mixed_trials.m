@@ -60,7 +60,7 @@ if numel(mag_2f) < ischedule
     v = zeros(size(sig,1),1);
     for it = 1:size(sig,1)
         [~, f, vv] = calc_fft(sig(it,:), fs);
-        v(it) = find_fft_bins(target_freq,target_freq_range, vv, f);
+        [v(it), ~] = find_fft_bins(target_freq,target_freq_range, vv, f);
     end
     mag_2f(ischedule) = mean(v,1,'omitnan');
 end

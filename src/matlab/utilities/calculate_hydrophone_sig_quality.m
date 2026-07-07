@@ -33,6 +33,8 @@ if (isfield(ex.info,'mixed') && strcmp(ex.info.mixed.stim_name{stimulus_type_idx
     end
 elseif strcmp(ex.info.experiment.exp_type, 'Adaptive') || (isfield(ex.info,'mixed') && strcmp(ex.info.mixed.stim_name{stimulus_type_idx}, 'ONOFF'))
     [stim_ON , stim_OFF] = extract_stim_ON_OFF(latency_samples, period_length_samples, jitter_vec, ramp_duration_samples, hydrophone_mV);
+else
+    error('Unrecognized test mode')
 end
 
 % Filter the stim OFF signal to only include the current stimulus frequency

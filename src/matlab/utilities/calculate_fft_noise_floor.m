@@ -5,7 +5,7 @@ if exclude_harmonics
     loc_2f = mod(freq_vec, target_freq) <= target_freq_range | ...
              mod(freq_vec, target_freq) >= (target_freq - target_freq_range);
 else
-    [~, loc_2f_bin] = min(abs(freq_vec - target_freq));
+    [~, loc_2f_bin] = find_fft_bins(target_freq, target_freq_range, input_signal, freq_vec);
     loc_2f = false(size(freq_vec));
     loc_2f(loc_2f_bin) = true;
 end

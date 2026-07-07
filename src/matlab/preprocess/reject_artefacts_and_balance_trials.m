@@ -1,4 +1,5 @@
-function [kept_trials_idx, n_valid_trials, rel_rej_thresh_across ]  = reject_artefacts_and_balance_trials(ex, app, all_trials, all_phases,valid_channels)
+function [kept_trials_idx, n_valid_trials, rel_rej_thresh_across ]  = ...
+    reject_artefacts_and_balance_trials(ex, app, all_trials, all_phases,valid_channels)
 %% Here you actually reject trials and balance the kept trials to include even numbers of both stimulus phases
 % Assign variables
 reject_threshold_sd = ex.info.signal_quality.rejection_threshold_sd;
@@ -19,16 +20,17 @@ for ichan = 1:length(valid_channels)
     % Reject by comparing time sample amplitude within trials
     median_vals = median(cur_chan_data_raw, 2,'omitnan');
     mad_vals = median(abs(cur_chan_data_raw - repmat(median_vals, 1, size(cur_chan_data_raw, 2))), 2, 'omitnan')*mad_to_std;
-    if mad_vals == 0
-        keyboard
-    else
-        my_z_within(:, :, ichan) = (cur_chan_data_raw - repmat(median_vals, 1, size(cur_chan_data_raw, 2))) ...
-            ./ (repmat(mad_vals, 1, size(cur_chan_data_raw, 2)) );
-        bad = any(abs(my_z_within(:, :, ichan)) > reject_threshold_sd*5, 2);
-        rejected_trials = [rejected_trials find(bad)'];
-    end
     
+    % Guard for zero mad_vals
+    zero_mad_trials = find(mad_vals == 0);
+    mad_vals(mad_vals == 0) = NaN;
 
+    % Calculate z-score
+    my_z_within(:, :, ichan) = (cur_chan_data_raw - repmat(median_vals, 1, size(cur_chan_data_raw, 2))) ...
+        ./ (repmat(mad_vals, 1, size(cur_chan_data_raw, 2)) );
+    bad = any(abs(my_z_within(:, :, ichan)) > reject_threshold_sd*5, 2);
+    rejected_trials = [rejected_trials find(bad)' zero_mad_trials'];
+  
     % Reject by comparing RMS across trials
     cur_chan_data = sqrt(mean(cur_chan_data_raw.^2, 2, 'omitnan'));
     cur_median = median(cur_chan_data,'omitnan');

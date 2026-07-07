@@ -1,4 +1,4 @@
-function target_bin_mag_vec = ...
+function [target_bin_mag_vec, target_bin_loc] = ...
     find_fft_bins(target_freq, target_freq_range, input_signal, freq_vec)
 %% Extracts magnitude values from selected FFT bins
 % Input structure requirements
@@ -13,5 +13,7 @@ lower_end = target_freq - target_freq_range;
 upper_end = target_freq + target_freq_range;
 
 bin_idxs = freq_vec >= lower_end & freq_vec <= upper_end;
-target_bin_mag_vec = max(input_signal(:, bin_idxs), [], 2);
+window_cols = find(bin_idxs); % Idx values of freq_vec that are within the window
+[target_bin_mag_vec, temp_loc] = max(input_signal(:, bin_idxs), [], 2);
+target_bin_loc = window_cols(temp_loc);
 end
