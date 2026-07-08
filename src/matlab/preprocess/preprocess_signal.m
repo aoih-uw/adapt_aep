@@ -8,6 +8,9 @@ ex.no_valid_trials = 0;
 %% Reject artefacts but not in timed mode
 if ~strcmp(ex.info.experiment.exp_type,'Timed')
     ex = reject_artefacts_single(ex,app);
+else
+    app.Label_rejection_rate.Text = sprintf('%d', ex.counter.grand_iblock*...
+        ex.info.trials.trials_per_block);
 end
 
 %% Adaptive code-specific preprocessing

@@ -22,7 +22,7 @@ if strcmp(ex.info.experiment.exp_type,'Adaptive')
         fprintf('\nAutosaved at %s\n', char(now_time));
     end
 elseif strcmp(ex.info.experiment.exp_type, 'Timed')
-    if mod(iblock,every_block) == 0
+    if mod(iblock,every_block) == 0 || ex.decision(ex.counter.iamp).amp_done == 1
         % save in regular intervals and also when the amp is done to make
         % sure you got all trials even between the last autosave and when the experiment ends
         fprintf('\nSaving data ...\n')

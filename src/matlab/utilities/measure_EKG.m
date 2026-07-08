@@ -1,4 +1,4 @@
-function [ex, ekg_sig_microV_ds,ekg_rate, ekg_fs_ds, peak_threshold] = measure_EKG(ex,init_check,input_peak_threshold, app)
+function [ex, ekg_sig_microV_ds,ekg_rate, ekg_fs_ds, peak_threshold] = measure_EKG(ex,init_check, app)
 fs = ex.info.recording.sampling_rate_hz;
 %% This function uses playrec to passively measure the EKG of the subject, 
 % uses findpeaks() to identify BPM rate based on a peak threshold value that the user assigns at the beginning of the experiment. 
@@ -25,29 +25,20 @@ while redo
         electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, ...
         hydrophone_voltage_scaling_factor_V,ex,app);
 
+    % Filter EKG signal
     d = designfilt('bandpassfir', 'FilterOrder', 4, ...
-    'CutoffFrequency1', 1, 'CutoffFrequency2', 100, ...
+    'CutoffFrequency1', 1, 'CutoffFrequency2', 50, ...
     'SampleRate', fs);
     ekg_sig_microV = bandpassfilter(ekg_sig_microV, d);
-    
-    % Manually select peak_threshold value if it doesn't exist
-    if isempty(input_peak_threshold)
-        [y, Fs] = audioread('user_input.mp3'); sound(y, Fs);
-        % Show raw signal first so user can pick threshold
-        myfig = figure;
-        t = (0:N_samples-1) / fs;
-        plot(t, squeeze(ekg_sig_microV(1,:,1)), 'r-', 'LineWidth', 1);
-        xlabel('Time (s)'); ylabel('EKG (\muV)');
-        title('Click on the signal to set peak threshold, then press Enter');
-        grid on; xlim([0 t(end)]); drawnow;
-        [~, peak_threshold] = ginput(1);  % user clicks once; y-value = threshold
-        close(myfig);
-    else
-        peak_threshold = input_peak_threshold;
-    end
 
+    % Take absolute value of signal
+    ekg_sig_microV_abs = abs(ekg_sig_microV);
+    
+    % Assign peak_threshold using 99 percentile
+    peak_threshold = prctile(ekg_sig_microV_abs,99);
+    
     % Find peaks
-    [pks, locs] = findpeaks(ekg_sig_microV, 'MinPeakHeight', peak_threshold, ...
+    [pks, locs] = findpeaks(ekg_sig_microV_abs, 'MinPeakHeight', peak_threshold, ...
         'MinPeakDistance', minDist);
     num_spikes = numel(pks);
     ekg_rate = (num_spikes/sample_dur_s)*60;
@@ -69,6 +60,9 @@ while redo
         [y, Fs] = audioread('user_input.mp3'); sound(y, Fs);
         % Ask experimenter to confirm or redo
         resp = input('Press Enter to confirm, or type "r" to remeasure: ', 's');
+        while ~ismember(lower(strtrim(resp)), {'', 'r'})
+            resp = input('Invalid input, try again. Press Enter to confirm, or type "r" to remeasure: ', 's');
+        end
         close(myfig);
         redo = strcmpi(strtrim(resp), 'r');
     elseif strcmp(ex.info.experiment.exp_type,'Timed') || strcmp(ex.info.experiment.exp_type,'Mixed stimuli')

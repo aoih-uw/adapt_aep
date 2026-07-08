@@ -10,10 +10,12 @@ else
     for iblock = 1:max_block
         ex.block(iblock).stim_type = NaN;
         ex.block(iblock).stim_amp = NaN;
+        ex.block(iblock).unique_id = NaN;
         ex.block(iblock).collection_attempts = 0;
     end
 end
 
+% Remove all appended block/raw fields, only keep up to max_block
 if isfield(ex,'block')
     if size(ex.block,2) > max_block
         ex.block = ex.block(:,1:max_block);
@@ -42,13 +44,17 @@ for iblock = 1:max_block
     %% Raw data
     ex.raw(iblock).hydrophone_mV= NaN;
     ex.raw(iblock).electrodes_microV = NaN; % order follows ex.info.channels.names
-    ex.raw(iblock).time_stamp = NaN;
     ex.raw(iblock).loopback = NaN;
+    ex.raw(iblock).time_stamp = NaN;
 end
 
 % Setup noise
 ex.noise.starting_rms = NaN;
 
-% Create a template of the raw and block fields
-ex.template.block = ex.block(1);
-ex.template.raw = ex.raw(1);
+% Create a template of the raw and block fields if this is the first time
+% we are setting up block structure
+if isnat(ex.info.experiment.exp_time_start)
+    ex.template.block = ex.block(1);
+    ex.template.raw = ex.raw(1);
+end
+

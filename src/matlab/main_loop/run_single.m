@@ -134,7 +134,9 @@ while ~ex.exp_done % While testing current stimulus frequency
                     ex = select_next_dialog(ex);
                 end
             elseif strcmp(app.DropDown_test_mode.Value, 'Timed')
-                return
+                % Do not allow testing at a different amplitude at this time
+                % If I do, then I need to restructure some code particularly counters!
+                return 
             end
         end
 

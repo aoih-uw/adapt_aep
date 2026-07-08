@@ -63,16 +63,19 @@ for ch = 1:N_channels
         ax.UserData = h;
     else
         set(h.fill, 'XData', [time_s_ds, fliplr(time_s_ds)], ...
-                    'YData', [data_mean+data_std, fliplr(data_mean-data_std)]);
+            'YData', [data_mean+data_std, fliplr(data_mean-data_std)]);
         set(h.line, 'XData', time_s_ds, 'YData', data_mean);
+        xlim(ax, [min(time_s_ds), max(time_s_ds)]);
+
     end
 end
 
 pad = max(range(data_mean_all(:)) * 0.2, eps);
 lo = min(data_mean_all(:),[],'omitnan');
 hi = max(data_mean_all(:),[],'omitnan');
-linkaxes([electrode_axes{:}], 'xy');
+linkaxes([electrode_axes{:}], 'y');
 safe_ylim(electrode_axes{1}, lo - pad, hi + pad);
+
 drawnow limitrate
 end
 

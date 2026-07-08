@@ -59,6 +59,7 @@ for ic = 1:n_ch
         c, 'FaceAlpha', 0.3, 'EdgeColor', 'none', 'HandleVisibility', 'off');
     plot(fft_ax, ff, vv, 'Color', c, 'LineWidth', 1.5);
 end
+
 xlabel(fft_ax, 'Frequency (Hz)');
 ylabel(fft_ax, 'Magnitude (\muV)');
 title(fft_ax, 'Live FFT Monitor');

@@ -7,7 +7,6 @@ mad_to_std = ex.info.signal_quality.mad_to_std;
 clipping_threshold = 300; % microV
 
 % Preallocate before the loop
-my_z_within = NaN(size(all_trials));
 rejected_trials = [];
 rel_rej_thresh_across = NaN(1, length(valid_channels));
 for ichan = 1:length(valid_channels)
@@ -17,20 +16,6 @@ for ichan = 1:length(valid_channels)
     % Reject by clipping
     rejected_trials = [rejected_trials find(any(abs(cur_chan_data_raw) >= clipping_threshold,2))'];
 
-    % Reject by comparing time sample amplitude within trials
-    median_vals = median(cur_chan_data_raw, 2,'omitnan');
-    mad_vals = median(abs(cur_chan_data_raw - repmat(median_vals, 1, size(cur_chan_data_raw, 2))), 2, 'omitnan')*mad_to_std;
-    
-    % Guard for zero mad_vals
-    zero_mad_trials = find(mad_vals == 0);
-    mad_vals(mad_vals == 0) = NaN;
-
-    % Calculate z-score
-    my_z_within(:, :, ichan) = (cur_chan_data_raw - repmat(median_vals, 1, size(cur_chan_data_raw, 2))) ...
-        ./ (repmat(mad_vals, 1, size(cur_chan_data_raw, 2)) );
-    bad = any(abs(my_z_within(:, :, ichan)) > reject_threshold_sd*5, 2);
-    rejected_trials = [rejected_trials find(bad)' zero_mad_trials'];
-  
     % Reject by comparing RMS across trials
     cur_chan_data = sqrt(mean(cur_chan_data_raw.^2, 2, 'omitnan'));
     cur_median = median(cur_chan_data,'omitnan');
@@ -68,6 +53,9 @@ reject_rate = n_trials_rejected/n_trials_collected;
 
 %% Report rejection rate
 if reject_rate > 0.5
-    uialert(app.UIFigure, 'More than half of the trials have been rejected.', 'Warning', 'Icon', 'warning');
+    % Alert experimenter will do health check
+    [y, Fs] = audioread('half_trials_reject.mp3');
+    sound(y, Fs)
+    fprintf('More than half of the trials have been rejected.')
 end
 app.Label_rejection_rate.Text = sprintf('%d', n_valid_trials);

@@ -5,27 +5,11 @@ ex.counter.ihealth = ex.counter.ihealth + 1;
 ihealth = ex.counter.ihealth;
 
 % Alert experimenter will do health check
-[y, Fs] = audioread('button_press.mp3');
+[y, Fs] = audioread('checking_health.mp3');
 sound(y, Fs)
 
-% Extract peak_threshold value if present
-if init_check
-    input_peak_threshold = [];
-elseif ihealth > 0
-    if ~isnan(ex.health(ihealth-1).peak_threshold)
-        input_peak_threshold = ex.health(ihealth-1).peak_threshold;
-        if isnan(input_peak_threshold)
-            input_peak_threshold = [];
-        end
-    else
-        input_peak_threshold = [];
-    end
-else
-    input_peak_threshold = [];
-end
-
 % Measure EKG
-[ex, ekg_sig_microV, ekg_rate, ekg_fs_ds, peak_threshold] = measure_EKG(ex,init_check,input_peak_threshold,app);
+[ex, ekg_sig_microV, ekg_rate, ekg_fs_ds, peak_threshold] = measure_EKG(ex,init_check,app);
 
 % Save values to ex
 % Check if we are attempting to fill past preallocated spots

@@ -22,10 +22,14 @@ period_samps = period_s*fs;
 full_amp_cycles = ex.info.stimulus.full_amplitude_cycle_num; % Minimum full amplitude duration ms is 20ms following Mooney et al. 2010
 cur_full_amp_dur_samps = period_s*full_amp_cycles*fs;
 desired_freq_res = 5; %fs/N = 5
-min_req_samples = ceil(fs/desired_freq_res);
-cur_full_samp = max(cur_full_amp_dur_samps, min_req_samples); 
-full_samp = round(ceil(cur_full_samp/period_samps)*period_samps); % Round up to nearest cycle
-ex.info.stimulus.full_amplitude_duration_ms = full_samp/fs*1e3;
+if mod(stim_freq,desired_freq_res) == 0
+    min_req_samples = ceil(fs/desired_freq_res);
+    cur_full_samp = max(cur_full_amp_dur_samps, min_req_samples);
+    full_samp = round(ceil(cur_full_samp/period_samps)*period_samps); % Round up to nearest cycle
+    ex.info.stimulus.full_amplitude_duration_ms = full_samp/fs*1e3;
+else
+    error('Stimulus frequency must be a multiple of %d', desired_freq_res)
+end
 
 % Ramp cycle duration
 ramp_cycles = ex.info.stimulus.ramp_duration_cycles;

@@ -31,6 +31,7 @@ if strcmp(app.DropDown_test_mode.Value, 'Mixed stimuli')
 
     ex.block(iblock).stim_type = cur_stim_name;
     ex.block(iblock).stim_amp = current_amplitude;
+    ex.block(iblock).unique_id = cur_parameters(4);
     app.Label_current_amp.Text = string(current_amplitude);
 elseif strcmp(app.DropDown_test_mode.Value, 'Adaptive')
     is_ONOFF = 1;

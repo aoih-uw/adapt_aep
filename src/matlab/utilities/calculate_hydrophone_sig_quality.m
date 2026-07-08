@@ -42,7 +42,7 @@ stim_OFF_filt = zeros(size(stim_OFF,1), size(stim_OFF,2));
 stim_ON_filt = zeros(size(stim_ON,1), size(stim_ON,2));
 
 d = designfilt('bandpassfir', 'FilterOrder', 4, ...
-    'CutoffFrequency1', stimulus_freq-0.5, 'CutoffFrequency2', stimulus_freq+0.5, ...
+    'CutoffFrequency1', stimulus_freq-3, 'CutoffFrequency2', stimulus_freq+3, ...
     'SampleRate', fs);
 for itrial = 1:size(stim_OFF,1)
     stim_OFF_filt(itrial,:) = bandpassfilter(stim_OFF(itrial,:),d);
@@ -63,6 +63,13 @@ end
 ex.block(iblock).hydrophone.stimulus_rms = median(stim_ON_dB);
 ex.block(iblock).hydrophone.stimulus_rms_mad = median(abs(ex.block(iblock).hydrophone.stimulus_rms - stim_ON_dB))*mad_to_std;
 ex.block(iblock).hydrophone.tank_nf_rms = median(stim_OFF_dB);
+if ex.block(iblock).hydrophone.tank_nf_rms >= 110
+    [y, Fs] = audioread('error.mp3'); sound(y, Fs);
+    fprintf(['Noise floor in tank is high %1.2f dB SPL. Ensure pump is properly in subjects mouth,\n' ...
+        'confirm hydrophone location, look at hydrophone signal on oscilloscope, and see if \n' ...
+        'hydrophone amp is overloading\n'],ex.block(iblock).hydrophone.tank_nf_rms)
+    keyboard
+end
 ex.block(iblock).hydrophone.tank_nf_rms_mad = median(abs(ex.block(iblock).hydrophone.tank_nf_rms-stim_OFF_dB))*mad_to_std;
 
 %% Calculate dB SNR of stim_ON (Stimulus signal relative to noise floor)

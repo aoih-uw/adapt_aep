@@ -3,7 +3,7 @@ function ex = setup_experiment_present_sound(ex,app)
 % OUTPUT = ex.raw.electrodes_microV(N_trials x N_samples x N_channels)
 % ex.trial_count gets updated here
 
-% Load in variables
+%% Assign variables
 iblock = ex.counter.iblock;
 trials_per_block = ex.info.trials.trials_per_block;
 stimulus_block = ex.block(iblock).stimulus_block;
@@ -20,13 +20,13 @@ if ~strcmp(app.DropDown_test_mode.Value, 'Mixed stimuli')
     iamp = ex.counter.iamp;
 end
 
-% Get necessary metadata for present_sound()
+%% Get necessary metadata for present_sound()
 [ex, N_channels, N_trials, N_samples, output_channels, ...
     input_channels, hydrophone_idx, loopback_idx, electrode_idx, ...
     electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V] ...
     = init_present_sound_variables(ex, stimulus_block);
 
-% Rip it
+%% Rip it
 if ex.test
     rec_data_mV = ex.mock_data;
     N_samples = size(rec_data_mV,2);
@@ -38,7 +38,7 @@ else
         hydrophone_voltage_scaling_factor_V, ex, app);
 end
 
-% Save values to ex
+%% Save values to ex
 if size(rec_data_mV,1) > 1
     ex.raw(iblock).hydrophone_mV = squeeze(rec_data_mV(:,:,hydrophone_idx));
     ex.raw(iblock).loopback  = squeeze(rec_data_mV(:,:,loopback_idx));
@@ -49,9 +49,11 @@ else
     error('Only 1 or less trials included in present_sound() output')
 end
 
-% Assign trial counts
-if ~strcmp(app.DropDown_test_mode.Value, 'Mixed stimuli')
+%% Assign trial counts
+if strcmp(app.DropDown_test_mode.Value, 'Adaptive') || strcmp(app.DropDown_test_mode.Value, 'Static trial count')
     ex.trial_count(iamp) = N_trials_presented;
+elseif strcmp(app.DropDown_test_mode.Value, 'Timed')
+    ex.trial_count(iamp) = iblock*trials_per_block;
 end
 
 %% Check for NaNs
@@ -66,16 +68,12 @@ end
 %% Calculate hydrophone RMS dB SPL
 % Only do this every 10 blocks since this is computationally heavy
 if mod(iblock,10) == 0 || iblock == 1
-    tic()
     fprintf('Calculating hydrophone SNR and tank noise floor...\n')
     ex = calculate_hydrophone_sig_quality(ex);
-    toc()
 end
 
 %% Plot signals
-tic()
 plot_sigs_to_monitor('raw',ex,app,N_samples,N_trials,N_channels)
-toc()
 if strcmp(app.DropDown_test_mode.Value, 'Timed') || strcmp(app.DropDown_test_mode.Value, 'Static trial count')
     plot_live_fft(ex, iblock, fs, app)
 end
@@ -90,7 +88,7 @@ time_since_exp_start = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Forma
 time_elapsed =  string(time_since_exp_start, 'hh:mm:ss');
 app.Label_time_elapsed.Text = time_elapsed;
 ex.info.experiment.total_time_elapsed = time_since_exp_start;
-if strcmp(app.DropDown_test_mode.Value, 'Mixed stimuli')
+if strcmp(app.DropDown_test_mode.Value, 'Mixed stimuli') || strcmp(app.DropDown_test_mode.Value, 'Timed')
     app.Label_grand_total.Text = string(N_trials_presented);
 else
     grand_total_N_trials = sum(arrayfun(@(x) x, ex.trial_count(1:ex.counter.iamp)));

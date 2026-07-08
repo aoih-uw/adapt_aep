@@ -32,7 +32,7 @@ all_jitter = zeros(trials_per_block * n_blocks,1);
     reject_artefacts_and_balance_trials(ex, app, all_trials, all_phases, valid_channels);
 
 % Save values to ex.block field
-ex.kept.trials = all_trials(kept_trials_idx,:,:);
+ex.kept.trials = all_trials(kept_trials_idx,:,:); % Used in count_trials plotting
 ex.kept.phases = all_phases(kept_trials_idx);
 ex.kept.jitter = all_jitter(kept_trials_idx);
 
