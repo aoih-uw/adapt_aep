@@ -21,5 +21,7 @@ for itrial = 1:size(signal,1) % Extract periods by trial
 end
 
 % Remove the onramp/offramp samples from stim_ON to get steady state portion of signal
+% Also remove the equivalent stim_OFF ramp samples so we have equal numbers
+% of samples to compare ON/OFF to in separate_subtract_bootstrap
 stim_OFF = stim_OFF(:,ramp_duration_samples+1:end-ramp_duration_samples);
 stim_ON = stim_ON(:,ramp_duration_samples+1:end-ramp_duration_samples);

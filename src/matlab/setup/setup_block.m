@@ -19,7 +19,7 @@ end
 if isfield(ex,'block')
     if size(ex.block,2) > max_block
         ex.block = ex.block(:,1:max_block);
-        ex.raw = ex.block(:,1:max_block);
+        ex.raw = ex.raw(:,1:max_block);
     end
 end
 

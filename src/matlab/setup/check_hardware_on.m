@@ -1,6 +1,8 @@
 function check_hardware_on
 % A GUI to ensure that all necessary hardware used in experiment are turned
 % on and using the correct settings
+[y, Fs] = audioread('button_press.mp3');
+sound(y, Fs)
 
 % --- Style constants (match adapt_aep app) ---
 bg      = [0.8824 0.9294 0.9686];

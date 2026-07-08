@@ -132,8 +132,8 @@ ex.info.calibration = struct( ... % These values will be updated by prepare_next
 if strcmp(app.DropDown_test_mode.Value,'Mixed stimuli')
     ex.info.mixed = struct( ...
         'stim_name',              {{'trim','ONOFF'}}, ... % Make this an if statement so it will generate which frequency to look for in the response
-        'max_trials',             [1030 130], ... % Auto populate
-        'test_amplitudes',        140, ... % Must be an even number of equal number of stimulus +/- polarities in block
+        'max_trials',             [20 10], ... % Auto populate
+        'test_amplitudes',        140:-3:95, ... % Must be an even number of equal number of stimulus +/- polarities in block
         'N_trials_per_file',      200 ...
         );
         % 'stim_name',              {{'trim','ONOFF'}}, ... % Make this an if statement so it will generate which frequency to look for in the response
