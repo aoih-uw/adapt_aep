@@ -1,5 +1,5 @@
 %% Load your data first with load_my_file
-clearvars my_mean_set my_std_set a_fit k_fit x0_fit my_thresh_0 my_thresh_noise chi2_red grand_fft_vec grand_sorted amp_sorted sorted_idx dy d2y my_snr noise_floor
+clearvars my_mean_set my_std_set a_fit k_fit x0_fit chi2_red grand_fft_vec grand_sorted amp_sorted sorted_idx dy d2y my_snr noise_floor
 
 % 1024 trial specific variables
 trials_vec = [16 32 64 128 256 512 1024];
@@ -133,7 +133,7 @@ for isubj = 1:length(subjid_list)
                 cur_mean = sqrt(max(cur_mean_non_trans.^2 - noise_floor(i_it,i_tri,ichan,isubj).^2, 0));
                 cur_std = my_std_set(i_it,:,i_tri,ichan,isubj);
 
-                softplus = @(p,x) (p(1)/p(2))*(log1p(exp(p(2).*(x-p(3))))) + cur_mean(1) ;
+                softplus = @(p,x) (p(1)/p(2))*(log1p(exp(p(2).*(x-p(3))))) + 0;
 
                 % Find where the signal first exceeds the noise_floor by a
                 % fraction of the total range
@@ -154,7 +154,7 @@ for isubj = 1:length(subjid_list)
                 lb = [0, 0.5/upper_span, min(amp_sorted)];   % keep k off 0
                 ub = [Inf, 10/upper_span, max(amp_sorted)-5];  % cap knee sharpness
 
-                p = lsqcurvefit(softplus,p0,amp_sorted',cur_mean,lb,ub,optimset('Display','off'));
+                p = lsqcurvefit(softplus,p0,amp_sorted',cur_mean_non_trans,lb,ub,optimset('Display','off'));
 
                 a_fit(i_it,i_tri,ichan,isubj) = p(1);
                 k_fit(i_it,i_tri,ichan,isubj) = p(2);
@@ -166,33 +166,7 @@ for isubj = 1:length(subjid_list)
                 slope_frac = 0.05; % fraction of max slope defining "end of lower asymptote"
                 x_lower_end(i_it,i_tri,ichan,isubj) = p(3) + (1/p(2))*log(slope_frac/(1-slope_frac));
 
-                % Only look at x_vec where the curve has started rising
-                rise_mask = y_vec > noise_floor(i_it,i_tri,ichan,isubj)  + 0.1 * (max(y_vec) - noise_floor(i_it,i_tri,ichan,isubj) );
-                if any(rise_mask)
-                    x_kneedle = x_vec(rise_mask);
-                    y_kneedle = y_vec(rise_mask);
-
-                    xn = (x_kneedle - min(x_kneedle)) / (max(x_kneedle) - min(x_kneedle)); % normalize all x values from 0-1
-                    yn = (y_kneedle - min(y_kneedle)) / (max(y_kneedle) - min(y_kneedle)); % normalize all y values from 0-1
-                    [~, idx] = max(yn - xn); % find where yn differs from xn the most
-
-                    x_t = x_kneedle(idx);
-                    y_t = softplus(p, x_t);  % y value at knee point
-
-                    % Derivative of softplus at x_t: d/dx = a * sigmoid(k*(x - x0))
-                    slope = dsoftplus_dx(p, x_t);  % = p(1) / (1 + exp(-p(2)*(x_t - p(3))))
-
-                    % Tangent line: y = slope*(x - x_t) + y_t
-                    % Set y = noise_floor and solve for x:
-                    x_cross_noise = x_t - (y_t - noise_floor(i_it,i_tri,ichan,isubj) ) / slope;
-                    x_cross_0 = x_t - (y_t - 0) / slope;
-
-                    my_thresh_noise(i_it,i_tri,ichan,isubj) = x_cross_noise;
-                    my_thresh_0(i_it,i_tri,ichan,isubj) = x_cross_0;
-                else
-                    my_thresh_noise(i_it,i_tri,ichan,isubj) = x_cross_noise;
-                    my_thresh_0(i_it,i_tri,ichan,isubj) = NaN;
-                end
+                
 
                 % Run plot_derivatives from here
 
@@ -200,7 +174,7 @@ for isubj = 1:length(subjid_list)
                     nexttile(t1, (ichan-1)*length(trials_vec) + i_tri)
                     plot(x_vec,y_vec,'Color',[128 128 128]./255,'LineWidth',2);
                     hold on;
-                    errorbar(amp_sorted, cur_mean , cur_std,'o-','Color',cur_color)
+                    errorbar(amp_sorted, cur_mean_non_trans , cur_std,'o-','Color',cur_color)
                     title(sprintf('%d trials', cur_trial))
                     xlabel('Stimulus Amplitude (dB)')
                     ylabel('2f Magnitude (\muV)')
@@ -275,5 +249,5 @@ for isubj = 1:length(subjid_list)
 
     % Save figures
     save(sprintf('porichthys_notatus_%s_1024_trial', subjid_list{isubj}), ...
-        'my_mean_set', 'my_std_set', 'a_fit', 'k_fit', 'x0_fit', 'my_thresh_0', 'my_thresh_noise')
+        'my_mean_set', 'my_std_set', 'a_fit', 'k_fit', 'x0_fit', 'x_lower_end')
 end
