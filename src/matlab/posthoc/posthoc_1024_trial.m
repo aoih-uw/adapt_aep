@@ -3,28 +3,33 @@ clearvars my_mean_set my_std_set a_fit k_fit x0_fit chi2_red grand_fft_vec grand
 
 % 1024 trial specific variables
 trials_vec = [16 32 64 128 256 512 1024];
-% trials_vec = [1024];
-n_it = 1000;
-my_chans = [2,3,4]; % 3 = skull pierce, 2 = skin, 1 = EKG , 4 = forebrain
+amp_vec = 140:-3:95;
+stim_type_vec = {'trim', 'ONOFF'};
+my_chans = [2,3,4]; % 2 = 2mm, 3 = 4mm, 4 = subcut
 my_mean_set = [];
 my_std_set = [];
-
-% My functions
-dsoftplus_dx = @(p,x) p(1) ./ (1 + exp(-p(2).*(x - p(3))));
 
 % Waterfall plot initialize
 f_water = figure; hold on
 tiledlayout(3,1)
+offset_step = 5;   % vertical spacing between traces - adjust to your data scale
+wcount = 0;
+
+% Preallocate 
+diffs_vec = NaN(3000,1);
+grand_fft_vec = [];
+ON_2f = NaN(3000, length(amp_vec), length(stim_type_vec), length(my_chans));
+OFF_2f = NaN(3000, length(amp_vec), length(stim_type_vec), length(my_chans));
 
 % Extract 1024 related data
 for isubj = 1:length(subjid_list)
     f_1 = figure('Visible','off'); t1 = tiledlayout(length(my_chans), length(trials_vec), 'TileSpacing','tight','Padding','tight');
-    clipped = [];
     for ichan = 1:length(my_chans)
+        
+        % Setup waterfall figure
         figure(f_water)
         nexttile
-        offset_step = 5;   % vertical spacing between traces - adjust to your data scale
-        wcount = 0;
+        
         % Assign channel related vars
         cur_chan = my_chans(ichan);
         if ichan == 1
@@ -34,7 +39,9 @@ for isubj = 1:length(subjid_list)
         elseif ichan == 3
             cur_color = tableau_10('purple');
         end
-        grand_fft_vec = [];
+        
+        %% Extract data
+        % Look through all files
         for iname = 1:length(my_names{isubj})
             diffs_vec = [];
             % Get 2f amplitudes from raw signals
@@ -45,9 +52,9 @@ for isubj = 1:length(subjid_list)
                 % Load in vars
                 latency_samp = grand_ex_save{iname,isubj}.info.recording.latency_samples; % Latency samples not down sampled
                 stimulus = grand_ex_save{iname,isubj}.info.stimulus.waveform;
-                fs = grand_ex_save{iname,isubj}.ds_fs;
-                ds_rate = 2;
-                cur_batch_elec = grand_ex_save{iname,isubj}.raw_signals(1,ibatch).electrodes_microV_ds;
+                fs = my_fs(iname,isubj);
+                ds_rate = 1;
+                cur_batch_elec = grand_ex_save{iname,isubj}.raw_signals(1,ibatch).electrodes_microV;
                 cur_batch_jitter = grand_ex_save{iname,isubj}.block_level_info(1,ibatch).jitter;
                 for itrial = 1:10
                     cur_jitter = cur_batch_jitter(itrial);

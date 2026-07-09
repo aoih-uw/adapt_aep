@@ -2,11 +2,12 @@ clearvars
 addpath(genpath('\\wsl.localhost\ubuntu\home\aoih\adapt_aep\src\matlab'))
 
 % Set data location
-cd 'F:\2026\Research\May Midshipman\2026_06_19\porichthys_notatus_20_20260619\1024_trial'
-subjid_vec = {20};
+base_dir = 'F:\2026\Research\July Midshipman';
+cd(base_dir)
+subjid_vec = {23};
+file_type = 'mixed_stimuli';
 stim_freq = 100;
 stim_amp = [];
-file_type = 'raw_data';
 
 % Setup filename
 if isempty(stim_freq), stim_freq = '*'; else stim_freq = sprintf('%dHz', stim_freq); end
@@ -16,19 +17,17 @@ if isempty(file_type), file_type = '*'; end
 for isubj = 1:length(subjid_vec)
     % Get file names
     subjid = subjid_vec{isubj};
+    subject_folder = sprintf('*_%d*', subjid);
+    current_folder = dir(subject_folder);
+    my_path = sprintf('%s/%s/%s', base_dir,current_folder.name, file_type);
+    cd(my_path)
     if isempty(subjid),    subjid    = '*'; else subjid    = num2str(subjid);    end
-
-    files = dir(sprintf('*%s_%s_%s_%s*', subjid, stim_freq, stim_amp, file_type));
+    files = dir(sprintf('*%s_%s_*_%s_%s*', subjid, stim_freq, stim_amp, file_type));
     if isempty(files)
         fprintf('No files found')
     else
     my_names{isubj} = {files.name};
     end
-
-    % Sort by amplitude order
-    amps = cellfun(@(f) str2double(regexp(f,'(\d+)dBSPL','tokens','once')), my_names{isubj});
-    [~, sortIdx] = sort(amps);
-    my_names{isubj} = my_names{isubj}(sortIdx);
 
     % Load in files
     for iname = 1:length(my_names{isubj})
@@ -40,7 +39,7 @@ for isubj = 1:length(subjid_vec)
         cur_freq = ex.info.stimulus.frequency_hz;
         my_amp(iname,isubj) = cur_amp;
         my_freq(iname,isubj) = cur_freq;
-        my_fs(iname,isubj) = ex.ds_fs;
+        my_fs(iname,isubj) = ex.info.recording.sampling_rate_hz;
         freq_2f(iname,isubj) = 2*cur_freq;
         grand_ex_save{iname,isubj} = ex;
         subjid_list{isubj} = subjid;
