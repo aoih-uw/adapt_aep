@@ -40,7 +40,10 @@ cla(app.UIAxes_boot)
 cla(app.UIAxes_gate)
 
 % Extract Stim ON and OFF Periods
-[stim_ON , stim_OFF] = extract_stim_ON_OFF(latency_samples, period_length_samples, kept_jitter, ramp_duration_samples, kept_trials_filtered);
+[stim_ON , stim_OFF] = extract_stim_ON_OFF( ...
+    kept_trials_filtered, 1, fs, ...
+    latency_samples, period_length_samples, ramp_duration_samples,...
+    [], kept_jitter);
 
 %% See if noise has averaged down enough to do analysis
 if isnan(ex.noise.starting_rms)
