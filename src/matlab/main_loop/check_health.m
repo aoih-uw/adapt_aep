@@ -22,13 +22,11 @@ ex.health(ihealth).electrodes_microV = ekg_sig_microV; % N_trials, N_samples, N_
 ex.health(ihealth).time_stamp = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
 ex.health(ihealth).ekg_rate = ekg_rate;
 ex.health(ihealth).ekg_fs_ds = ekg_fs_ds;
+
 ex.health(ihealth).peak_threshold = peak_threshold;
 
 % Plot ekg rate over time
-ekg_rate_vec = cat(1, ex.health(1:ihealth).ekg_rate);
-plot(app.UIAxes_health, 1:length(ekg_rate_vec), ekg_rate_vec,'o-', 'Color', ...
-    tableau_10('red'), 'MarkerFaceColor', tableau_10('red'), 'MarkerEdgeColor', tableau_10('red'), 'MarkerSize', 14)
-xlim(app.UIAxes_health,[0.5, ihealth+0.5])
-ylim(app.UIAxes_health,[min(ekg_rate_vec)-2 max(ekg_rate_vec)+2])
-
-
+time_vec = (0:length(ekg_sig_microV)-1)/ekg_fs_ds;
+plot(app.UIAxes_health, time_vec, ekg_sig_microV,'-', 'Color', tableau_10('red'))
+xlim(app.UIAxes_health,[0 time_vec(end)])
+drawnow

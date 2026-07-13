@@ -7,6 +7,10 @@ if strcmp(app.DropDown_test_mode.Value, 'Mixed stimuli')
     if  ex.counter.ischedule == 1
         my_2f = []; my_2f_std = [];
     end
+elseif  strcmp(app.DropDown_test_mode.Value, 'Timed')
+    if ex.counter.grand_iblock == 1
+        my_2f = []; my_2f_std = [];
+    end
 else
     if iblock == 1
         my_2f = []; my_2f_std = [];

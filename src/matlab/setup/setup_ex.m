@@ -21,6 +21,7 @@ ex.exp_done = 0;
 ex.test = 0;
 ex.last_autosave_time = [];
 ex.no_valid_trials = 0;
+ex.last_temp_check = NaT;
 
 % Trial counter
 if ~strcmp(app.DropDown_test_mode.Value,'Mixed stimuli')

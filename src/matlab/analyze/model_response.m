@@ -165,7 +165,7 @@ try
         hold(app.UIAxes_model_3, 'off');
 
         cla(app.UIAxes_thresh_est)
-        plot(app.UIAxes_thresh_est, x_lower_end, 'o-', 'Color', tableau_10('teal'), 'LineWidth', 1, 'MarkerFaceColor', tableau_10('teal'));
+        plot(app.UIAxes_thresh_est, ex.model.threshold, 'o-', 'Color', tableau_10('teal'), 'LineWidth', 1, 'MarkerFaceColor', tableau_10('teal'));
         xlabel(app.UIAxes_thresh_est, 'Iteration');
         ylabel(app.UIAxes_thresh_est, 'x0');
         title(app.UIAxes_thresh_est, 'Threshold Estimate');
