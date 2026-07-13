@@ -12,7 +12,7 @@ max_trials = ex.info.trials.max_trials;
 latency_samples = ex.info.recording.latency_samples;
 period_length_samples = length(ex.info.stimulus.waveform);
 ramp_duration_ms = ex.info.stimulus.ramp_duration_ms;
-ramp_duration_samples = ceil(ramp_duration_ms/1000*fs);
+ramp_duration_samples = round(ramp_duration_ms/1000*fs);
 
 % Median absolute deviation variables
 mad_to_std = ex.info.signal_quality.mad_to_std;

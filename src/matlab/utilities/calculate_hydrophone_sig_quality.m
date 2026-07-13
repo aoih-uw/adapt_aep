@@ -1,12 +1,13 @@
 function ex = calculate_hydrophone_sig_quality(ex)
 %% Calculates hydrophone signal SNR
+
 %% Assign varables
 fs = ex.info.recording.sampling_rate_hz;
 iblock = ex.counter.iblock;
 hydrophone_mV = ex.raw(iblock).hydrophone_mV;
 hydrophone_gain_mV_per_Pa = ex.info.recording.hydrophone_gain_mV_per_Pa;
 ramp_duration_ms = ex.info.stimulus.ramp_duration_ms;
-ramp_duration_samples = ceil(ramp_duration_ms/1000*fs);
+ramp_duration_samples = round(ramp_duration_ms/1000*fs);
 period_length_samples = length(ex.info.stimulus.waveform);
 stimulus_freq = ex.info.stimulus.frequency_hz;
 target_freq_range = ex.info.stimulus.range_2f_hz;

@@ -27,9 +27,16 @@ while ex.counter.ischedule < size(test_schedule,1)
         ex = check_health(ex,app,0);
     end
 
-    %% READ THERMOMETER
+    %% TRACK TEMPERATURE
     fprintf('\nChecking temperature...\n')
-    % ex = check_temperature(ex);
+    if isnat(ex.last_temp_check)
+        ex.last_temp_check = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
+    end
+    time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.last_temp_check;
+    if time_diff >= minutes(15)
+        [y, Fs] = audioread('tank_temp.mp3');
+        sound(y, Fs)
+    end
 
     %% DATA COLLECTION
     while ~batch_completed
