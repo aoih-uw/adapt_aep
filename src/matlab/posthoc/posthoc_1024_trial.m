@@ -23,14 +23,24 @@ for itri = 1:length(trials_vec)
     for iamp = 1:length(amp_vec)
         for ichan = 1:length(my_chans)
             cur_set = squeeze(ON_2f(:,iamp,1,ichan));
+            cur_phase = squeeze(phase_vec(:,1,iamp,1,ichan));
             % Remove nans
-            cur_set(isnan(cur_set)) = [];
+            nan_mask = isnan(cur_set);
+            cur_set(nan_mask) = [];
+            cur_phase(nan_mask) = [];
             % Check if there are not enough trials to select from for this current trial
             if size(cur_set,1) < trials_vec(end)
                 keyboard
             end
             for iit = 1:n_it
-                rand_select = randperm(size(cur_set,1),cur_n_trial);
+                % Ensure equal phases
+                phases = unique(cur_phase);
+                n_per_phase = cur_n_trial / length(phases); % assumes cur_n_trial divides evenly
+                rand_select = [];
+                for ip = 1:length(phases)
+                    idx = find(cur_phase == phases(ip));
+                    rand_select = [rand_select; idx(randperm(length(idx), n_per_phase))];
+                end
                 tmp_mean = mean(cur_set(rand_select).^2,1); % power
                 tmp_sem = std(cur_set(rand_select).^2,[],1)/sqrt(size(rand_select,2));% power
                 mean_2f_mag(iit,iamp,itri,ichan) = tmp_mean;% power

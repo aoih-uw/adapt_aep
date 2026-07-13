@@ -12,12 +12,14 @@ isubj = 1;
 %% Preallocate
 % 2f magnitude bins
 ON_2f = NaN(2000, length(amp_vec), length(stim_type_vec), length(my_chans),'single');
-OFF_2f = NaN(2000, length(amp_vec), length(stim_type_vec), length(my_chans),'single');
+OFF_2f = NaN(2000, length(amp_vec), 1, length(my_chans),'single'); % Only valid for ONOFF stimuli
 
 % FFTs
 freq_vec = NaN(2000, 201, length(amp_vec), length(stim_type_vec), length(my_chans),'single');
 ON_fft_vals = NaN(2000, 201, length(amp_vec), length(stim_type_vec), length(my_chans),'single');
+OFF_fft_vals = NaN(2000, 201, length(amp_vec), 1, length(my_chans),'single'); % Only valid for ONOFF stimuli
 low_lim= 0 ; up_lim = 1000; % Hz
+phase_vec = NaN(2000, 1, length(amp_vec), length(stim_type_vec), length(my_chans),'single');
 
 %% Begin searching through datasets
 % By individual files
@@ -52,7 +54,7 @@ for iname = 1:size(grand_ex_save,1)
         for ibatch = 1:n_batches
 
             % Get kept_trials for each set of iblocks
-            [kept_trials, kept_jitter] = get_kept_trials(grand_ex_save, iname, isubj, ...
+            [kept_trials, kept_jitter, kept_phase] = get_kept_trials(grand_ex_save, iname, isubj, ...
                 ibatch, cur_chan, single_batch_locs, mult_batch_locs);
 
             if ~isempty(kept_trials)
@@ -66,6 +68,10 @@ for iname = 1:size(grand_ex_save,1)
                 amp_idx = find(amp_vec == round(grand_ex_save{iname,isubj}.block_level_info(ibatch).stim_amp)); % Round for sensitive doubles
                 stim_type_idx = find(strcmp(stim_type_vec, ...
                     grand_ex_save{iname,isubj}.block_level_info(ibatch).stim_type));
+
+                if isempty(amp_idx) || isempty(stim_type_idx)
+                    keyboard
+                end
                 
                 % Find the first full NaN row to start populating from
                 start_row = find(isnan(ON_2f(:,amp_idx,stim_type_idx,ichan)), 1, 'first');
@@ -86,7 +92,10 @@ for iname = 1:size(grand_ex_save,1)
                         [],...
                         kept_jitter);
                 end
-                
+
+                % Make sure to keep phase_vec info
+                phase_vec(row_range, 1, amp_idx, stim_type_idx, ichan) = kept_phase'; 
+
                 % Loop through stim_ON/stim_OFF
                 for itrial = 1:n_trials
                     % Stim ON
@@ -102,12 +111,25 @@ for iname = 1:size(grand_ex_save,1)
                     select_fft_vals = tmp_fft_vals(freq_vec_range);
                     freq_vec(row_range(itrial), 1:size(select_fft_vals,2), amp_idx, stim_type_idx, ichan) = select_freq_vec;
                     ON_fft_vals(row_range(itrial), 1:size(select_fft_vals,2), amp_idx, stim_type_idx, ichan) = select_fft_vals;
-
+                    
                     % Stim OFF for ONOFF Stim types
                     if strcmp(cur_stim_type, 'ONOFF')
-                    cur_trial = stim_OFF(itrial,:);
-                    cur_trial(isnan(cur_trial)) = [];
-                    [~, tmp_freq_vec, tmp_fft_vals] = calc_fft(cur_trial, fs);
+                    cur_trial_OFF = stim_OFF(itrial,:);
+                    cur_trial_OFF(isnan(cur_trial_OFF)) = [];
+                    
+                    [~, tmp_freq_vec, tmp_fft_vals] = calc_fft(cur_trial_OFF, fs);
+                    freq_vec_range = find(tmp_freq_vec >=low_lim & tmp_freq_vec <= up_lim);
+                    select_freq_vec_OFF = tmp_freq_vec(freq_vec_range);
+                    
+                    % Check for any size mismatches between ON OFF periods,
+                    % there should not be
+                    if any(size(cur_trial) ~= size(cur_trial_OFF)) || ...
+                            any(select_freq_vec_OFF ~= select_freq_vec)
+                        keyboard
+                    end
+                    
+                    OFF_fft_vals(row_range(itrial),1:size(select_fft_vals,2),amp_idx,1,ichan) = ...
+                        tmp_fft_vals(freq_vec_range);
                     [temp_OFF_2f(itrial), target_bin_loc] = ...
                         find_fft_bins(target_freq, target_freq_range, tmp_fft_vals, tmp_freq_vec);
                     end
@@ -115,10 +137,17 @@ for iname = 1:size(grand_ex_save,1)
 
                 %% Populate ON_2f and OFF_2f bin magnitude matrices
                 % Populate
+                if any(isnan(temp_ON_2f)) || (any(isnan(temp_OFF_2f)) & strcmp(cur_stim_type, 'ONOFF'))
+                    keyboard
+                end
+                
                 ON_2f(row_range,amp_idx,stim_type_idx,ichan) ...
                     = temp_ON_2f;
-                OFF_2f(row_range,amp_idx,stim_type_idx,ichan) ...
-                    = temp_OFF_2f;
+
+                if strcmp(cur_stim_type, 'ONOFF')
+                    OFF_2f(row_range,amp_idx,1,ichan) ...
+                        = temp_OFF_2f;
+                end
             end
 
 
