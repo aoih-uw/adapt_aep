@@ -19,6 +19,12 @@ valid_channels = find(~strcmp(channel_names, 'EKG'));
 analysis_channel = ex.info.channels.analysis_channel;
 analysis_channel_idx = find(strcmp(channel_names(valid_channels),analysis_channel));
 iblock = ex.counter.iblock;
+latency_samples = ex.info.recording.latency_samples;
+period_length_samples = length(ex.info.stimulus.waveform);
+ramp_duration_ms = ex.info.stimulus.ramp_duration_ms;
+ramp_duration_samples = round(ramp_duration_ms/1000*fs);
+trim_stim_pre_dur_ms = ex.info.stimulus.trim_stim_pre_dur_ms;
+stimulus_type_idx = ex.info.mixed.test_schedule(ischedule,1);
 
 % Clear axes
 delete(findobj(app.UIAxes_funfetti, 'Type', 'text'));
@@ -57,10 +63,28 @@ ylim(app.UIAxes_funfetti,[0.5, length(stim_types)+0.5]);
 %% Overlay 2f magnitude trace per cell
 if numel(mag_2f) < ischedule
     sig = ex.kept.trials(:,:,analysis_channel_idx); % Only plot valid set of trials
+    jitter_vec = ex.kept.jitter;
+    phase_vec = ex.kept.phases; % Double check here that it is indeed balanced
+
     v = zeros(size(sig,1),1);
     for it = 1:size(sig,1)
-        [~, f, vv] = calc_fft(sig(it,:), fs);
-        [v(it), ~] = find_fft_bins(target_freq,target_freq_range, vv, f);
+        cur_sig = sig(it,:);
+        % Extract stim ON portion for 2f mag calculation
+        if  strcmp(ex.info.mixed.stim_name{stimulus_type_idx}, 'trim')
+            [stim_ON , ~] = extract_stim_ON_OFF( ...
+                cur_sig, 0, fs, ...
+                latency_samples, period_length_samples, ramp_duration_samples,...
+                trim_stim_pre_dur_ms,...
+                jitter_vec);
+        elseif strcmp(ex.info.mixed.stim_name{stimulus_type_idx}, 'ONOFF')
+            [stim_ON , ~] = extract_stim_ON_OFF( ...
+                cur_sig, 1, fs, ...
+                latency_samples, period_length_samples, ramp_duration_samples,...
+                [],...
+                jitter_vec);
+        end
+        [~, freq_vec, fft_vals] = calc_fft(stim_ON, fs);
+        [v(it), ~] = find_fft_bins(target_freq,target_freq_range, fft_vals, freq_vec);
     end
     mag_2f(ischedule) = mean(v,1,'omitnan');
 end
@@ -75,7 +99,7 @@ for i = 1:N_unique_stimuli
     my_c = find(amplitudes == uniq_stimuli(i,2));
     x = linspace(my_c-0.4, my_c+0.4, numel(trace));
     plot(app.UIAxes_funfetti, x, (my_r+0.4) - (trace/ymax)*0.6, '-o', ...
-        'Color',tableau_10('grey'), 'MarkerSize',2, 'Color',tableau_10('grey'), 'LineWidth',1);
+        'Color',tableau_10('grey'), 'MarkerSize',2, 'LineWidth',1);
 end
 hold(app.UIAxes_funfetti,'off')
 

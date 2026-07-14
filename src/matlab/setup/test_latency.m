@@ -10,7 +10,18 @@ fs = ex.info.recording.sampling_rate_hz;
 test_signal = [zeros(1, fs) 1 1 1 -1 -1 -1 zeros(1, fs)]';
 
 test_page = playrec('playrec',test_signal, 4, -1, 4);
-playrec('block',test_page); % blocks all other functionality until recording is done
+
+% Timeout guard
+t0 = tic;
+while ~playrec('isFinished', test_page)
+    if toc(t0) > 60
+        playrec('delPage', test_page);
+        keyboard
+        error('Playrec timed out. Check USB cord connection')
+    end
+end
+pause(0.05);
+
 test_rec = double(playrec('getRec',test_page)); % Retrieve recorded data and convert into double precision
 playrec('delPage',test_page); % delete data to free memory
 
