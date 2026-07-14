@@ -38,7 +38,7 @@ while ~ex.exp_done % While testing current stimulus frequency
         sound(y, Fs)
         ex.last_signal_inspection = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss'); 
     end
-    
+
     while ~ex.decision(ex.counter.iamp).amp_done % While testing current stimulus amplitude
         %% HEALTH CHECK
         time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.health(ex.counter.ihealth).time_stamp;
@@ -63,6 +63,7 @@ while ~ex.exp_done % While testing current stimulus frequency
         if time_diff >= minutes(15)
             [y, Fs] = audioread('tank_temp.mp3');
             sound(y, Fs)
+            ex.last_temp_check = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
         end
 
         %% CREATE BLOCK OF TRIALS
