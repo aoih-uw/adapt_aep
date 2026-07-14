@@ -66,6 +66,12 @@ if numel(mag_2f) < ischedule
     jitter_vec = ex.kept.jitter;
     phase_vec = ex.kept.phases; % Double check here that it is indeed balanced
 
+    % Ensure equal phases included in average
+    if sum(phase_vec) ~= 0
+        keyboard
+    end
+
+    % Preallocate
     bin_2f = zeros(size(sig,1),1);
     for it = 1:size(sig,1)
         cur_sig = sig(it,:);
@@ -106,8 +112,8 @@ hold(app.UIAxes_funfetti,'off')
 % Add text in each cell
 for my_r = 1:length(stim_types)
     for my_c = 1:length(amplitudes)
-        text(app.UIAxes_funfetti,my_c, my_r, sprintf('%1.2f%%', heat_2d(my_r,my_c)*100), ...
-            'HorizontalAlignment','center', 'VerticalAlignment','middle', 'FontSize', 8);
+        text(app.UIAxes_funfetti,my_c, my_r, sprintf('%1.1f%%', heat_2d(my_r,my_c)*100), ...
+            'HorizontalAlignment','center', 'VerticalAlignment','middle', 'FontSize', 11);
     end
 end
 

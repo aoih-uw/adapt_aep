@@ -28,6 +28,17 @@ while ~ex.exp_done % While testing current stimulus frequency
     %% UPDATE GUI
     app.Label_current_amp.Text = string(ex.info.stimulus.amplitude_spl);
 
+    %% INSPECT SIGNALS REMINDER
+    if isnat(ex.last_signal_inspection)
+        ex.last_signal_inspection = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
+    end
+    time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.last_signal_inspection;
+    if time_diff >= minutes(5)
+        [y, Fs] = audioread('inspect_sigs.mp3');
+        sound(y, Fs)
+        ex.last_signal_inspection = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss'); 
+    end
+    
     while ~ex.decision(ex.counter.iamp).amp_done % While testing current stimulus amplitude
         %% HEALTH CHECK
         time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.health(ex.counter.ihealth).time_stamp;

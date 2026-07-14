@@ -66,6 +66,17 @@ while ex.counter.ischedule < size(test_schedule,1)
     %% COUNT TRIALS
     ex = count_mixed_trials(ex,app);
 
+    %% INSPECT SIGNALS REMINDER
+    if isnat(ex.last_signal_inspection)
+        ex.last_signal_inspection = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
+    end
+    time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.last_signal_inspection;
+    if time_diff >= minutes(5)
+        [y, Fs] = audioread('inspect_sigs.mp3');
+        sound(y, Fs)
+        ex.last_signal_inspection = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss'); 
+    end
+
     %% SAVE RAW DATA IF DONE WITH SCHEDULE
     if ex.counter.iblock >= (ex.info.mixed.N_trials_per_file/ex.info.trials.trials_per_block) || ...
             ex.counter.ischedule == size(test_schedule,1)
