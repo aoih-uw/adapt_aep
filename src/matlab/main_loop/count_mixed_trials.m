@@ -66,7 +66,7 @@ if numel(mag_2f) < ischedule
     jitter_vec = ex.kept.jitter;
     phase_vec = ex.kept.phases; % Double check here that it is indeed balanced
 
-    v = zeros(size(sig,1),1);
+    bin_2f = zeros(size(sig,1),1);
     for it = 1:size(sig,1)
         cur_sig = sig(it,:);
         % Extract stim ON portion for 2f mag calculation
@@ -84,9 +84,9 @@ if numel(mag_2f) < ischedule
                 jitter_vec);
         end
         [~, freq_vec, fft_vals] = calc_fft(stim_ON, fs);
-        [v(it), ~] = find_fft_bins(target_freq,target_freq_range, fft_vals, freq_vec);
+        [bin_2f(it), ~] = find_fft_bins(target_freq,target_freq_range, fft_vals, freq_vec);
     end
-    mag_2f(ischedule) = mean(v,1,'omitnan');
+    mag_2f(ischedule) = mean(bin_2f,1,'omitnan');
 end
 
 hold(app.UIAxes_funfetti,'on')
