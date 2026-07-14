@@ -45,7 +45,7 @@ for itrial = 1:height(stimulus)
         % Timeout guard
         t0 = tic;
         while ~playrec('isFinished', ipage)
-            if toc(t0) > 60
+            if toc(t0) > 20
                 playrec('delPage', ipage);
                 if strcmp(app.DropDown_test_mode.Value, 'Mixed stimuli')
                     ex = save_mixed_raw(ex,app);

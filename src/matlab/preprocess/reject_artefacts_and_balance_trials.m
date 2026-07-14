@@ -8,7 +8,7 @@ clipping_threshold = 300; % microV
 
 % Preallocate before the loop
 rejected_trials = [];
-rel_rej_thresh_across = NaN(1, length(valid_channels));
+rel_rej_thresh_across = NaN(length(valid_channels),2);
 for ichan = 1:length(valid_channels)
     % Get data
     cur_chan_data_raw = squeeze(all_trials(:, :, ichan));
@@ -16,12 +16,19 @@ for ichan = 1:length(valid_channels)
     % Reject by clipping
     rejected_trials = [rejected_trials find(any(abs(cur_chan_data_raw) >= clipping_threshold,2))'];
 
+    % Reject by comparing max sample amplitude across trials
+    max_vals = max(cur_chan_data_raw,[],2);
+    cur_median = median(max_vals,'omitnan');
+    cur_mad = median(abs(cur_median-max_vals),'omitnan')*mad_to_std;
+    rel_rej_thresh_across(ichan,1) = cur_median + cur_mad*reject_threshold_sd;
+    rejected_trials = [rejected_trials find(max_vals >= rel_rej_thresh_across(ichan,1))'];
+
     % Reject by comparing RMS across trials
     cur_chan_data = sqrt(mean(cur_chan_data_raw.^2, 2, 'omitnan'));
     cur_median = median(cur_chan_data,'omitnan');
     cur_mad = median(abs(cur_median-cur_chan_data),'omitnan')*mad_to_std;
-    rel_rej_thresh_across(ichan) = cur_median + cur_mad*reject_threshold_sd;
-    rejected_trials = [rejected_trials find(cur_chan_data >= rel_rej_thresh_across(ichan))'];
+    rel_rej_thresh_across(ichan,2) = cur_median + cur_mad*reject_threshold_sd;
+    rejected_trials = [rejected_trials find(cur_chan_data >= rel_rej_thresh_across(ichan,2))'];
 end
 all_chan_rejected_trials = unique(rejected_trials);
 
