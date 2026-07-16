@@ -37,17 +37,16 @@ ex.kept.trials = all_trials(kept_trials_idx,:,:); % Used in count_trials plottin
 ex.kept.phases = all_phases(kept_trials_idx);
 ex.kept.jitter = all_jitter(kept_trials_idx);
 
-% Increment trial counter
-cur_trial_type = ex.info.mixed.test_schedule(ischedule,4);
-ex.info.mixed.trial_counter(cur_trial_type) = ...
-    ex.info.mixed.trial_counter(cur_trial_type) + size(ex.kept.trials,1);
-
 ex.block(iblock).kept_trials_idx = kept_trials_idx;
 ex.block(iblock).collection_attempts = ex.counter.N_not_enough_trials;
 ex.block(iblock).across_trial_thresh = across_trial_thresh;
 
 if n_valid_trials < trials_per_block
     ex.counter.N_not_enough_trials = ex.counter.N_not_enough_trials + 1;
-else
+else % There are enough trials
     ex.counter.N_not_enough_trials = 0;
+    % Increment trial counter
+    cur_trial_type = ex.info.mixed.test_schedule(ischedule,4);
+    ex.info.mixed.trial_counter(cur_trial_type) = ...
+        ex.info.mixed.trial_counter(cur_trial_type) + size(ex.kept.trials,1);
 end
