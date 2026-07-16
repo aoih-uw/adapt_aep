@@ -46,7 +46,7 @@ heat_2d = zeros(length(stim_types), length(amplitudes));
 for i = 1:N_unique_stimuli
     my_r = find(stim_types == uniq_stimuli(i,1));
     my_c = find(amplitudes == uniq_stimuli(i,2));
-    heat_2d(my_r, my_c) = completion_mat(i);
+    heat_2d(my_r, my_c) = min(completion_mat(i),1);
 end
 
 % Draw the 2d heatmap
@@ -114,7 +114,7 @@ end
 
 n = 256; blue = tableau_10('blue');
 colormap(app.UIAxes_funfetti,[linspace(1,blue(1),n)', linspace(1,blue(2),n)', linspace(1,blue(3),n)']);
-clim(app.UIAxes_funfetti, [0 max(max(completion_mat(:)), eps)]);
+clim(app.UIAxes_funfetti, [0 1]);
 xticks(app.UIAxes_funfetti,1:length(amplitudes)); xticklabels(app.UIAxes_funfetti,amplitudes);
 yticks(app.UIAxes_funfetti,(1:length(stim_types))); yticklabels(app.UIAxes_funfetti,ex.info.mixed.stim_name(stim_types));
 title(app.UIAxes_funfetti,'Mixed Stimuli Experiment Progress')
