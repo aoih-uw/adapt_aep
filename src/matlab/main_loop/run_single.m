@@ -29,6 +29,18 @@ while ~ex.exp_done % While testing current stimulus frequency
     app.Label_current_amp.Text = string(ex.info.stimulus.amplitude_spl);
 
     while ~ex.decision(ex.counter.iamp).amp_done % While testing current stimulus amplitude
+        
+        %% INSPECT SIGNALS REMINDER
+        if isnat(ex.last_signal_inspection)
+            ex.last_signal_inspection = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
+        end
+        time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.last_signal_inspection;
+        if time_diff >= minutes(5)
+            [y, Fs] = audioread('inspect_sigs.mp3');
+            sound(y, Fs)
+            ex.last_signal_inspection = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
+        end
+        
         %% HEALTH CHECK
         time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.health(ex.counter.ihealth).time_stamp;
         if strcmp(app.DropDown_test_mode.Value, 'Timed')
@@ -52,6 +64,7 @@ while ~ex.exp_done % While testing current stimulus frequency
         if time_diff >= minutes(15)
             [y, Fs] = audioread('tank_temp.mp3');
             sound(y, Fs)
+            ex.last_temp_check = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
         end
 
         %% CREATE BLOCK OF TRIALS
@@ -114,7 +127,7 @@ while ~ex.exp_done % While testing current stimulus frequency
                 ex.decision(ex.counter.iamp).amp_done_reason = 'Experiment time reached';
             end
         end
-        
+
         fprintf('\n--- Block Completed (Amp %d, Block %d) ---\n', ex.counter.iamp, ex.counter.iblock);
 
         %% SAVE RAW DATA
@@ -143,7 +156,7 @@ while ~ex.exp_done % While testing current stimulus frequency
             elseif strcmp(app.DropDown_test_mode.Value, 'Timed')
                 % Do not allow testing at a different amplitude at this time
                 % If I do, then I need to restructure some code particularly counters!
-                return 
+                return
             end
         end
 
@@ -160,7 +173,7 @@ while ~ex.exp_done % While testing current stimulus frequency
             end
             % If 'continue', proceed normally
         end
-        
+
     end
 end
 

@@ -14,6 +14,7 @@ signal_clip_threshold = 4.5; % V
 rec_data_mV = zeros(size(stimulus,2), ...
     length(input_channels), size(stimulus,1)); % # of samples x # of channels x # of trials
 
+t_rate = tic();
 for itrial = 1:height(stimulus)
     % Progress bar
     if itrial == 1, fprintf('\n'); end
@@ -99,4 +100,10 @@ for itrial = 1:height(stimulus)
     if itrial == height(stimulus), fprintf('\n  Finished\n'); end
 end
 
+% Measure presentation rate
+my_dur = toc(t_rate);
+trials_per_sec = height(stimulus)/my_dur;
+fprintf('Presentation rate: %.2f trials/sec\n', trials_per_sec);
+
+% Rearrange data
 rec_data_mV = permute(rec_data_mV,[3,1,2]); % change to n_trial, n_sample, n_channel
