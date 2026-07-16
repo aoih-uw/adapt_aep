@@ -1,4 +1,9 @@
-function grand_ex_save = posthoc_load_my_file(subjid,base_dir,file_type,stim_freq,stim_amp)
+subjid = 24;
+base_dir = 'F:\2026\Research\July Midshipman';
+cd(base_dir)
+file_type = 'mixed_stimuli';
+stim_freq = 100;
+stim_amp = [];
 
 % Setup filename
 if isempty(stim_freq), stim_freq = '*'; else stim_freq = sprintf('%dHz', stim_freq); end
