@@ -1,4 +1,4 @@
-function grand_ex_save = posthoc_load_my_file(subjid,file_type,stim_freq,stim_amp)
+function grand_ex_save = posthoc_load_my_file(subjid,base_dir,file_type,stim_freq,stim_amp)
 
 % Setup filename
 if isempty(stim_freq), stim_freq = '*'; else stim_freq = sprintf('%dHz', stim_freq); end
@@ -19,8 +19,9 @@ else
 end
 
 % Load in files
+for iname = 1:size(my_names,2)
 current_file = my_names{iname};
-fprintf('Loading %s for subject %s, %d/%d\n',current_file, subjid, iname, length(my_names{isubj}))
+fprintf('Loading %s, %d/%d\n',current_file, iname, length(my_names))
 S = load(current_file);
 ex = S.ex_save;
 grand_ex_save{iname} = ex;
