@@ -29,15 +29,10 @@ stimulus_type_idx = ex.info.mixed.test_schedule(ischedule,1);
 % Clear axes
 delete(findobj(app.UIAxes_funfetti, 'Type', 'text'));
 
-% Preallocate completion matrix
-completion_mat = zeros(N_unique_stimuli,1);
-
-completed_schedule = test_schedule(1:ischedule,:); % Get list of stimuli we have tested up till now
-[unique_tested_stimuli, ~, all_idx] = unique(completed_schedule, 'rows'); % Get idxs of unique stimuli we have tested up till now
-[~, ~, idx] = unique(all_idx); % Need to count unique instances of each unique stimuli to count
-unique_counts = accumarray(idx, 1); % Here are the counts
-
-completion_mat(unique_tested_stimuli(:,4)) = (unique_counts*trials_per_block) ./ unique_tested_stimuli(:,3);
+% Setup variables
+N_trials_needed = ex.info.mixed.uniq_stimuli(:,3);
+N_trials_collected = ex.info.mixed.trial_counter;
+completion_mat = N_trials_collected ./ N_trials_needed;
 
 %% Plot live fft
 plot_live_fft(ex,iblock,fs,app);

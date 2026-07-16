@@ -5,6 +5,7 @@ iblock = ex.counter.iblock;
 channel_names = ex.info.channels.names;
 valid_channels = find(~strcmp(channel_names, 'EKG'));
 trials_per_block = ex.info.trials.trials_per_block;
+ischedule = ex.counter.ischedule;
 
 % Get all iblocks that are relevant for the current stimulus type we are working with
 if ex.counter.N_not_enough_trials >= iblock
@@ -35,6 +36,11 @@ all_jitter = zeros(trials_per_block * n_blocks,1);
 ex.kept.trials = all_trials(kept_trials_idx,:,:); % Used in count_trials plotting
 ex.kept.phases = all_phases(kept_trials_idx);
 ex.kept.jitter = all_jitter(kept_trials_idx);
+
+% Increment trial counter
+cur_trial_type = ex.info.mixed.test_schedule(ischedule,4);
+ex.info.mixed.trial_counter(cur_trial_type) = ...
+    ex.info.mixed.trial_counter(cur_trial_type) + size(ex.kept.trials,1);
 
 ex.block(iblock).kept_trials_idx = kept_trials_idx;
 ex.block(iblock).collection_attempts = ex.counter.N_not_enough_trials;
