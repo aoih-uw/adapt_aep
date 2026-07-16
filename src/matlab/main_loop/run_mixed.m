@@ -68,7 +68,7 @@ while ex.counter.ischedule < size(test_schedule,1)
             fprintf('\nPresenting stimulus...\n')
             ex = setup_experiment_present_sound(ex,app); % Present stimuli and measure signals
 
-            % REJECT ARTEFACTS
+            %% REJECT ARTEFACTS
             fprintf('\nRejecting artefacts...\n')
             ex = reject_artefacts_mixed(ex,app);
 
@@ -84,11 +84,18 @@ while ex.counter.ischedule < size(test_schedule,1)
 
         %% COUNT TRIALS
         ex = count_mixed_trials(ex,app);
+    else
+        fprintf('Collected enough trials for current stimulus type, skipping current ischedule\n')
     end
 
+    % REPORT PROGRESS
+    fprintf('Experiment progress: %1.2f%% complete\n', (ex.counter.ischedule/size(test_schedule,1)*100));
+
     %% SAVE RAW DATA
-    if ex.counter.iblock >= (ex.info.mixed.N_trials_per_file/ex.info.trials.trials_per_block) || ...
-            ex.counter.ischedule == size(test_schedule,1)
-        ex = save_mixed_raw(ex,app);
+    if ex.counter.iblock > 0 % Only save if there is data in the block structure
+        if ex.counter.iblock >= (ex.info.mixed.N_trials_per_file/ex.info.trials.trials_per_block) || ...
+                ex.counter.ischedule == size(test_schedule,1)
+            ex = save_mixed_raw(ex,app);
+        end
     end
 end

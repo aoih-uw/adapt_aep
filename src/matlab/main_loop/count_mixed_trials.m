@@ -6,11 +6,10 @@ persistent mag_2f
 test_schedule = ex.info.mixed.test_schedule;
 ischedule = ex.counter.ischedule;
 if ischedule == 1
-    mag_2f = [];
+    mag_2f = nan(1, size(test_schedule,1));
 end
 uniq_stimuli = ex.info.mixed.uniq_stimuli;
 N_unique_stimuli = ex.info.mixed.N_unique_stimuli;
-trials_per_block = ex.info.trials.trials_per_block;
 target_freq = ex.info.stimulus.frequency_hz * 2;
 target_freq_range = ex.info.stimulus.range_2f_hz;
 fs = ex.info.recording.sampling_rate_hz;
@@ -56,7 +55,7 @@ xlim(app.UIAxes_funfetti,[0.5, length(amplitudes)+0.5]);
 ylim(app.UIAxes_funfetti,[0.5, length(stim_types)+0.5]);
 
 %% Overlay 2f magnitude trace per cell
-if numel(mag_2f) < ischedule
+if isnan(mag_2f(ischedule))
     sig = ex.kept.trials(:,:,analysis_channel_idx); % Only plot valid set of trials
     jitter_vec = ex.kept.jitter;
     phase_vec = ex.kept.phases; % Double check here that it is indeed balanced
@@ -121,7 +120,3 @@ yticks(app.UIAxes_funfetti,(1:length(stim_types))); yticklabels(app.UIAxes_funfe
 title(app.UIAxes_funfetti,'Mixed Stimuli Experiment Progress')
 ylabel(app.UIAxes_funfetti,'Stimuil type')
 xlabel(app.UIAxes_funfetti,'Amplitude (dB SPL)')
-
-% Print out % Complete
-fprintf('Experiment progress: %1.2f%% complete, %d/%d trials\n', (ischedule/size(test_schedule,1)*100), ...
-    ischedule*trials_per_block, size(test_schedule,1)*trials_per_block)
