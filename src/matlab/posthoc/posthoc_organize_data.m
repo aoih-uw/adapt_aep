@@ -4,7 +4,7 @@
 %% Assign Variables
 clearvars -except grand_ex_save
 amp_vec = 95:3:140;
-stim_type_vec = {'trim', 'ONOFF'};
+stim_type_vec = {'trim','ONOFF'};
 my_chans = [2,3,4]; % 2 = 2mm, 3 = 4mm, 4 = subcut
 target_freq_range =  3; % for fft bin finding calculations
 isubj = 1;
@@ -23,22 +23,22 @@ phase_vec = NaN(2000, 1, length(amp_vec), length(stim_type_vec), length(my_chans
 
 %% Begin searching through datasets
 % By individual files
-for iname = 1:size(grand_ex_save,1)
+for iname = 1:length(grand_ex_save)
     tic()
     fprintf('%d\n', iname)
     % Load in vars necessary for processing data
-    latency_samples = grand_ex_save{iname,isubj}.info.recording.latency_samples;
-    stimulus = grand_ex_save{iname,isubj}.info.stimulus.waveform;
-    fs = grand_ex_save{iname,isubj}.info.recording.sampling_rate_hz;
-    ramp_duration_samples = grand_ex_save{iname,isubj}.info.stimulus.ramp_duration_ms/1e3*fs;
-    target_freq = grand_ex_save{iname,isubj}.info.stimulus.frequency_hz*2;
-    trim_stim_pre_dur_ms = grand_ex_save{iname,isubj}.info.stimulus.trim_stim_pre_dur_ms;
+    latency_samples = grand_ex_save{1,iname}.info.recording.latency_samples;
+    stimulus = grand_ex_save{1,iname}.info.stimulus.waveform;
+    fs = grand_ex_save{1,iname}.info.recording.sampling_rate_hz;
+    ramp_duration_samples = grand_ex_save{1,iname}.info.stimulus.ramp_duration_ms/1e3*fs;
+    target_freq = grand_ex_save{1,iname}.info.stimulus.frequency_hz*2;
+    trim_stim_pre_dur_ms = grand_ex_save{1,iname}.info.stimulus.trim_stim_pre_dur_ms;
 
     % Get number of batches
-    n_batches = size(grand_ex_save{iname,isubj}.raw_signals,2);
+    n_batches = size(grand_ex_save{1,iname}.raw_signals,2);
 
     % Get a vector of the number of times collection was attempted
-    collect_attempt_vec = cat(1,grand_ex_save{iname,isubj}.block_level_info(1:n_batches).collection_attempts);
+    collect_attempt_vec = cat(1,grand_ex_save{1,iname}.block_level_info(1:n_batches).collection_attempts);
     collect_attempt_vec = [collect_attempt_vec ; 0]; % To account for times where the very last batch was a retry and had enough trials by then, but there are no batches after so there won't be a negative value
     att_diff = diff(collect_attempt_vec);
     last_batch_loc = find(att_diff < 0);
@@ -65,9 +65,9 @@ for iname = 1:size(grand_ex_save,1)
                 temp_OFF_2f = NaN(n_trials,1);
 
                 % Get indices for populating matrices
-                amp_idx = find(amp_vec == round(grand_ex_save{iname,isubj}.block_level_info(ibatch).stim_amp)); % Round for sensitive doubles
+                amp_idx = find(amp_vec == round(grand_ex_save{1,iname}.block_level_info(ibatch).stim_amp)); % Round for sensitive doubles
                 stim_type_idx = find(strcmp(stim_type_vec, ...
-                    grand_ex_save{iname,isubj}.block_level_info(ibatch).stim_type));
+                    grand_ex_save{1,iname}.block_level_info(ibatch).stim_type));
 
                 if isempty(amp_idx) || isempty(stim_type_idx)
                     keyboard
@@ -78,7 +78,7 @@ for iname = 1:size(grand_ex_save,1)
                 row_range = start_row:start_row+n_trials-1;
 
                 % Extract ON/OFF periods
-                cur_stim_type = grand_ex_save{iname,isubj}.block_level_info(ibatch).stim_type;
+                cur_stim_type = grand_ex_save{1,iname}.block_level_info(ibatch).stim_type;
                 if strcmp(cur_stim_type, 'trim')
                     [stim_ON , stim_OFF] = extract_stim_ON_OFF( ...
                         kept_trials, 0, fs, ...

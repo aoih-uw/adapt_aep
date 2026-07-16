@@ -1,6 +1,6 @@
 % Function posthoc_waterfall
 amp_vec = 95:3:140;
-stim_type_vec = {'trim', 'ONOFF'};
+stim_type_vec = {'ONOFF'};
 my_chans = [2,3,4];
 target_freq_range = 3;
 isubj = 1;

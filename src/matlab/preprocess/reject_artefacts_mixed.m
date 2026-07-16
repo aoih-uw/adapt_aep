@@ -5,6 +5,7 @@ iblock = ex.counter.iblock;
 channel_names = ex.info.channels.names;
 valid_channels = find(~strcmp(channel_names, 'EKG'));
 trials_per_block = ex.info.trials.trials_per_block;
+ischedule = ex.counter.ischedule;
 
 % Get all iblocks that are relevant for the current stimulus type we are working with
 if ex.counter.N_not_enough_trials >= iblock
@@ -42,6 +43,10 @@ ex.block(iblock).across_trial_thresh = across_trial_thresh;
 
 if n_valid_trials < trials_per_block
     ex.counter.N_not_enough_trials = ex.counter.N_not_enough_trials + 1;
-else
+else % There are enough trials
     ex.counter.N_not_enough_trials = 0;
+    % Increment trial counter
+    cur_trial_type = ex.info.mixed.test_schedule(ischedule,4);
+    ex.info.mixed.trial_counter(cur_trial_type) = ...
+        ex.info.mixed.trial_counter(cur_trial_type) + size(ex.kept.trials,1);
 end

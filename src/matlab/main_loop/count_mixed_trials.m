@@ -6,11 +6,10 @@ persistent mag_2f
 test_schedule = ex.info.mixed.test_schedule;
 ischedule = ex.counter.ischedule;
 if ischedule == 1
-    mag_2f = [];
+    mag_2f = nan(1, size(test_schedule,1));
 end
 uniq_stimuli = ex.info.mixed.uniq_stimuli;
 N_unique_stimuli = ex.info.mixed.N_unique_stimuli;
-trials_per_block = ex.info.trials.trials_per_block;
 target_freq = ex.info.stimulus.frequency_hz * 2;
 target_freq_range = ex.info.stimulus.range_2f_hz;
 fs = ex.info.recording.sampling_rate_hz;
@@ -29,15 +28,10 @@ stimulus_type_idx = ex.info.mixed.test_schedule(ischedule,1);
 % Clear axes
 delete(findobj(app.UIAxes_funfetti, 'Type', 'text'));
 
-% Preallocate completion matrix
-completion_mat = zeros(N_unique_stimuli,1);
-
-completed_schedule = test_schedule(1:ischedule,:); % Get list of stimuli we have tested up till now
-[unique_tested_stimuli, ~, all_idx] = unique(completed_schedule, 'rows'); % Get idxs of unique stimuli we have tested up till now
-[~, ~, idx] = unique(all_idx); % Need to count unique instances of each unique stimuli to count
-unique_counts = accumarray(idx, 1); % Here are the counts
-
-completion_mat(unique_tested_stimuli(:,4)) = (unique_counts*trials_per_block) ./ unique_tested_stimuli(:,3);
+% Setup variables
+N_trials_needed = ex.info.mixed.uniq_stimuli(:,3);
+N_trials_collected = ex.info.mixed.trial_counter;
+completion_mat = N_trials_collected ./ N_trials_needed;
 
 %% Plot live fft
 plot_live_fft(ex,iblock,fs,app);
@@ -52,7 +46,7 @@ heat_2d = zeros(length(stim_types), length(amplitudes));
 for i = 1:N_unique_stimuli
     my_r = find(stim_types == uniq_stimuli(i,1));
     my_c = find(amplitudes == uniq_stimuli(i,2));
-    heat_2d(my_r, my_c) = completion_mat(i);
+    heat_2d(my_r, my_c) = min(completion_mat(i),1);
 end
 
 % Draw the 2d heatmap
@@ -61,7 +55,7 @@ xlim(app.UIAxes_funfetti,[0.5, length(amplitudes)+0.5]);
 ylim(app.UIAxes_funfetti,[0.5, length(stim_types)+0.5]);
 
 %% Overlay 2f magnitude trace per cell
-if numel(mag_2f) < ischedule
+if isnan(mag_2f(ischedule))
     sig = ex.kept.trials(:,:,analysis_channel_idx); % Only plot valid set of trials
     jitter_vec = ex.kept.jitter;
     phase_vec = ex.kept.phases; % Double check here that it is indeed balanced
@@ -120,13 +114,9 @@ end
 
 n = 256; blue = tableau_10('blue');
 colormap(app.UIAxes_funfetti,[linspace(1,blue(1),n)', linspace(1,blue(2),n)', linspace(1,blue(3),n)']);
-clim(app.UIAxes_funfetti, [0 max(max(completion_mat(:)), eps)]);
+clim(app.UIAxes_funfetti, [0 1]);
 xticks(app.UIAxes_funfetti,1:length(amplitudes)); xticklabels(app.UIAxes_funfetti,amplitudes);
 yticks(app.UIAxes_funfetti,(1:length(stim_types))); yticklabels(app.UIAxes_funfetti,ex.info.mixed.stim_name(stim_types));
 title(app.UIAxes_funfetti,'Mixed Stimuli Experiment Progress')
 ylabel(app.UIAxes_funfetti,'Stimuil type')
 xlabel(app.UIAxes_funfetti,'Amplitude (dB SPL)')
-
-% Print out % Complete
-fprintf('Experiment progress: %1.2f%% complete, %d/%d trials\n', (ischedule/size(test_schedule,1)*100), ...
-    ischedule*trials_per_block, size(test_schedule,1)*trials_per_block)

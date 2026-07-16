@@ -1,62 +1,108 @@
-![logo](adapt_aep_logo.png "Logo")
-# adapt_aep
+<div align="center">
+<img src="adapt_aep_logo.png" alt="adapt_aep banner" width="25%"/>
 
-Auditory evoked potential (AEP) acquisition software tool with online response detection.
+**Auditory evoked potential (AEP) acquisition with online response detection.**
+Present sound stimuli and record electrode signals simultaneously, detect
+auditory responses online, and let the software adapt how many trials to run.
 
-## Key Features
-1. Simultaneous presentation of sound stimuli and measurement of electrode signals
-2. Live detection of auditory responses
-3. Adaptive control of the number of stimulus trials
+![MATLAB](https://img.shields.io/badge/MATLAB-App-orange)
+![License](https://img.shields.io/badge/License-MIT-blue)
+![Status](https://img.shields.io/badge/Status-In%20development-yellow)
 
-![logo](GUI_preview.png "GUI Preview")
+</div>
 
-### Stimuli
-The user can select the stimulus frequency (Hz) in the experiment GUI.  
-Stimuli are windowed tone bursts with cosine off and onramps. Stimulus features related to signal and ramp duration can be adjusted in `setup_info.m`
+## Contents
+- [🎯 Highlights](#-highlights)
+- [🧠 How it works](#-how-it-works)
+- [📁 Repository layout](#-repository-layout)
+- [🚀 Getting started](#-getting-started)
+- [📄 License](#-license)
+- [✉️ Authors & contact](#-authors--contact)
 
-### Electrode
-This software is designed for measuremnt of far-field potentials via sub-dermal electrodes. Measurement from surface electrodes is also possible.  
+---
 
-### Experiment flow
-1. Stimuli will be presented in blocks (The user will indicate the number of trials per block via the GUI)
-2. After each block has been measured, the program will perform signal preprocessing and analysis to determine if there is an auditory response present
-3. Based on the results from this analysis, the user can decide whether to continue testing at this current stimulus frequency and amplitude, to test the stimulus at a different amplitude, or conclude testing at the current frequency.
+## 🎯 Highlights
+- **Simultaneous play + record** — stimuli and electrode measurement on the same clock.
+- **Live response detection** — FFT and bootstrap tests run between blocks.
+- **Adaptive trial counts** — stop collecting as soon as a response is confirmed.
 
-## Installation
+| Mode | Description |
+|---|---|
+| **Adaptive** | Stops as soon as a response is confirmed |
+| **Static trial count** | Runs a fixed number of trials |
+| **Timed** | Runs for a fixed duration |
+| **Mixed stimuli** | Interleaves multiple stimulus types |
 
+<div align="center">
+
+![GUI preview](GUI_preview.png)
+*The app: subject/stimulus/experiment controls (left), live signal monitor (center), online analysis (right).*
+
+</div>
+
+---
+
+## 🧠 How it works
+Everything runs from `adapt_aep.mlapp`. **Initialize** builds the experiment
+state and hardware; **Start** enters the acquisition loop, which repeats
+present → preprocess → analyze → decide until a response is found or a limit
+is reached.
+
+---
+
+## 📁 Repository layout
+```
+src/matlab/
+├── adapt_aep.mlapp        # main GUI + orchestrator
+├── setup/                 # ex struct, hardware, stimulus template
+├── main_loop/             # run_single · run_mixed · present/measure
+├── preprocess/            # artefact rejection · filtering
+├── analyze/               # separate_subtract_bootstrap · model_response
+├── save/                  # raw + session data and figures
+├── plot/                  # live monitor & model plots
+├── utilities/             # FFT, bootstrap, DAC, EKG helpers
+├── calibration/           # stimulus calibration app
+└── posthoc/               # offline re-analysis scripts
+tests/matlab/              # unit tests with playrec/data mocks
+data/aep/                  # per-subject results & figures
+```
+
+---
+
+## 🚀 Getting started
 ```bash
-# Clone the repository
 git clone https://github.com/aoih-uw/adapt_aep.git
 cd adapt_aep
 ```
+1. Edit `src/matlab/setup/setup_info.m` with your experiment parameters.
+2. Open `src/matlab/adapt_aep.mlapp` in MATLAB and run it.
+3. **Initialize** → **Calibrate stimulus** → **Start experiment**.
 
-## Quick Start
-1. Edit `setup_info.m` with the experiment parameters specific to your experiment.
-2. Run adapt_aep_app.mlapp to launch the experiment GUI 
+**Requirements** — MATLAB with:
+- [ ] DSP System Toolbox
+- [ ] Signal Processing Toolbox
+- [ ] Audio Toolbox
+- [ ] Statistics and Machine Learning Toolbox
+- [ ] Curve Fitting Toolbox
 
-## Requirements
-The following MATLAB Toolboxes are required:
-1. DSP System Toolbox
-2. Signal Processing Toolbox
-3. Audio Toolbox
-4. Statistics and Machine Learning Toolbox
-5. Curve fitting toolbox
+Response detection depends on [`playrec`](http://www.playrec.co.uk/) for
+synchronized audio I/O. A Python port may follow.
 
-This software tool currently runs on MATLAB. A complete python version may be developed in the future!
+---
 
-## License
+## 📄 License
+MIT — see [LICENSE](LICENSE).
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+---
 
-## Authors
+## ✉️ Authors & contact
 
-- Aoi Hunsaker - [@aoih-uw](https://github.com/aoih-uw)
+<div align="center">
 
-## Contact
+![GitHub](https://img.shields.io/badge/-aoih--uw-black?logo=github)
 
-- Project Link: [https://github.com/aoih-uw/adapt_aep](https://github.com/aoih-uw/adapt_aep)
-- Issues: [https://github.com/aoih-uw/adapt_aep/issues](https://github.com/aoih-uw/adapt_aep/issues)
+Aoi Hunsaker — [@aoih-uw](https://github.com/aoih-uw)
 
-## Status
+Project: <https://github.com/aoih-uw/adapt_aep> · Issues: <https://github.com/aoih-uw/adapt_aep/issues>
 
-Project status: In development
+</div>
