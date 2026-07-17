@@ -42,7 +42,7 @@ for itri = 1:length(trials_vec)
                     rand_select = [rand_select; idx(randperm(length(idx), n_per_phase))];
                 end
                 tmp_mean = mean(cur_set(rand_select).^2,1); % power
-                tmp_sem = std(cur_set(rand_select).^2,[],1)/sqrt(size(rand_select,2));% power
+                tmp_sem = std(cur_set(rand_select).^2,[],1)/sqrt(size(rand_select,1));% power
                 mean_2f_mag(iit,iamp,itri,ichan) = tmp_mean;% power
                 sem_2f_mag(iit,iamp,itri,ichan) = tmp_sem;% power
             end
