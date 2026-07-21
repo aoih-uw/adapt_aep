@@ -1,4 +1,4 @@
-function [kept_trials, kept_jitter, kept_phase] = get_kept_trials(grand_ex_save, iname, isubj, ...
+function [kept_trials, kept_jitter, kept_phase] = get_kept_trials(grand_ex_save, iname, ...
     ibatch, cur_chan, single_batch_locs, mult_batch_locs)
 
 if ismember(ibatch,single_batch_locs)
@@ -22,6 +22,7 @@ elseif ismember(ibatch, mult_batch_locs(:,1)) % Only look through first_batches
     amps = arrayfun(@(b) grand_ex_save{1,iname}.block_level_info(b).stim_amp, first_batch:last_batch);
     stim_types = arrayfun(@(b) grand_ex_save{1,iname}.block_level_info(b).stim_type, first_batch:last_batch, 'UniformOutput', false);
 
+    % Check if I incorrectly selected a set of blocks
     if length(unique(amps)) > 1 || length(unique(stim_types)) > 1
         keyboard
     end
