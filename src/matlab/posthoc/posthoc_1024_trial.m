@@ -1,15 +1,17 @@
 %% Load your data first with load_my_file
 
 % 1024 trial specific variables
-% trials_vec = [16 32 64 128 256 512 1024];
+trials_vec = [16 32 64 128 256 512 1024];
 % Only use trim stimulus
 subjid = grand_ex_save{1,1}.info.animal.subject_ID;
-trials_vec = [16 128 1024];
-amp_vec = 95:3:140;
-stim_type_vec = {'trim', 'ONOFF'};
+% trials_vec = [16 128 1024];
+amp_vec = grand_ex_save{1,1}.info.mixed.test_amplitudes;
+amp_vec = sort(amp_vec);
+stim_type_vec = grand_ex_save{1,1}.info.mixed.stim_name;
 my_chans = [2,3,4]; % 2 = 2mm, 3 = 4mm, 4 = subcut
+my_chans_name = {'2 mm subcranial', '4 mm subcranial', 'Subcutaneous'};
 n_it = 1000;
-sp_slope_frac = 0.01; % fraction of max slope defining "end of lower asymptote"
+sp_slope_frac = 0.04; % fraction of max slope defining "end of lower asymptote"
 use_sigmoid = 0;
 
 % Preallocate
@@ -135,7 +137,7 @@ for ichan = 1:length(my_chans)
             hold on;
 
             % Plot raw data
-            errorbar(amp_vec, cur_data , cur_data_sem,'o-','Color',cur_color)
+            errorbar(amp_vec, cur_data , cur_data_sem,'o','Color',cur_color)
             title(sprintf('%d trials', trials_vec(itri)))
             xlabel('Stimulus Amplitude (dB)')
             ylabel('2f Magnitude (\muV)')
@@ -153,8 +155,9 @@ growth_std(ichan,:) = std(thresh_fit(:,:,ichan),[],1)';
 end
 
 %% Plot how much 2f magnitude varies by channel and N trials included in average
-figure;
+figure;tiledlayout(3,1,'TileSpacing','tight','Padding','tight')
 for ichan = 1:length(my_chans)
+    nexttile
     if ichan == 1
         cur_color = tableau_10('blue');
     elseif ichan == 2
@@ -162,29 +165,29 @@ for ichan = 1:length(my_chans)
     elseif ichan == 3
         cur_color = tableau_10('purple');
     end
-
     cur_mean_vec = squeeze(growth_mean(ichan,:));
     cur_std_vec = squeeze(growth_std(ichan,:));
-    errorbar(trials_vec,cur_mean_vec,cur_std_vec,'o-','LineWidth',2,'Color',cur_color)
+    errorbar(trials_vec,cur_mean_vec,cur_std_vec,'o-','LineWidth',1.5,'Color',cur_color,'MarkerFaceColor',cur_color)
     hold on;
+    xticks(trials_vec)
+    xlim([0 1050])
+    xtickangle(45)
+    title(my_chans_name{ichan})
+    xlabel('N Trials in Average')
+    ylabel('Threshold (dB SPL)')
 end
-xticks(trials_vec)
-xtickangle(45)
-xlabel('N Trials in Average')
-ylabel('Threshold estimate (dB SPL)')
-legend(string(my_chans))
-title('How much does threshold estimation vary by trial number and by channel number')
+sgtitle('How much does threshold estimation vary by trial number and by channel number')
 
 % Apply tufte styling
 apply_tufte
 
-% Save figures
-figs = findall(0, 'Type', 'figure');
-for i = 1:length(figs)
-    figs(i).WindowState = 'maximized';
-    drawnow;
-    exportgraphics(figs(i), sprintf('%d_figure_%d_1024_trials.png', subjid, figs(i).Number), 'Resolution', 300);
-    savefig(figs(i), sprintf('%d_figure_%d_1024_trials.fig', subjid, figs(i).Number));
-end
-
-close all
+% % Save figures
+% figs = findall(0, 'Type', 'figure');
+% for i = 1:length(figs)
+%     figs(i).WindowState = 'maximized';
+%     drawnow;
+%     exportgraphics(figs(i), sprintf('%d_figure_%d_1024_trials.png', subjid, figs(i).Number), 'Resolution', 300);
+%     savefig(figs(i), sprintf('%d_figure_%d_1024_trials.fig', subjid, figs(i).Number));
+% end
+% 
+% close all

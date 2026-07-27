@@ -1,8 +1,11 @@
 %% posthoc_bootstrap_simulation
 % Assign variables
-amp_vec = 95:3:140;
+amp_vec = grand_ex_save{1,1}.info.mixed.test_amplitudes;
+amp_vec = sort(amp_vec);
+stim_type_vec = grand_ex_save{1,1}.info.mixed.stim_name;
+stim_type_idx = find(strcmp('ONOFF',stim_type_vec));
 my_chans = [2,3,4];
-n_bootstrap = 5000;
+n_bootstrap = 10000;
 trials_in_batch = 10;
 max_batches = 130/trials_in_batch; % 130 trials in batches of 10
 bootstrp_sim = NaN(max_batches, 5, length(amp_vec), length(my_chans));
@@ -13,14 +16,13 @@ growth_func_noise_floor = NaN(length(my_chans),length(amp_vec));
 
 thresh_fit = NaN(length(my_chans));
 use_sigmoid = 0;
-sp_slope_frac = 0.01; % fraction of max slope defining "end of lower asymptote"
-
+sp_slope_frac = 0.05; % fraction of max slope defining "end of lower asymptote"
 
 % Loop through data
 for iamp = 1:length(amp_vec)
     for ichan = 1:length(my_chans)
         % Get all ON-OFF data
-        diff_2f = ON_2f(:,iamp,2,ichan) - OFF_2f(:,iamp,1,ichan);
+        diff_2f = ON_2f(:,iamp,stim_type_idx,ichan) - OFF_2f(:,iamp,1,ichan);
         diff_2f(isnan(diff_2f)) = [];
         idx = 1;
         resp_found = 0;
@@ -83,47 +85,51 @@ end
 % Plot mean/sem across batches and ID when resp_found
 for ichan = 1:length(my_chans)
     figure;
-    tiledlayout(1,16,'Padding','tight','TileSpacing','tight');
+    tiledlayout(4,4,'Padding','tight','TileSpacing','tight');
     for iamp = 1:length(amp_vec)
         nexttile; hold on;
+        
         chan_amp_data = bootstrp_sim(:,:,iamp,ichan);
         chan_amp_data = chan_amp_data(~isnan(chan_amp_data(:,1)),:);  % keep filled batches
         batch_num  = chan_amp_data(:,1);
         resp_found = chan_amp_data(:,2);
         batch_mean = chan_amp_data(:,3);
         batch_sem  = chan_amp_data(:,4);
-        errorbar(batch_num,batch_mean,batch_sem,'Color',[.7 .7 .7],'HandleVisibility','off');
+
+        % Sort batch data
+        [batch_num, si] = sort(batch_num);
+        batch_mean = batch_mean(si);
+        batch_sem  = batch_sem(si);
+        resp_found = resp_found(si);
+
+        % Create error fill
+        x_vec  = batch_num(:).';
+        lo = (batch_mean - batch_sem).';
+        hi = (batch_mean + batch_sem).';
+        fill([x_vec fliplr(x_vec)], [lo fliplr(hi)], [.7 .7 .7], ...
+            'FaceAlpha',.25,'EdgeColor','none','HandleVisibility','off');
+        plot(x_vec, batch_mean, 'Color',[.7 .7 .7],'HandleVisibility','off');
+        
+        % Plot raw data
         scatter(batch_num(resp_found==1),batch_mean(resp_found==1),40,tableau_10('green'),'filled');
         scatter(batch_num(resp_found==0),batch_mean(resp_found==0),40,tableau_10('red'),'filled');
-        title(amp_vec(iamp))
-        xlabel('N trials'); ylabel('Mean \pm SEM');
+        title(sprintf('%d dB',amp_vec(iamp)));
+        xlabel('N trials in average'); ylabel('Amplitude (\muV)');
     end
     sgtitle(sprintf('Channel %d', my_chans(ichan)));
     hold off;
 end
 
-% Plot min num of trials needed to find reliable resp_found (i.e., no more
-% no resp_found after resp_found)
-figure
-for ichan = 1:length(my_chans)
-    if ichan == 1
-        cur_color = tableau_10('blue');
-    elseif ichan == 2
-        cur_color = tableau_10('orange');
-    elseif ichan == 3
-        cur_color = tableau_10('purple');
-    end
-    plot(amp_vec,resp_found_data(ichan,:),'-o','Color',cur_color,'MarkerFaceColor',cur_color,'LineWidth',2);
-    hold on;
-end
-ylim([0,50])
-xticks(amp_vec)
-yticks(0:5:50)
-xlim([95 140])
-xlabel('Stimulus amplitude')
-ylabel('N trials needed for + response')
-title('How many trials need to be in the average to find a response?')
-legend(string(my_chans))
+% Plot min num of trials needed to find reliable resp_found (i.e., no more no resp_found after resp_found)
+figure;
+h = heatmap(resp_found_data);              % keep NaNs — don't convert to 130
+h.MissingDataColor = tableau_10('grey');   % grey out the NaN cells
+h.XDisplayLabels = string(amp_vec);
+h.YDisplayLabels = {'2 mm Subcranial', '4 mm Subcranial','Subcutaneous'};
+h.ColorbarVisible = 'off';
+h.Colormap = interp1([0 1], [1 1 1; tableau_10('blue')], linspace(0,1,256));
+title('Number of trials needed to detect AEP response')
+h.XLabel = 'Stimulus Amplitude (dB SPL)';
 
 % Plot growth functions
 figure; tiledlayout(1,3,'Padding','tight','TileSpacing','tight');
@@ -141,7 +147,7 @@ for ichan = 1:length(my_chans)
     cur_noise_floor = median(growth_func_noise_floor(ichan,:));
 
     % Fit model
-    if use_sigmoid 
+    if use_sigmoid
         % Fit sigmoid
         [p, cur_data, cur_data_sem, logistic] = param_logistic(cur_y, [], amp_vec, []);
     else
@@ -157,13 +163,14 @@ for ichan = 1:length(my_chans)
         y_vec = softplus(p,x_vec);
     end
     thresh_fit(ichan) = p(3) + (1/p(2))*log(sp_slope_frac/(1-sp_slope_frac));
-    
+
     % Plot raw data
-    errorbar(amp_vec,cur_y,cur_y_sem,'-o','Color',cur_color,'MarkerFaceColor',cur_color,'LineWidth',2);
+    errorbar(amp_vec,cur_y,cur_y_sem,'o','Color',cur_color,'MarkerFaceColor',cur_color,'LineWidth',2);
     hold on;
+    
     % Plot fitted curve
-    plot(x_vec,y_vec,'-','Color',tableau_10('grey'),'LineWidth',2);
-    xline(thresh_fit(ichan))
+    plot(x_vec,y_vec,'-','Color',cur_color,'LineWidth',2);
+    xline(thresh_fit(ichan), '--','LineWidth',2)
     xticks(amp_vec)
     xlabel('Stimulus amplitude')
     ylabel('Amplitude (\muV)')
@@ -174,11 +181,11 @@ sgtitle('Simulated Adaptive Growth Functions')
 % Apply Tufte styling
 apply_tufte
 
-% Save figures
-figs = findall(0, 'Type', 'figure');
-for i = 1:length(figs)
-    figs(i).WindowState = 'maximized';
-    drawnow;
-    exportgraphics(figs(i), sprintf('%d_figure_%d_1024_trials.png', subjid, figs(i).Number), 'Resolution', 300);
-    savefig(figs(i), sprintf('%d_figure_%d_bootstrap.fig', subjid, figs(i).Number));
-end
+% % Save figures
+% figs = findall(0, 'Type', 'figure');
+% for i = 1:length(figs)
+%     figs(i).WindowState = 'maximized';
+%     drawnow;
+%     exportgraphics(figs(i), sprintf('%d_figure_%d_1024_trials.png', subjid, figs(i).Number), 'Resolution', 300);
+%     savefig(figs(i), sprintf('%d_figure_%d_bootstrap.fig', subjid, figs(i).Number));
+% end

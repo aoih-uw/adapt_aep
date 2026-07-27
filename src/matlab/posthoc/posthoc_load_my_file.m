@@ -1,5 +1,7 @@
 % Assign vars
-subjid = 25;
+clearvars
+addpath(genpath('\\wsl.localhost\ubuntu\home\aoih\adapt_aep\src\matlab'))
+subjid = 23;
 base_dir = 'F:\2026\Research\July Midshipman';
 cd(base_dir)
 file_type = 'mixed_stimuli';

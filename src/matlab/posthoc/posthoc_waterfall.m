@@ -1,12 +1,13 @@
 % Function posthoc_waterfall
 % Assign vars
 subjid = grand_ex_save{1,1}.info.animal.subject_ID;
-amp_vec = 95:3:140;
-stim_type_vec = {'trim','ONOFF'};
+amp_vec = grand_ex_save{1,1}.info.mixed.test_amplitudes;
+amp_vec = sort(amp_vec);
+stim_type_vec = grand_ex_save{1,1}.info.mixed.stim_name;
 my_chans = [2,3,4];
 target_freq_range = 3;
 channel_names = {'2mm','4 mm', 'Subcutaneous'};
-stim_freq = 100;
+stim_freq = grand_ex_save{1,1}.info.stimulus.frequency_hz;
 data_titles = {'Stim ON','Stim OFF','Stim ON-OFF'};
 
 % Look at which type of stimuli we are working with to know how many trials
@@ -104,10 +105,10 @@ end
 % Apply tufte styling
 apply_tufte
 
-figs = findall(0, 'Type', 'figure');
-for i = 1:length(figs)
-    figs(i).WindowState = 'maximized';
-    drawnow;
-    exportgraphics(figs(i), sprintf('%d_figure_%d_waterfall.png', subjid, figs(i).Number), 'Resolution', 300);
-    savefig(figs(i), sprintf('%d_figure_%d_1024_waterfall.fig', subjid, figs(i).Number));
-end
+% figs = findall(0, 'Type', 'figure');
+% for i = 1:length(figs)
+%     figs(i).WindowState = 'maximized';
+%     drawnow;
+%     exportgraphics(figs(i), sprintf('%d_figure_%d_waterfall.png', subjid, figs(i).Number), 'Resolution', 300);
+%     savefig(figs(i), sprintf('%d_figure_%d_1024_waterfall.fig', subjid, figs(i).Number));
+% end

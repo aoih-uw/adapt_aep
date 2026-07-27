@@ -3,8 +3,9 @@
 
 %% Assign Variables
 clearvars -except grand_ex_save
-amp_vec = 95:3:140;
-stim_type_vec = {'trim','ONOFF'};
+amp_vec = grand_ex_save{1,1}.info.mixed.test_amplitudes;
+amp_vec = sort(amp_vec);
+stim_type_vec = grand_ex_save{1,1}.info.mixed.stim_name;
 my_chans = [2,3,4]; % 2 = 2mm, 3 = 4mm, 4 = subcut
 target_freq_range =  3; % for fft bin finding calculations
 
