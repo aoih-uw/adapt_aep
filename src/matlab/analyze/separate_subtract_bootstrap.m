@@ -7,6 +7,7 @@ kept_trials_filtered = ex.kept.trials_filtered;
 N_valid_trials = size(ex.kept.trials_filtered,1);
 kept_jitter = ex.kept.jitter;
 max_trials = ex.info.trials.max_trials;
+n_bootstrap = ex.info.analysis.n_bootstrap;
 
 % Sample variables
 latency_samples = ex.info.recording.latency_samples;
@@ -39,7 +40,7 @@ cla(app.UIAxes_boot)
 % cla(app.UIAxes_perm)
 cla(app.UIAxes_gate)
 
-% Extract Stim ON and OFF Periods
+%% Extract Stim ON and OFF Periods
 [stim_ON , stim_OFF] = extract_stim_ON_OFF( ...
     kept_trials_filtered, 1, fs, ...
     latency_samples, period_length_samples, ramp_duration_samples,...
@@ -79,21 +80,23 @@ end
 % Just pick one freq_vec for ease
 freq_vec = freq_vec_stim_ON(1,:);
 
-%% Extract Stim ON 2f bins
+%% Extract Bins
+% Stim ON 2f bins
 [stim_ON_2f_vec, ~] = ...
     find_fft_bins(freq_2f_hz, range_2f_hz, fft_vals_stim_ON, freq_vec);
 
-%% Extract Stim OFF 2f bins (i.e., noise floor)
+% Extract Stim OFF 2f bins (i.e., noise floor)
 % Get the magnitude value at 2f in the stim OFF period to compare to stim ON period for the model
     [stim_OFF_2f_vec, ~] = ...
     find_fft_bins(freq_2f_hz, range_2f_hz, fft_vals_stim_OFF, freq_vec);
 
-%% Calculate DIFF: Subtract ON - OFF for bootstrap
+%% Calculate DIFFs
+% Calculate DIFF: Subtract ON - OFF for bootstrap
 diffs = fft_vals_stim_ON - fft_vals_stim_OFF; % Subtract across full freq_vec range
 [diff_2f_vec, ~] = ...
     find_fft_bins(freq_2f_hz, range_2f_hz, diffs, freq_vec);
 
-%% Calculate mean diff 2f magnitude to compare to other peaks in diff
+% Calculate mean diff 2f magnitude to compare to other peaks in diff
 diff_2f_mean = mean(diff_2f_vec); % Collapse 2f diff bin means across trials
 
 % Calculate distribution of values at non 2f bins for comparison
@@ -165,13 +168,16 @@ elseif N_valid_trials >= max_trials
     gate_type = 3;
 end
 
-% Run the bootstrap
+%% Run the bootstrap
 if run_bootstrap
     ex.counter.iboot = ex.counter.iboot + 1;
     iboot = ex.counter.iboot;
-
-    [bootstat, lower_CI, upper_CI] = calculate_bootstrap(ex, diff_2f_vec);
+    fprintf('\nStarting bootstrap calculation...\n')
+    tic()
+    [bootstat, lower_CI, upper_CI] = calculate_bootstrap(n_bootstrap, diff_2f_vec);
     fprintf('\nBootstrapping CI range: [ %.3f , %.3f ]',lower_CI, upper_CI)
+    time_elapsed = toc();
+    fprintf('\nBootstrap calculation time: %.3f\n', time_elapsed);
     
     % Save to boot
     ex.bootstrap(iboot).bootstat = bootstat;
