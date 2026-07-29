@@ -13,10 +13,14 @@ period_60_hz = 1/60; % time it takes to complete 1 cycle of 60 Hz (s)
 selected_cycle_samples = ceil(rand(trials_per_block, 1) * period_60_hz * fs);
 
 % Create alternating phase vector
-if mod(trials_per_block,2) == 0
-    phase_vec = 2*(randperm(trials_per_block) <= trials_per_block/2)' - 1;
+if ex.test % Make phases all the same for posthoc_simulate_data
+    phase_vec = ones(trials_per_block,1);
 else
-    error('make_stim_block:oddTrials', 'The number of trials is not evenly divded by 2!')
+    if mod(trials_per_block,2) == 0
+        phase_vec = 2*(randperm(trials_per_block) <= trials_per_block/2)' - 1;
+    else
+        error('make_stim_block:oddTrials', 'The number of trials is not evenly divded by 2!')
+    end
 end
 
 %% Define [PRE, DUR, POST] stimulus periods
@@ -54,6 +58,10 @@ for itrial = 1:trials_per_block
     temp_stimulus = [jitter stim_OFF stim_ON post_stim latency]*phase;
 
     % Apply amplitude scaling
-    temp_stimulus_scaled = apply_stim_amp_scaling(current_amplitude, correction_factor, temp_stimulus);
-    stimulus(itrial, 1:length(temp_stimulus_scaled)) = temp_stimulus_scaled;
+    if ~ex.test
+        temp_stimulus = apply_stim_amp_scaling(current_amplitude, correction_factor, temp_stimulus);
+    end
+
+    % Save to stimulus
+    stimulus(itrial, 1:length(temp_stimulus)) = temp_stimulus;
 end

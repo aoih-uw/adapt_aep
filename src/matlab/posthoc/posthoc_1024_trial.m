@@ -2,13 +2,17 @@
 
 % 1024 trial specific variables
 trials_vec = [16 32 64 128 256 512 1024];
-amp_vec = 95:3:140;
-stim_type_vec = {'trim', 'ONOFF'};
+% Only use trim stimulus
+subjid = grand_ex_save{1,1}.info.animal.subject_ID;
+% trials_vec = [16 128 1024];
+amp_vec = grand_ex_save{1,1}.info.mixed.test_amplitudes;
+amp_vec = sort(amp_vec);
+stim_type_vec = grand_ex_save{1,1}.info.mixed.stim_name;
 my_chans = [2,3,4]; % 2 = 2mm, 3 = 4mm, 4 = subcut
+my_chans_name = {'2 mm subcranial', '4 mm subcranial', 'Subcutaneous'};
 n_it = 1000;
-sp_slope_frac = 0.05; % fraction of max slope defining "end of lower asymptote"
-lower_asy = 0; % Lower asymptote
-softplus = @(p,x) (p(1)/p(2))*(log1p(exp(p(2).*(x-p(3))))) + lower_asy;
+sp_slope_frac = 0.04; % fraction of max slope defining "end of lower asymptote"
+use_sigmoid = 0;
 
 % Preallocate
 % These collect the 2f magnitudes calculated over n_it times depending on
@@ -39,12 +43,19 @@ for itri = 1:length(trials_vec)
                 rand_select = [];
                 for ip = 1:length(phases)
                     idx = find(cur_phase == phases(ip));
-                    rand_select = [rand_select; idx(randperm(length(idx), n_per_phase))];
+                    rand_select = [rand_select; idx(randi(length(idx), n_per_phase,1))];
                 end
-                tmp_mean = mean(cur_set(rand_select).^2,1); % power
-                tmp_sem = std(cur_set(rand_select).^2,[],1)/sqrt(size(rand_select,2));% power
-                mean_2f_mag(iit,iamp,itri,ichan) = tmp_mean;% power
-                sem_2f_mag(iit,iamp,itri,ichan) = tmp_sem;% power
+
+                % Ensure equal phases have been selected
+                if sum(cur_phase(rand_select)) ~= 0
+                    keyboard
+                end
+
+                % Save randomly selected subsample
+                tmp_mean = mean(cur_set(rand_select),1);
+                tmp_sem = std(cur_set(rand_select),[],1)/sqrt(size(rand_select,1));
+                mean_2f_mag(iit,iamp,itri,ichan) = tmp_mean;
+                sem_2f_mag(iit,iamp,itri,ichan) = tmp_sem;
             end
         end
     end
@@ -80,13 +91,13 @@ for ichan = 1:length(my_chans)
     % Start looping through trial N conditions
     for itri = 1:length(trials_vec)
         nexttile
-        
+
         % Preallocate
         % These will collect every iterations growth function, where all
         % amplitude data is included in a vector per iteration
         growth_per_it_mean = NaN(n_it,length(amp_vec));
         growth_per_it_sem = NaN(n_it,length(amp_vec));
-        
+
         % Generate per iteration growth functions
         for iamp = 1:length(amp_vec)
             growth_per_it_mean(:,iamp) = squeeze(mean_2f_mag(:,iamp,itri,ichan));
@@ -99,8 +110,12 @@ for ichan = 1:length(my_chans)
             cur_data = growth_per_it_mean(iit,:);
             cur_data_sem = growth_per_it_sem(iit,:);
 
-            % Fit softplus
-            [p, cur_data, cur_data_sem] = param_softplus(cur_data,cur_data_sem,amp_vec, [], lower_asy, 1);
+            if use_sigmoid
+                [p, cur_data, cur_data_sem, logistic] = param_logistic(cur_data, cur_data_sem, amp_vec, []);
+            else
+                % Fit softplus
+                [p, cur_data, cur_data_sem, softplus] = param_softplus(cur_data,cur_data_sem,amp_vec, []); % Fit to the raw data without correction
+            end
 
             % Save params
             a_fit(iit ,itri,ichan) = p(1);
@@ -109,35 +124,40 @@ for ichan = 1:length(my_chans)
 
             % Find threshold
             x_vec = linspace(min(amp_vec),max(amp_vec),200);
-            y_vec = softplus(p,x_vec);
+            if use_sigmoid
+                y_vec = logistic(p,x_vec);
+            else
+                y_vec = softplus(p,x_vec);
+            end
             thresh_fit(iit ,itri,ichan) = p(3) + (1/p(2))*log(sp_slope_frac/(1-sp_slope_frac));
 
-            if mod(iit,250) == 0 % Plot only every 100th iteration
-                % Plot model fit
-                plot(x_vec,y_vec,'Color',[128 128 128]./255,'LineWidth',2);
-                hold on;
+        if mod(iit,250) == 0 % Plot only every 100th iteration
+            % Plot model fit
+            plot(x_vec,y_vec,'Color',[128 128 128]./255,'LineWidth',2);
+            hold on;
 
-                % Plot raw data
-                errorbar(amp_vec, cur_data , cur_data_sem,'o-','Color',cur_color)
-                title(sprintf('%d trials', trials_vec(itri)))
-                xlabel('Stimulus Amplitude (dB)')
-                ylabel('2f Magnitude (\muV)')
-                xline(x0_fit(iit ,itri,ichan), '--', 'Color',tableau_10('grey'))
-                xline(thresh_fit(iit ,itri,ichan),'--','Color',tableau_10('red'))
-                yline(cur_data(1),'--')
-                yline(0,'--')
-            end
+            % Plot raw data
+            errorbar(amp_vec, cur_data , cur_data_sem,'o','Color',cur_color)
+            title(sprintf('%d trials', trials_vec(itri)))
+            xlabel('Stimulus Amplitude (dB)')
+            ylabel('2f Magnitude (\muV)')
+            xline(x0_fit(iit ,itri,ichan), '--', 'Color',tableau_10('grey'))
+            xline(thresh_fit(iit ,itri,ichan),'--','Color',tableau_10('red'))
+            yline(cur_data(1),'--')
+            yline(0,'--')
         end
     end
+end
 
-    % Calculate mean threshold
-    growth_mean(ichan,:) = mean(thresh_fit(:,:,ichan),1)';
-    growth_std(ichan,:) = std(thresh_fit(:,:,ichan),[],1)';
+% Calculate mean threshold
+growth_mean(ichan,:) = mean(thresh_fit(:,:,ichan),1)';
+growth_std(ichan,:) = std(thresh_fit(:,:,ichan),[],1)';
 end
 
 %% Plot how much 2f magnitude varies by channel and N trials included in average
-figure;
+figure;tiledlayout(3,1,'TileSpacing','tight','Padding','tight')
 for ichan = 1:length(my_chans)
+    nexttile
     if ichan == 1
         cur_color = tableau_10('blue');
     elseif ichan == 2
@@ -145,15 +165,29 @@ for ichan = 1:length(my_chans)
     elseif ichan == 3
         cur_color = tableau_10('purple');
     end
-
     cur_mean_vec = squeeze(growth_mean(ichan,:));
     cur_std_vec = squeeze(growth_std(ichan,:));
-    errorbar(trials_vec,cur_mean_vec,cur_std_vec,'o-','LineWidth',2,'Color',cur_color)
+    errorbar(trials_vec,cur_mean_vec,cur_std_vec,'o-','LineWidth',1.5,'Color',cur_color,'MarkerFaceColor',cur_color)
     hold on;
-end
     xticks(trials_vec)
+    xlim([0 1050])
     xtickangle(45)
+    title(my_chans_name{ichan})
     xlabel('N Trials in Average')
-    ylabel('Threshold estimate (dB SPL)')
-legend(string(my_chans))
-    title('How much does threshold estimation vary by trial number and by channel number')
+    ylabel('Threshold (dB SPL)')
+end
+sgtitle('How much does threshold estimation vary by trial number and by channel number')
+
+% Apply tufte styling
+apply_tufte
+
+% % Save figures
+% figs = findall(0, 'Type', 'figure');
+% for i = 1:length(figs)
+%     figs(i).WindowState = 'maximized';
+%     drawnow;
+%     exportgraphics(figs(i), sprintf('%d_figure_%d_1024_trials.png', subjid, figs(i).Number), 'Resolution', 300);
+%     savefig(figs(i), sprintf('%d_figure_%d_1024_trials.fig', subjid, figs(i).Number));
+% end
+% 
+% close all
