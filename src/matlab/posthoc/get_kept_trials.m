@@ -1,5 +1,5 @@
 function [kept_trials, kept_jitter, kept_phase] = get_kept_trials(grand_ex_save, iname, ...
-    ibatch, cur_chan, single_batch_locs, mult_batch_locs)
+    ibatch, cur_chan, single_batch_locs, mult_batch_locs,trials_per_block)
 
 if ismember(ibatch,single_batch_locs)
     % None of the trials got rejected
@@ -8,7 +8,7 @@ if ismember(ibatch,single_batch_locs)
     kept_phase = grand_ex_save{1,iname}.block_level_info(1,ibatch).phase_vec;
 
     % Alert user if trials were rejected in this case
-    if length(grand_ex_save{1,iname}.block_level_info(ibatch).kept_trials_idx) ~= 10
+    if length(grand_ex_save{1,iname}.block_level_info(ibatch).kept_trials_idx) ~= trials_per_block
         keyboard
     end
 elseif ismember(ibatch, mult_batch_locs(:,1)) % Only look through first_batches
@@ -32,7 +32,7 @@ elseif ismember(ibatch, mult_batch_locs(:,1)) % Only look through first_batches
         size(grand_ex_save{1,iname}.raw_signals(1,b).electrodes_microV,2), ...
         first_batch:last_batch);
     max_size = max(sizes);
-    n_rows = 10*length(first_batch:last_batch);
+    n_rows = trials_per_block*length(first_batch:last_batch);
     temp_sigs = NaN(n_rows,max_size);
     temp_jitter = NaN(n_rows,1);
     temp_phase = NaN(n_rows,1);
@@ -43,10 +43,10 @@ elseif ismember(ibatch, mult_batch_locs(:,1)) % Only look through first_batches
         cur_batch = grand_ex_save{1,iname}.raw_signals(1,iii).electrodes_microV(:,:,cur_chan);
         cur_jitter = grand_ex_save{1,iname}.block_level_info(1,iii).jitter;
         cur_phase = grand_ex_save{1,iname}.block_level_info(1,iii).phase_vec;
-        temp_sigs(my_idx:my_idx+9,1:size(cur_batch,2)) = cur_batch;
-        temp_jitter(my_idx:my_idx+9) = cur_jitter;
-        temp_phase(my_idx:my_idx+9) = cur_phase;
-        my_idx = my_idx + 10;
+        temp_sigs(my_idx:my_idx+(trials_per_block-1),1:size(cur_batch,2)) = cur_batch;
+        temp_jitter(my_idx:my_idx+(trials_per_block-1)) = cur_jitter;
+        temp_phase(my_idx:my_idx+(trials_per_block-1)) = cur_phase;
+        my_idx = my_idx + trials_per_block;
     end
     % Keep non-rejected trials only
     kept_trials_idx = grand_ex_save{1,iname}.block_level_info(1,last_batch).kept_trials_idx;

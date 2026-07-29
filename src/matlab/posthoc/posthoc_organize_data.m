@@ -8,6 +8,7 @@ amp_vec = sort(amp_vec);
 stim_type_vec = grand_ex_save{1,1}.info.mixed.stim_name;
 my_chans = [2,3,4]; % 2 = 2mm, 3 = 4mm, 4 = subcut
 target_freq_range =  3; % for fft bin finding calculations
+trials_per_block = grand_ex_save{1,1}.info.trials.trials_per_block;
 
 %% Preallocate
 % 2f magnitude bins
@@ -58,7 +59,7 @@ for iname = 1:length(grand_ex_save)
 
             % Get kept_trials for each set of iblocks
             [kept_trials, kept_jitter, kept_phase] = get_kept_trials(grand_ex_save, iname, ...
-                ibatch, cur_chan, single_batch_locs, mult_batch_locs);
+                ibatch, cur_chan, single_batch_locs, mult_batch_locs,trials_per_block);
 
             % Ensure equal phases
             if sum(kept_phase) ~= 0
@@ -191,8 +192,6 @@ for iname = 1:length(grand_ex_save)
                         = temp_OFF_2f;
                 end
             end
-
-
         end
     end
     toc()

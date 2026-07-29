@@ -5,7 +5,7 @@ amp_vec = sort(amp_vec);
 stim_type_vec = grand_ex_save{1,1}.info.mixed.stim_name;
 stim_type_idx = find(strcmp('ONOFF',stim_type_vec));
 my_chans = [2,3,4];
-n_bootstrap = 10000;
+n_bootstrap = 1000;
 trials_in_batch = 10;
 max_batches = 130/trials_in_batch; % 130 trials in batches of 10
 bootstrp_sim = NaN(max_batches, 5, length(amp_vec), length(my_chans));
@@ -16,7 +16,7 @@ growth_func_noise_floor = NaN(length(my_chans),length(amp_vec));
 
 thresh_fit = NaN(length(my_chans));
 use_sigmoid = 0;
-sp_slope_frac = 0.05; % fraction of max slope defining "end of lower asymptote"
+max_resp_frac = 0.01; % fraction of max slope defining "end of lower asymptote"
 
 % Loop through data
 for iamp = 1:length(amp_vec)
@@ -162,7 +162,8 @@ for ichan = 1:length(my_chans)
     else
         y_vec = softplus(p,x_vec);
     end
-    thresh_fit(ichan) = p(3) + (1/p(2))*log(sp_slope_frac/(1-sp_slope_frac));
+    thresh_idx = find(y_vec >= max(y_vec)*max_resp_frac,1,'first');
+    thresh_fit(ichan) = p(3)-5;
 
     % Plot raw data
     errorbar(amp_vec,cur_y,cur_y_sem,'o','Color',cur_color,'MarkerFaceColor',cur_color,'LineWidth',2);
@@ -170,7 +171,8 @@ for ichan = 1:length(my_chans)
     
     % Plot fitted curve
     plot(x_vec,y_vec,'-','Color',cur_color,'LineWidth',2);
-    xline(thresh_fit(ichan), '--','LineWidth',2)
+    xline(thresh_fit(ichan), '--','LineWidth',2,'Color', tableau_10('red'))
+    xline(p(3), '--', 'Color', tableau_10('grey'))
     xticks(amp_vec)
     xlabel('Stimulus amplitude')
     ylabel('Amplitude (\muV)')
