@@ -32,6 +32,7 @@ for iname = 1:length(grand_ex_save)
     stimulus = grand_ex_save{1,iname}.info.stimulus.waveform;
     fs = grand_ex_save{1,iname}.info.recording.sampling_rate_hz;
     ramp_duration_samples = grand_ex_save{1,iname}.info.stimulus.ramp_duration_ms/1e3*fs;
+    % target_freq = 130;
     target_freq = grand_ex_save{1,iname}.info.stimulus.frequency_hz*2;
     trim_stim_pre_dur_ms = grand_ex_save{1,iname}.info.stimulus.trim_stim_pre_dur_ms;
 

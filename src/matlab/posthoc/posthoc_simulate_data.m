@@ -31,6 +31,32 @@ ex = setup_block(ex); % Per amplitude meta/data
 
 % Get the amplitudes we are testing with
 amp_vec = ex.info.mixed.test_amplitudes;
+amp_vec = sort(amp_vec);
+
+% Create fake signal set
+set_threshold = 110;
+ending_slope_range = 5;
+sig_vals = amp_vec >= set_threshold;
+n_non_zeros = size(find(sig_vals),2);
+n_zeros = length(sig_vals)-n_non_zeros;
+n_soft_ramp = round(n_non_zeros/3); % 1/3 of non_zero values will be a soft ramp
+
+% Slope is 1
+for i = 1:n_soft_ramp 
+    soft_ramp(i) = 0 + i;
+end
+
+% Slope is 5
+for i =  1:length(sig_vals)-n_soft_ramp-n_zeros-ending_slope_range
+    hard_ramp(i) = soft_ramp(end) + 5*i;
+end
+
+% Slope is 10
+for i = 1:ending_slope_range
+    harder_ramp(i) = hard_ramp(end) + 10*i;
+end
+
+scale_factor = [zeros(1,n_zeros) soft_ramp hard_ramp harder_ramp];
 
 % Assign misc vars
 trials_per_block = ex.info.trials.trials_per_block;
@@ -60,6 +86,7 @@ for ischedule = 1:length(ex.info.mixed.test_schedule)
     cur_parameters = ex.info.mixed.test_schedule(ex.counter.ischedule,:); % [stim_name, stim_amp, trials_needed, uniq_idx]
     cur_stim_name = ex.info.mixed.stim_name{cur_parameters(1)};
     current_amplitude = cur_parameters(2);
+    cur_amp_idx = find(current_amplitude == amp_vec);
 
     % Determine stim type
     if strcmp(cur_stim_name, 'trim')
@@ -97,7 +124,7 @@ for ischedule = 1:length(ex.info.mixed.test_schedule)
 
     % Identify the full scale RMS of the stimulus to use to match noise rms
     % later
-    full_scale_rms = median(rms(stimulus,2));
+    full_scale_rms = median(max(stimulus,[],2));
 
     %% Generate pink noise on per trial basis
     % Need to generate on per trial basis so it averages down
@@ -109,22 +136,16 @@ for ischedule = 1:length(ex.info.mixed.test_schedule)
         my_mult = full_scale_rms/rms(tmp_noise);
         my_noise(itrial,:) = tmp_noise*my_mult;
     end
-
-    % Create fake signal set
-    set_threshold = 110;
-    norm_amp = (current_amplitude - (set_threshold-3)) / (max(amp_vec) - (set_threshold-3));
-    w = 20;
-    u = min(max((current_amplitude - set_threshold)/w, 0), 1);
-    scale_factor = norm_amp * u^2*(3-2*u);
+    
 
     % Setup signal and noise scaling factors
-    chan_scale = [0.25 2 10 0.25];
-    noise_scale = [1 1 1 1];
+    chan_scale = [1 0.5 1 0.25];
+    noise_scale = ones(1,4);
 
     % Apply scaling and noise to simulated AEP
     for ichan = 1:ex.info.channels.n_channels
         ex.raw_signals(iblock).electrodes_microV(:,:,ichan) = ...
-            stimulus*scale_factor*chan_scale(ichan) + my_noise*noise_scale(ichan);
+            stimulus*scale_factor(cur_amp_idx)*chan_scale(ichan) + my_noise*noise_scale(ichan);
     end
 
     % Progress counter

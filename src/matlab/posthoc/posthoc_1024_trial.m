@@ -62,8 +62,6 @@ for itri = 1:length(trials_vec)
 end
 
 % Plot growth functions across different trial counts
-figure;
-t1 = tiledlayout(length(my_chans), length(trials_vec), 'TileSpacing','tight','Padding','tight');
 
 % Start looping through data
 
@@ -78,6 +76,8 @@ x0_fit = NaN(n_it,length(trials_vec),length(my_chans));
 thresh_fit = NaN(n_it,length(trials_vec),length(my_chans));
 
 for ichan = 1:length(my_chans)
+    figure;
+    t1 = tiledlayout(1, 3, 'TileSpacing','tight','Padding','tight');
     % Assign plotting colors
     cur_chan = my_chans(ichan);
     if ichan == 1
@@ -90,8 +90,9 @@ for ichan = 1:length(my_chans)
 
     % Start looping through trial N conditions
     for itri = 1:length(trials_vec)
-        nexttile
-
+        if itri == 1 || itri == 4 || itri == 7
+            nexttile
+        end
         % Preallocate
         % These will collect every iterations growth function, where all
         % amplitude data is included in a vector per iteration
@@ -131,33 +132,35 @@ for ichan = 1:length(my_chans)
             end
             thresh_fit(iit ,itri,ichan) = p(3) + (1/p(2))*log(sp_slope_frac/(1-sp_slope_frac));
 
-        if mod(iit,250) == 0 % Plot only every 100th iteration
-            % Plot model fit
-            plot(x_vec,y_vec,'Color',[128 128 128]./255,'LineWidth',2);
-            hold on;
+            if itri == 1 || itri == 4 || itri == 7
+                if mod(iit,250) == 0
+                     % Plot only every 100th iteration
+                    % Plot model fit
+                    plot(x_vec,y_vec,'Color',[128 128 128]./255,'LineWidth',2);
+                    hold on;
 
-            % Plot raw data
-            errorbar(amp_vec, cur_data , cur_data_sem,'o','Color',cur_color)
-            title(sprintf('%d trials', trials_vec(itri)))
-            xlabel('Stimulus Amplitude (dB)')
-            ylabel('2f Magnitude (\muV)')
-            xline(x0_fit(iit ,itri,ichan), '--', 'Color',tableau_10('grey'))
-            xline(thresh_fit(iit ,itri,ichan),'--','Color',tableau_10('red'))
-            yline(cur_data(1),'--')
-            yline(0,'--')
+                    % Plot raw data
+                    errorbar(amp_vec, cur_data , cur_data_sem,'o','Color',cur_color)
+                    title(sprintf('%d trials', trials_vec(itri)))
+                    xlabel('Stimulus Amplitude (dB)')
+                    ylabel('2f Magnitude (\muV)')
+                    xline(x0_fit(iit ,itri,ichan), '--', 'Color',tableau_10('grey'))
+                    xline(thresh_fit(iit ,itri,ichan),'--','Color',tableau_10('red'))
+                    yline(cur_data(1),'--')
+                    yline(0,'--')
+                end
+            end
         end
     end
-end
-
 % Calculate mean threshold
 growth_mean(ichan,:) = mean(thresh_fit(:,:,ichan),1)';
 growth_std(ichan,:) = std(thresh_fit(:,:,ichan),[],1)';
 end
 
+
 %% Plot how much 2f magnitude varies by channel and N trials included in average
-figure;tiledlayout(3,1,'TileSpacing','tight','Padding','tight')
 for ichan = 1:length(my_chans)
-    nexttile
+    figure;
     if ichan == 1
         cur_color = tableau_10('blue');
     elseif ichan == 2
@@ -170,13 +173,14 @@ for ichan = 1:length(my_chans)
     errorbar(trials_vec,cur_mean_vec,cur_std_vec,'o-','LineWidth',1.5,'Color',cur_color,'MarkerFaceColor',cur_color)
     hold on;
     xticks(trials_vec)
-    xlim([0 1050])
     xtickangle(45)
     title(my_chans_name{ichan})
     xlabel('N Trials in Average')
     ylabel('Threshold (dB SPL)')
+    xscale('log')
+    xlim([0 1050])
+
 end
-sgtitle('How much does threshold estimation vary by trial number and by channel number')
 
 % Apply tufte styling
 apply_tufte
@@ -189,5 +193,5 @@ apply_tufte
 %     exportgraphics(figs(i), sprintf('%d_figure_%d_1024_trials.png', subjid, figs(i).Number), 'Resolution', 300);
 %     savefig(figs(i), sprintf('%d_figure_%d_1024_trials.fig', subjid, figs(i).Number));
 % end
-% 
+%
 % close all
