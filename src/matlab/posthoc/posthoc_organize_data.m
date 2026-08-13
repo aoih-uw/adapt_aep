@@ -1,14 +1,28 @@
 %% Load your data first with load_my_file
-%% Sort through data
 
 %% Assign Variables
 clearvars -except grand_ex_save
-amp_vec = grand_ex_save{1,1}.info.mixed.test_amplitudes;
-amp_vec = sort(amp_vec);
-stim_type_vec = grand_ex_save{1,1}.info.mixed.stim_name;
-my_chans = [2,3,4]; % 2 = 2mm, 3 = 4mm, 4 = subcut
-target_freq_range =  3; % for fft bin finding calculations
-trials_per_block = grand_ex_save{1,1}.info.trials.trials_per_block;
+save_dir = 'F:\2026\Research\July Midshipman\organized_data';
+info = grand_ex_save{1,1}.info;
+meta.subjid            = info.animal.subject_ID;
+meta.amp_vec           = sort(info.mixed.test_amplitudes);
+meta.stim_type_vec     = info.mixed.stim_name;
+meta.stim_freq         = info.stimulus.frequency_hz;
+meta.my_chans          = [2,3,4];   % 2 = 2mm, 3 = 4mm, 4 = subcut
+meta.my_chans_name     = {'2 mm subcranial','4 mm subcranial','Subcutaneous'};
+meta.target_freq_range = 3;
+meta.trials_per_block  = info.trials.trials_per_block;
+meta.ON_OFF_max_trials = 130;
+
+% Metadata
+subjid = meta.subjid;
+amp_vec = meta.amp_vec;
+stim_type_vec = meta.stim_type_vec;
+stim_freq = meta.stim_freq;
+my_chans = meta.my_chans;
+my_chans_name = meta.my_chans_name;
+target_freq_range = meta.target_freq_range;
+trials_per_block = meta.trials_per_block;
 
 %% Preallocate
 % 2f magnitude bins
@@ -198,4 +212,15 @@ for iname = 1:length(grand_ex_save)
     toc()
 end
 
-dbstop = 1;
+% Organize data into org_data
+org_data.ON_2f        = ON_2f;
+org_data.OFF_2f       = OFF_2f;
+org_data.freq_vec     = freq_vec;
+org_data.ON_fft_vals  = ON_fft_vals;
+org_data.OFF_fft_vals = OFF_fft_vals;
+org_data.phase_vec    = phase_vec;
+
+% Save organized data
+cd(save_dir)
+save(sprintf('subject_%d_target_%d_Hz',subjid,target_freq), ...
+    'meta', 'org_data')

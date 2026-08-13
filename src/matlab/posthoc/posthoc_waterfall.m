@@ -1,13 +1,24 @@
 % Function posthoc_waterfall
+clearvars -except grand_ex_save meta org_data
+
 % Assign vars
-subjid = grand_ex_save{1,1}.info.animal.subject_ID;
-amp_vec = grand_ex_save{1,1}.info.mixed.test_amplitudes;
-amp_vec = sort(amp_vec);
-stim_type_vec = grand_ex_save{1,1}.info.mixed.stim_name;
-my_chans = [2,3,4];
-target_freq_range = 3;
-channel_names = {'2mm','4 mm', 'Subcutaneous'};
-stim_freq = grand_ex_save{1,1}.info.stimulus.frequency_hz;
+% Metadata
+subjid = meta.subjid;
+amp_vec = meta.amp_vec;
+stim_type_vec = meta.stim_type_vec;
+stim_freq = meta.stim_freq;
+my_chans = meta.my_chans;
+my_chans_name = meta.my_chans_name;
+target_freq_range = meta.target_freq_range;
+trials_per_block = meta.trials_per_block;
+
+% Organized data
+freq_vec     = org_data.freq_vec;
+ON_fft_vals  = org_data.ON_fft_vals;
+OFF_fft_vals = org_data.OFF_fft_vals;
+phase_vec    = org_data.phase_vec;
+
+% Function specific vars
 data_titles = {'Stim ON','Stim OFF','Stim ON-OFF'};
 
 % Look at which type of stimuli we are working with to know how many trials
@@ -98,17 +109,9 @@ for itype = 1:length(stim_type_vec)
             xlabel('Frequency (Hz)')
             title(data_titles{idata})
         end
-        sgtitle([stim_type_vec{itype} ' - ' channel_names{ichan}])
+        sgtitle([stim_type_vec{itype} ' - ' my_chans_name{ichan}])
     end
 end
 
 % Apply tufte styling
 apply_tufte
-
-% figs = findall(0, 'Type', 'figure');
-% for i = 1:length(figs)
-%     figs(i).WindowState = 'maximized';
-%     drawnow;
-%     exportgraphics(figs(i), sprintf('%d_figure_%d_waterfall.png', subjid, figs(i).Number), 'Resolution', 300);
-%     savefig(figs(i), sprintf('%d_figure_%d_1024_waterfall.fig', subjid, figs(i).Number));
-% end

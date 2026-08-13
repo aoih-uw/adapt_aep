@@ -1,11 +1,11 @@
 function [p_chan, thresh_ci, stable_n] = ...
     fit_low_CI_model(amp_vec, lower_ci_vec, boot_std_vec, ...
-    my_chans_name, my_tag, yes_plot)
+    trials_per_block, max_trials, my_chans_name, my_tag, yes_plot)
 
 % Preallocate
 x_vec = linspace(min(amp_vec), max(amp_vec), 2000);
 thresh_ci = NaN(size(lower_ci_vec,1), length(my_chans_name));
-p_chan = NaN(size(my_chans_name,2),4);
+p_chan = NaN(size(my_chans_name,2),4, size(lower_ci_vec,1));
 
 if yes_plot
     figure; tiledlayout(1,3,'TileSpacing','tight','Padding','tight');
@@ -14,7 +14,7 @@ end
 % Loop through data
 for ichan = 1:length(my_chans_name)
     if yes_plot
-    nexttile
+        nexttile
     end
     cur_color = select_chan_color(ichan);
     for ibatch = 1:size(lower_ci_vec,1)
@@ -23,12 +23,20 @@ for ichan = 1:length(my_chans_name)
 
         % Fit softplus
         cur_data_std = boot_std_vec(ibatch,:,ichan);
-        [p, ~, ~, softplus] = param_softplus(cur_y, cur_data_std, reshape(amp_vec,1,[]), [], 1);
+        [p, ~, ~, softplus,fit_ok, ~] = param_softplus(cur_y, cur_data_std, reshape(amp_vec,1,[]), [], 1);
+
+        % Create fitted softplus y vector
         y_vec = softplus(p, x_vec);
-        cross_idx = find(y_vec >= 0, 1, 'first');
-        if ~isempty(cross_idx)
-            thresh_ci(ibatch,ichan) = x_vec(cross_idx);
+
+        % Find and assign 0 crossing threshold value
+        if y_vec(1) < 0
+            cross_idx = find(y_vec >= 0, 1, 'first');
+            if ~isempty(cross_idx)
+                thresh_ci(ibatch,ichan) = x_vec(cross_idx);
+            end
         end
+
+        % Plot model fit
         if yes_plot
             plot(x_vec,y_vec,'Color',cur_color,'LineWidth',1.5)
             hold on;
@@ -41,13 +49,15 @@ for ichan = 1:length(my_chans_name)
             hold on;
         end
 
+        % Save model fit parameters
+        p_chan(ichan,:,ibatch) = p;
+
     end
     if yes_plot
         xregion(min(thresh_ci(:,ichan)), max(thresh_ci(:,ichan)), ...
             'FaceColor', tableau_10('grey'), 'FaceAlpha', 0.2)
     end
-    % save p
-    p_chan(ichan,:) = p;
+
 end
 
 if yes_plot
@@ -56,20 +66,29 @@ end
 
 % Find N trials at which threshold estimate stabilizes
 tol = 3; % dB tolerance band
-n_trials = 10:10:130;
+n_trials = trials_per_block:trials_per_block:max_trials;
 stable_n = NaN(1,length(my_chans_name));
 for ichan = 1:length(my_chans_name)
+    % Get vector of thresholds
     y_vec = thresh_ci(:,ichan);
-    last_bad = find(abs(y_vec - y_vec(end)) > tol, 1, 'last');
-    if isempty(last_bad)
-        stable_n(ichan) = n_trials(1);
-    elseif last_bad < numel(y_vec)
-        stable_n(ichan) = n_trials(last_bad+1);
+    if isnan(y_vec(end))
+        stable_n(ichan) = NaN;
+    else
+        non_nan_idxs = find(~isnan(y_vec));
+        non_nan_y_vec = y_vec(non_nan_idxs);
+        last_bad = find(abs(non_nan_y_vec - y_vec(end)) > tol, 1, 'last');
+        last_bad = non_nan_idxs(last_bad);
+        if isempty(last_bad)
+            stable_n(ichan) = n_trials(1);
+        elseif  ~isnan(y_vec(last_bad+1))
+            stable_n(ichan) = n_trials(last_bad+1);
+
+        end
     end
 end
 
+% Plot change in threshold estimate across batches of 10
 if yes_plot
-    % Plot change in threshold estimate across batches of 10
     figure; tiledlayout(1,3,'Padding','tight','TileSpacing','tight');
     for ichan = 1:length(my_chans_name)
         nexttile
