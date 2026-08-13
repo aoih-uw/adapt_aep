@@ -50,6 +50,7 @@ else
 end
 
 %% Assign trial counts
+
 if strcmp(app.DropDown_test_mode.Value, 'Adaptive') || strcmp(app.DropDown_test_mode.Value, 'Static trial count')
     ex.trial_count(iamp) = N_trials_presented;
 elseif strcmp(app.DropDown_test_mode.Value, 'Timed')
