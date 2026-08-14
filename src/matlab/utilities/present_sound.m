@@ -1,10 +1,10 @@
-function [rec_data_mV, ex] = present_sound(stimulus, ...
+function [rec_data_mV] = present_sound(stimulus, ...
     input_channels, output_channels, ...
     electrode_idx, hydrophone_idx, ...
     electrode_voltage_scaling_factor_V, ...
-    hydrophone_voltage_scaling_factor_V, ex, app)
-%% This function calls playrec to simultaneously present and record signals. Presents signals trial by trial, 
-% shows progress for number of trials presented per batch, enters debugging state when playrec gets stuck, 
+    hydrophone_voltage_scaling_factor_V)
+%% This function calls playrec to simultaneously present and record signals. Presents signals trial by trial,
+% shows progress for number of trials presented per batch, enters debugging state when playrec gets stuck,
 % checks for clipped hydrophone signals and absurdly high amplitude values,
 % applies correction factors to recover true mV values from electrodes/hydrophone after being amplified and processed by the DAC
 
@@ -35,21 +35,14 @@ for itrial = 1:height(stimulus)
     % Rip it
     try
         ipage = playrec('playrec', current_waveform, output_channels, -1, input_channels);
-        
+
         % Timeout guard
         t0 = tic;
         while ~playrec('isFinished', ipage)
             if toc(t0) > 20
                 playrec('delPage', ipage);
-                if strcmp(app.DropDown_test_mode.Value, 'Mixed stimuli')
-                    ex = save_mixed_raw(ex,app);
-                else
-                    if isfield(ex.info.experiment,'amp_time_start')
-                        ex = save_single_raw(ex, app, false);
-                    end
-                end
-                keyboard % Don't allow the program to progress further now since ex.block structure has been reset after saving
-            error('Playrec timed out. Check USB cord connection')
+                keyboard % Debug timeout
+                error('Playrec timed out. Check USB cord connection')
             end
         end
         pause(0.05);
@@ -82,7 +75,7 @@ for itrial = 1:height(stimulus)
     % Check for absurdly large electrode signals
     if any(abs(rec_data_mV(:,:,itrial)) > 1e3, 'all')
         fprintf('\nUnusually large voltage values detected in sensors (max: %.2f mV)\n', ...
-        max(abs(rec_data_mV(:,:,itrial)), [], 'all'));
+            max(abs(rec_data_mV(:,:,itrial)), [], 'all'));
         keyboard
     end
 

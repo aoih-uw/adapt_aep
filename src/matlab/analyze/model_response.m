@@ -19,7 +19,7 @@ if ex.test == 1
 
 else
     amplitude_vec = ex.model.amplitude_vec; % (1 x N_tested_amplitudes)
-    fixed_upper_level = ex.info.stimulus.max_amplitude_limit;
+    fixed_upper_level = ex.info.speaker.max_amplitude_limit;
     flex_lower_level = 0:5:fixed_upper_level-5;
 end
 noise_floor = ex.model.stim_OFF_2f_vec; % (trials x tested_amps)

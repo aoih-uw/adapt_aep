@@ -1,13 +1,6 @@
-function ex = make_stimulus_template(ex)
+function [tone_burst, total_sig_duration] = make_stimulus_template(fs, stim_freq,full_amp_stim_ON_ms,ramp_stim_ON_ms)
+%% Make a ramped tone burst for selected frequency
 ms_to_s = 1000;
-% Make a ramped tone burst for selected frequency
-
-% Extract data from ex
-fs = ex.info.recording.sampling_rate_hz;
-stim_freq = ex.info.stimulus.frequency_hz;
-full_amp_stim_ON_ms = ex.info.stimulus.full_amplitude_duration_ms;
-ramp_stim_ON_ms = ex.info.stimulus.ramp_duration_ms;
-
 % Nyquist check
 if stim_freq >= fs/2
     error('make_experiment_tone_burst:NyquistViolation', ...
@@ -15,7 +8,4 @@ if stim_freq >= fs/2
 end
 
 tone_burst = generate_tone_burst(fs, stim_freq, full_amp_stim_ON_ms, ramp_stim_ON_ms);
-
 total_sig_duration = (length(tone_burst)/fs)*ms_to_s;
-ex.info.stimulus.total_stimulus_duration_ms = total_sig_duration;
-ex.info.stimulus.waveform = tone_burst;

@@ -20,9 +20,9 @@ ds_rate = 10;
 redo = true;
 
 while redo
-    [~, ekg_sig_microV,ex] = run_ekg(stimulus_block, input_channels, output_channels, ...
+    [~, ekg_sig_microV] = run_ekg(stimulus_block, input_channels, output_channels, ...
         electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, ...
-        hydrophone_voltage_scaling_factor_V,ex,app);
+        hydrophone_voltage_scaling_factor_V);
 
     % Filter EKG signal
     d = designfilt('bandpassfir', 'FilterOrder', 4, ...
@@ -76,12 +76,12 @@ ekg_fs_ds = fs/ds_rate;
 end
 
 %% run_ekg helper function
-function [rec_data_mV, ekg_sig_microV, ex] = run_ekg(stimulus_block, input_channels, output_channels, ...
-    electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V,ex,app)
+function [rec_data_mV, ekg_sig_microV] = run_ekg(stimulus_block, input_channels, output_channels, ...
+    electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V)
 
 % Present sound
-[rec_data_mV, ex]  = present_sound(stimulus_block, input_channels, output_channels, ...
-    electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V, ex, app);
+[rec_data_mV]  = present_sound(stimulus_block, input_channels, output_channels, ...
+    electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V);
 
 % Save measurement
 ekg_sig_microV = rec_data_mV(:,:,electrode_idx(1)).*1e3; % Just get the EKG channel data and convert to microV
