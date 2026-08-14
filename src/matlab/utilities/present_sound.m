@@ -16,13 +16,6 @@ rec_data_mV = zeros(size(stimulus,2), ...
 
 t_rate = tic();
 for itrial = 1:height(stimulus)
-    % Progress bar
-    if itrial == 1, fprintf('\n'); end
-    pct = itrial / height(stimulus);
-    bar = repmat('█', 1, round(pct * 20));
-    gap = repmat('░', 1, 20 - round(pct * 20));
-    fprintf('\r  %s%s %d/%d\n', bar, gap, itrial, height(stimulus));
-
     % Get current trial
     if size(stimulus,3) > 1 % We have signals to present on more than one channel
         current_waveform = squeeze(stimulus(itrial,:,:));
@@ -77,8 +70,6 @@ for itrial = 1:height(stimulus)
     cur_sig = rec_data(:,hydrophone_idx); % rec_data is in Volts
     post_bioamp_sig = cur_sig.*hydrophone_voltage_scaling_factor_V; % Undo the scaling that the DAC did to understand what values it recieved
     if any(abs(post_bioamp_sig) >= signal_clip_threshold)
-        [y, Fs] = audioread('error.mp3');
-        sound(y, Fs)
         fprintf('Possible clipping in hydrophone signal. Inspect signal.\n')
         keyboard % Inspect signal and progress when issue is solved
     end
@@ -90,13 +81,12 @@ for itrial = 1:height(stimulus)
 
     % Check for absurdly large electrode signals
     if any(abs(rec_data_mV(:,:,itrial)) > 1e3, 'all')
-        [y, Fs] = audioread('error.mp3');
-        sound(y, Fs)
         fprintf('\nUnusually large voltage values detected in sensors (max: %.2f mV)\n', ...
         max(abs(rec_data_mV(:,:,itrial)), [], 'all'));
         keyboard
     end
 
+    fprintf('.');
     if itrial == height(stimulus), fprintf('\n  Finished\n'); end
 end
 

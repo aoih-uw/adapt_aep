@@ -4,10 +4,6 @@ function ex = check_health(ex, app, init_check)
 ex.counter.ihealth = ex.counter.ihealth + 1;
 ihealth = ex.counter.ihealth;
 
-% Alert experimenter will do health check
-[y, Fs] = audioread('checking_health.mp3');
-sound(y, Fs)
-
 % Measure EKG
 [ex, ekg_sig_microV, ekg_rate, ekg_fs_ds, peak_threshold] = measure_EKG(ex,init_check,app);
 

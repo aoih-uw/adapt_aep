@@ -12,8 +12,6 @@ folder = get_subject_folder(ex);
 
 if ~is_autosave % This is the final save for this session
     % Pop-up asking for final notes about experiment (moved before saving)
-    [y, Fs] = audioread('step.mp3');
-    sound(y, Fs)
     answer = inputdlg('Enter notes about the experiment:', 'Experiment Notes', [10 80]);
     if ~isempty(answer)
         ex.info.experiment.notes = answer{1};

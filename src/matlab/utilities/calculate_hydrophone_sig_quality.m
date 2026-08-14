@@ -67,7 +67,6 @@ ex.block(iblock).hydrophone.stimulus_rms = median(stim_ON_dB);
 ex.block(iblock).hydrophone.stimulus_rms_mad = median(abs(ex.block(iblock).hydrophone.stimulus_rms - stim_ON_dB))*mad_to_std;
 ex.block(iblock).hydrophone.tank_nf_rms = median(stim_OFF_dB);
 if ex.block(iblock).hydrophone.tank_nf_rms >= 110
-    [y, Fs] = audioread('error.mp3'); sound(y, Fs);
     fprintf(['Noise floor in tank is high %1.2f dB SPL. Ensure pump is properly in subjects mouth,\n' ...
         'confirm hydrophone location, look at hydrophone signal on oscilloscope, and see if \n' ...
         'hydrophone amp is overloading\n'],ex.block(iblock).hydrophone.tank_nf_rms)

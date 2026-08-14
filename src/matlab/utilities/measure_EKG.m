@@ -20,7 +20,7 @@ ds_rate = 10;
 redo = true;
 
 while redo
-    fprintf('Please wait %d seconds ...',sample_dur_s)
+    fprintf('Please wait %d seconds',sample_dur_s)
     [~, ekg_sig_microV,ex] = run_ekg(stimulus_block, input_channels, output_channels, ...
         electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, ...
         hydrophone_voltage_scaling_factor_V,ex,app);
@@ -57,7 +57,6 @@ while redo
     if strcmp(ex.info.experiment.exp_type,'Adaptive') || init_check ...
             || strcmp(ex.info.experiment.exp_type,'Static trial count')
         % Alert experimenter
-        [y, Fs] = audioread('user_input.mp3'); sound(y, Fs);
         % Ask experimenter to confirm or redo
         resp = input('Press Enter to confirm, or type "r" to remeasure: ', 's');
         while ~ismember(lower(strtrim(resp)), {'', 'r'})
@@ -66,7 +65,6 @@ while redo
         close(myfig);
         redo = strcmpi(strtrim(resp), 'r');
     elseif strcmp(ex.info.experiment.exp_type,'Timed') || strcmp(ex.info.experiment.exp_type,'Mixed stimuli')
-        [y, Fs] = audioread('step.mp3'); sound(y, Fs);
         pause(3)
         close(myfig);
         redo = false;

@@ -9,21 +9,14 @@ end
 
 % Get a list of connected devices
 my_devices = playrec('getDevices');
-if length(my_devices) > 1
-    my_devices(2:end) = []; % remove all other devices
-end
 
-% Check to make sure that Fireface is online
-if ~strcmp(my_devices.name, 'ASIO Fireface USB') % check that this is the only device initizlised
-    if isempty(strfind(my_devices.name, 'Fireface'))
-        errordlg('The Fireface is not recognized. Is it plugged in? Is it on?');
-        error('The Fireface is not recognized. Check to make sure that it is plugged in and turned on');
-    end
-    if isempty(strfind(my_devices.name, 'ASIO'))
-        errordlg('The Fireface is recognized, but it appears an older version of PlayRec was called.');
-        error('The Fireface is recognized, but it appears an older version of PlayRec was called.');
-    end
+% Find the index of the Fireface device
+idx = find(strcmp({my_devices.name}, 'ASIO Fireface USB'));
+if isempty(idx)
+    error('ASIO Fireface USB not found');
+else 
+    my_devices = my_devices(idx); % remove all other devices
 end
 
 % Initialize!
-playrec('init', fs, 0, 0, 8, 8);
+playrec('init', fs, my_devices.deviceID, my_devices.deviceID, 8, 8);

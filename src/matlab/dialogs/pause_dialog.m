@@ -1,5 +1,4 @@
 function [action, ex] = pause_dialog(ex,app)
-[y, Fs] = audioread('user_input.mp3'); sound(y, Fs);
 
 fprintf('\n========================================\n');
 fprintf('  Experiment Paused\n');

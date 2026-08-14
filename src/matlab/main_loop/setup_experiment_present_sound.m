@@ -31,6 +31,7 @@ if ex.test
     rec_data_mV = ex.mock_data;
     N_samples = size(rec_data_mV,2);
 else
+    fprintf('Presenting block of trials')
     [rec_data_mV, ex] = present_sound(stimulus_block, ...
         input_channels, output_channels, ...
         electrode_idx, hydrophone_idx, ...
@@ -47,6 +48,13 @@ if size(rec_data_mV,1) > 1
 else
     keyboard
     error('Only 1 or less trials included in present_sound() output')
+end
+
+%% Check for dropped out loopback signal
+for itrial = 1:size(stimulus_block,1)
+    if rms(ex.raw(iblock).loopback(itrial,:)) < 1e-4
+        error('Loopback signal dropped out')
+    end
 end
 
 %% Assign trial counts
@@ -97,7 +105,6 @@ else
 end
 
 %% Play sound after every present_sound() attempt has been completed
-[y, Fs] = audioread('batch.mp3');
-sound(y, Fs)
+beep
 
 

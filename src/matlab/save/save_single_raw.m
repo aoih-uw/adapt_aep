@@ -3,9 +3,6 @@ function ex = save_single_raw(ex, app, is_autosave)
 if nargin < 3, is_autosave = false; end
 fprintf('\nSaving current amplitude data...\n');
 
-[y, Fs] = audioread('saving_data.mp3');
-sound(y, Fs)
-
 % Assign variables
 iblock = ex.counter.iblock;
 ihealth = ex.counter.ihealth;

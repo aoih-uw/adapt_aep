@@ -1,8 +1,6 @@
 function check_signal_quality
 % A GUI to ensure hydrophone signal quality and 2f magnitudes are
 % acceptable before proceeding
-[y, Fs] = audioread('button_press.mp3');
-sound(y, Fs)
 
 % --- Style constants (match adapt_aep app) ---
 bg      = [0.8824 0.9294 0.9686];
@@ -136,9 +134,6 @@ end
         if all(checks)
             set(okBtn, 'Enable', 'on');
             if ~allCheckedBefore
-                sound_file = fullfile(this_dir, '..', 'sound_effects', 'step.mp3');
-                [yc, Fsc]  = audioread(sound_file);
-                sound(yc, Fsc);
                 allCheckedBefore = true;
             end
         else

@@ -61,8 +61,6 @@ reject_rate = n_trials_rejected/n_trials_collected;
 %% Report rejection rate
 if reject_rate > 0.5
     % Alert experimenter will do health check
-    [y, Fs] = audioread('half_trials_reject.mp3');
-    sound(y, Fs)
     fprintf('More than half of the trials have been rejected.')
 end
 app.Label_rejection_rate.Text = sprintf('%d', n_valid_trials);

@@ -33,8 +33,6 @@ while ex.counter.ischedule < size(test_schedule,1)
     end
     time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.last_signal_inspection;
     if time_diff >= minutes(5)
-        [y, Fs] = audioread('inspect_sigs.mp3');
-        sound(y, Fs)
         ex.last_signal_inspection = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
     end
 
@@ -45,8 +43,6 @@ while ex.counter.ischedule < size(test_schedule,1)
     end
     time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.last_temp_check;
     if time_diff >= minutes(15)
-        [y, Fs] = audioread('tank_temp.mp3');
-        sound(y, Fs)
         ex.last_temp_check = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
     end
 

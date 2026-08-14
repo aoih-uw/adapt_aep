@@ -1,8 +1,6 @@
 function ex = save_mixed_raw(ex,app)
 %% Saves raw data for mixed stimulus mode
 fprintf('\nSaving current amplitude data...\n');
-[y, Fs] = audioread('saving_data.mp3');
-sound(y, Fs)
 
 % Assign variables
 iblock = ex.counter.iblock;
