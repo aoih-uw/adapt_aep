@@ -1,6 +1,5 @@
 function ex = save_mixed_raw(ex,app)
 %% Saves raw data for mixed stimulus mode
-fprintf('\nSaving current amplitude data...\n');
 
 % Assign variables
 iblock = ex.counter.iblock;

@@ -13,13 +13,11 @@ if strcmp(ex.info.experiment.exp_type,'Adaptive')
         fprintf('\nSaving data ...\n')
         ex = save_single_raw(ex, app, false);
         ex.last_autosave_time = now_time;
-        fprintf('\nSaved at %s\n', char(now_time));
     elseif now_time - ex.last_autosave_time >= minutes(every_min)
         fprintf('\nAutosaving data ...\n')
         ex = save_single_raw(ex, app, true);
         ex = save_session_data(ex, app, true);
         ex.last_autosave_time = now_time;
-        fprintf('\nAutosaved at %s\n', char(now_time));
     end
 elseif strcmp(ex.info.experiment.exp_type, 'Timed')
     if mod(iblock,every_block) == 0 || ex.decision(ex.counter.iamp).amp_done == 1
@@ -28,7 +26,6 @@ elseif strcmp(ex.info.experiment.exp_type, 'Timed')
         fprintf('\nSaving data ...\n')
         ex = save_single_raw(ex, app, false);
         ex.last_autosave_time = now_time;
-        fprintf('\nSaved at %s\n', char(now_time));
     end
 elseif strcmp(ex.info.experiment.exp_type, 'Static trial count')
     if ex.decision(ex.counter.iamp).amp_done == 1
@@ -36,13 +33,11 @@ elseif strcmp(ex.info.experiment.exp_type, 'Static trial count')
         fprintf('\nSaving data ...\n')
         ex = save_single_raw(ex, app, false);
         ex.last_autosave_time = now_time; % Reset for next set
-        fprintf('\nSaved at %s\n', char(now_time));
     elseif now_time - ex.last_autosave_time >= minutes(every_min)
         % Autosave
         fprintf('\nAutosaving data ...\n')
         ex = save_single_raw(ex, app, true);
         ex.last_autosave_time = now_time;
-        fprintf('\nAutosaved at %s\n', char(now_time));
     end
 end
 

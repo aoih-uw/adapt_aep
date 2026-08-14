@@ -31,7 +31,6 @@ if ex.test
     rec_data_mV = ex.mock_data;
     N_samples = size(rec_data_mV,2);
 else
-    fprintf('Presenting block of trials')
     [rec_data_mV, ex] = present_sound(stimulus_block, ...
         input_channels, output_channels, ...
         electrode_idx, hydrophone_idx, ...
@@ -52,7 +51,8 @@ end
 
 %% Check for dropped out loopback signal
 for itrial = 1:size(stimulus_block,1)
-    if rms(ex.raw(iblock).loopback(itrial,:)) < 1e-4
+    if rms(ex.raw(iblock).loopback(itrial,:)) < 1e-5
+        keyboard
         error('Loopback signal dropped out')
     end
 end
@@ -77,7 +77,6 @@ end
 %% Calculate hydrophone RMS dB SPL
 % Only do this every 10 blocks since this is computationally heavy
 if mod(iblock,10) == 0 || iblock == 1
-    fprintf('Calculating hydrophone SNR and tank noise floor...\n')
     ex = calculate_hydrophone_sig_quality(ex);
 end
 

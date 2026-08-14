@@ -1,7 +1,6 @@
 function ex = save_single_raw(ex, app, is_autosave)
 %% Saves raw data for single stimulus mode
 if nargin < 3, is_autosave = false; end
-fprintf('\nSaving current amplitude data...\n');
 
 % Assign variables
 iblock = ex.counter.iblock;

@@ -87,13 +87,12 @@ for itrial = 1:height(stimulus)
     end
 
     fprintf('.');
-    if itrial == height(stimulus), fprintf('\n  Finished\n'); end
 end
 
 % Measure presentation rate
 my_dur = toc(t_rate);
 trials_per_sec = height(stimulus)/my_dur;
-fprintf('Presentation rate: %.2f trials/sec\n', trials_per_sec);
+% fprintf('Presentation rate: %.2f trials/sec\n', trials_per_sec);
 
 % Rearrange data
 rec_data_mV = permute(rec_data_mV,[3,1,2]); % change to n_trial, n_sample, n_channel

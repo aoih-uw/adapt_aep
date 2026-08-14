@@ -20,7 +20,6 @@ ds_rate = 10;
 redo = true;
 
 while redo
-    fprintf('Please wait %d seconds',sample_dur_s)
     [~, ekg_sig_microV,ex] = run_ekg(stimulus_block, input_channels, output_channels, ...
         electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, ...
         hydrophone_voltage_scaling_factor_V,ex,app);

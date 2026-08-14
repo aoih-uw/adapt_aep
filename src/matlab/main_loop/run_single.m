@@ -52,18 +52,19 @@ while ~ex.exp_done % While testing current stimulus frequency
         time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.health(ex.counter.ihealth).time_stamp;
         if strcmp(app.DropDown_test_mode.Value, 'Timed')
             if time_diff >= minutes(15)
-                fprintf('\nChecking animal health...\n')
+                fprintf('\nChecking animal health')
                 ex = check_health(ex,app,0);
+                fprintf('\n')
             end
         else
             if time_diff >= minutes(20)
-                fprintf('\nChecking animal health...\n')
+                fprintf('\nChecking animal health')
                 ex = check_health(ex,app,0);
+                fprintf('\n')
             end
         end
 
         %% TRACK TEMPERATURE
-        fprintf('\nChecking temperature...\n')
         if isnat(ex.last_temp_check)
             ex.last_temp_check = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
         end
@@ -73,7 +74,6 @@ while ~ex.exp_done % While testing current stimulus frequency
         end
 
         %% CREATE BLOCK OF TRIALS
-        fprintf('\nCreating trial block...\n')
         ex.counter.iblock = ex.counter.iblock + 1;
         if strcmp(app.DropDown_test_mode.Value, 'Timed')
             ex.counter.grand_iblock = ex.counter.grand_iblock + 1;
@@ -81,11 +81,9 @@ while ~ex.exp_done % While testing current stimulus frequency
         ex = create_new_stimuli_block(ex,app);
 
         %% DATA COLLECTION
-        fprintf('\nPresenting stimulus...\n')
         ex = setup_experiment_present_sound(ex,app); % Present stimuli and measure signals
 
         %% DATA PRE-PROCESSING
-        fprintf('\nPre-processing responses...\n')
         ex = preprocess_signal(ex,app);
 
         %% DATA ANALYSIS
@@ -125,7 +123,8 @@ while ~ex.exp_done % While testing current stimulus frequency
             end
         end
 
-        fprintf('\n--- Block Completed (Amp %d, Block %d) ---\n', ex.counter.iamp, ex.counter.iblock);
+        % Progression counter
+        fprintf('  b%d·a%d\n', ex.counter.iblock, ex.counter.iamp);
 
         %% SAVE RAW DATA
         ex = plan_save_single_raw(ex,app);
