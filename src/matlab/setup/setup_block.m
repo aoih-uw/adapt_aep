@@ -1,15 +1,15 @@
 function ex = setup_block(ex)
 %% Setup block-level fields in ex structure
 % Per block metadata
-if ~strcmp(ex.info.experiment.exp_type, 'Mixed stimuli')
+if ~strcmp(ex.info.experiment.exp_type, 'Mixed freqs')
     max_block = ceil(ex.info.trials.max_trials / ex.info.trials.trials_per_block);
     ex.info.trials.max_block = max_block;
 else
     max_block = ceil(ex.info.mixed.N_trials_per_file/ ex.info.trials.trials_per_block);
     ex.info.trials.max_block = max_block;
     for iblock = 1:max_block
-        ex.block(iblock).stim_type = NaN;
         ex.block(iblock).stim_amp = NaN;
+        ex.block(iblock).stim_freq = NaN;
         ex.block(iblock).unique_id = NaN;
         ex.block(iblock).collection_attempts = 0;
     end
@@ -32,6 +32,7 @@ for iblock = 1:max_block
     ex.block(iblock).stimulus_block = NaN; % Created in make_scaled_jittered_stim_block, presented via playrec
     ex.block(iblock).across_trial_thresh = NaN;
     ex.block(iblock).kept_trials_idx = NaN;
+    ex.block(iblock).stim_type = NaN;
 
     % Hydrophone signal quality
     ex.block(iblock).hydrophone.stimulus_rms = NaN;

@@ -1,12 +1,10 @@
 function [ex, selected_cycle_samples, stimulus, phase_vec] = ...
-    make_scaled_jittered_stim_block(ex, waveform, current_amplitude, trials_per_block, trim_stim_pre_dur_ms, is_ONOFF)
+    make_scaled_jittered_stim_block(ex, waveform, current_amplitude, trials_per_block, ...
+    trim_stim_pre_dur_ms, is_ONOFF, cur_freq, correction_factor)
 %% Creates a block of amplitude scaled stimuli with pre/post, jitter, and latency periods included 
 % Assign variables
 fs = ex.info.recording.sampling_rate_hz;
 latency_samples = ex.info.recording.latency_samples;
-cur_freq = ex.info.stimulus.frequency_hz;
-
-correction_factor = ex.info.calibration.correction_factor_linear;
 
 % Generate random phase offsets within one 60 Hz cycle
 period_60_hz = 1/60; % time it takes to complete 1 cycle of 60 Hz (s)
@@ -30,6 +28,7 @@ else
     stim_OFF = zeros(1,round(fs*trim_stim_pre_dur_ms/1e3));
 end
 stim_ON = waveform;
+stim_ON = waveform(:).'; % force row
 
 % Set POST stimulus duration depending on stimulus frequency
 if cur_freq < 100

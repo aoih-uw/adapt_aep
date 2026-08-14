@@ -2,7 +2,7 @@
 clearvars
 
 %% Setup ex structure
-app.DropDown_test_mode.Value = 'Mixed stimuli';
+app.DropDown_test_mode.Value = 'Mixed freqs';
 ex = setup_ex(app); % Create ex
 ex.test = 1;
 ex = setup_info(ex,app); % Setup info metadata
@@ -15,7 +15,7 @@ ex.info.stimulus.type = 'Tone burst';
 ex.info.experiment.response_feature = 'Double frequency';
 ex.info.trials.max_trials = length(ex.info.mixed.test_schedule)*ex.info.trials.trials_per_block;
 ex.info.experiment.timer_dur_min = NaN;
-ex.info.experiment.exp_type = 'Mixed stimuli';
+ex.info.experiment.exp_type = 'Mixed freqs';
 ex.info.experiment.test_tag = 'test';
 ex.info.animal.filename_root = sprintf('%s_%d_%gHz', ...
     'simulated_data', ...

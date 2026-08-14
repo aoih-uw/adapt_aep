@@ -4,7 +4,7 @@ function ex = setup_health(ex)
 % we need to reset and include values from the last health check
 
 % Set maximum block numbers to be preallocated
-if ~strcmp(ex.info.experiment.exp_type, 'Mixed stimuli')
+if ~strcmp(ex.info.experiment.exp_type, 'Mixed freqs')
     max_block_health = ceil(ex.info.trials.max_trials / ex.info.trials.trials_per_block);
     ex.info.trials.max_block_health = max_block_health;
 else

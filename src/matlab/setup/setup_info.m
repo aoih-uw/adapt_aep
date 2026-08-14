@@ -1,6 +1,8 @@
 function ex = setup_info(ex, app)
 my_time = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyy-MM-dd HH:mm:ss');
-rng_state = rng('shuffle');
+% Setup random seed
+rng('shuffle');
+rng_state = rng;
 
 % Experiment information
 ex.info.experiment = struct( ...
@@ -106,7 +108,7 @@ ex.info.signal_quality = struct( ...
     );
 
 %% Experiment type specific info
-if strcmp(app.DropDown_test_mode.Value,'mixed stimuli')
+if strcmp(app.DropDown_test_mode.Value,'Mixed freqs')
     % Assign values
     ex.info.mixed.stim_name         = {'ONOFF'};
     ex.info.mixed.stim_freqs        = [100 800];

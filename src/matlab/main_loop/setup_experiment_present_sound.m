@@ -8,15 +8,15 @@ iblock = ex.counter.iblock;
 trials_per_block = ex.info.trials.trials_per_block;
 stimulus_block = ex.block(iblock).stimulus_block;
 fs = ex.info.recording.sampling_rate_hz;
-if strcmp(app.DropDown_test_mode.Value, 'Mixed stimuli') || strcmp(app.DropDown_test_mode.Value, 'Timed')
+if strcmp(app.DropDown_test_mode.Value, 'Mixed freqs') || strcmp(app.DropDown_test_mode.Value, 'Timed')
     N_trials_presented = ex.counter.grand_iblock*trials_per_block;
-    if strcmp(app.DropDown_test_mode.Value, 'Mixed stimuli')
+    if strcmp(app.DropDown_test_mode.Value, 'Mixed freqs')
         first_block = iblock - ex.counter.N_not_enough_trials;
     end
 else
     N_trials_presented = iblock*trials_per_block;
 end
-if ~strcmp(app.DropDown_test_mode.Value, 'Mixed stimuli')
+if ~strcmp(app.DropDown_test_mode.Value, 'Mixed freqs')
     iamp = ex.counter.iamp;
 end
 
@@ -87,7 +87,7 @@ if strcmp(app.DropDown_test_mode.Value, 'Timed') || strcmp(app.DropDown_test_mod
 end
 
 %% Update GUI
-if strcmp(app.DropDown_test_mode.Value, 'Mixed stimuli')
+if strcmp(app.DropDown_test_mode.Value, 'Mixed freqs')
     app.Label_number_trials_presented.Text = string((iblock-first_block+1)*trials_per_block);
 else
     app.Label_number_trials_presented.Text = string(N_trials_presented);
@@ -96,7 +96,7 @@ time_since_exp_start = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Forma
 time_elapsed =  string(time_since_exp_start, 'hh:mm:ss');
 app.Label_time_elapsed.Text = time_elapsed;
 ex.info.experiment.total_time_elapsed = time_since_exp_start;
-if strcmp(app.DropDown_test_mode.Value, 'Mixed stimuli') || strcmp(app.DropDown_test_mode.Value, 'Timed')
+if strcmp(app.DropDown_test_mode.Value, 'Mixed freqs') || strcmp(app.DropDown_test_mode.Value, 'Timed')
     app.Label_grand_total.Text = string(N_trials_presented);
 else
     grand_total_N_trials = sum(arrayfun(@(x) x, ex.trial_count(1:ex.counter.iamp)));

@@ -18,32 +18,15 @@ batch_completed = 0;
 
 while ex.counter.ischedule < size(test_schedule,1)
 
-    %% REMINDERS
+    %% EXPERIMENTER REMINDERS
+    ex = experimenter_reminders(ex);
 
-    % HEALTH
+    %% CHECK HEALTH
     time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.health(ex.counter.ihealth).time_stamp;
     if time_diff >= minutes(15)
         fprintf('\nChecking animal health')
         ex = check_health(ex,app,0);
         fprintf('\n')
-    end
-
-    % INSPECT SIGNALS
-    if isnat(ex.last_signal_inspection)
-        ex.last_signal_inspection = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
-    end
-    time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.last_signal_inspection;
-    if time_diff >= minutes(5)
-        ex.last_signal_inspection = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
-    end
-
-    % TRACK TEMPERATURE
-    if isnat(ex.last_temp_check)
-        ex.last_temp_check = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
-    end
-    time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.last_temp_check;
-    if time_diff >= minutes(15)
-        ex.last_temp_check = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
     end
 
     %% INCREMENT ISCHEDULE
@@ -60,6 +43,7 @@ while ex.counter.ischedule < size(test_schedule,1)
             ex.counter.grand_iblock = ex.counter.grand_iblock + 1; % grand_iblock never resets
             ex = create_new_stimuli_block(ex,app);
 
+            %% DATA COLLECTION
             ex = setup_experiment_present_sound(ex,app); % Present stimuli and measure signals
 
             %% REJECT ARTEFACTS

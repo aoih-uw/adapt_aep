@@ -3,7 +3,7 @@ function plot_live_fft(ex, iblock, fs, app)
 % Assign Variables
 persistent my_2f my_2f_std
 % Reset persistent variables
-if strcmp(app.DropDown_test_mode.Value, 'Mixed stimuli')
+if strcmp(app.DropDown_test_mode.Value, 'Mixed freqs')
     if  ex.counter.ischedule == 1
         my_2f = []; my_2f_std = [];
     end
@@ -18,15 +18,18 @@ else
 end
 
 % Assign variables
+% Get current frequency idx
+freq_idx = get_current_freq_idx(ex);
+target_freq = ex.info.stimulus(freq_idx).frequency_hz * 2;
+target_freq_range = ex.info.stimulus(freq_idx).range_2f_hz;
+
 n_points = size(my_2f,2);
 channels    = [2, 3, 4];
 channel_name = {'2 mm', '4 mm', 'Skin'};
-target_freq = ex.info.stimulus.frequency_hz * 2;
 fft_ax = app.UIAxes_live_fft;
 bin_ax = app.UIAxes_funfetti;
 colors = {tableau_10('blue'), tableau_10('orange'), tableau_10('green')};
 n_ch   = numel(channels);
-target_freq_range = ex.info.stimulus.range_2f_hz;
 
 % fft_ax
 delete(allchild(fft_ax)); hold(fft_ax, 'on')
@@ -72,8 +75,8 @@ xline(fft_ax, target_freq,'HandleVisibility', 'off');
 legend(fft_ax, channel_name)
 hold(fft_ax, 'off')
 
-% Plot funfetti if it is NOT Mixed stimuli mode
-if ~strcmp(app.DropDown_test_mode.Value, 'Mixed stimuli')
+% Plot funfetti if it is NOT Mixed freqs mode
+if ~strcmp(app.DropDown_test_mode.Value, 'Mixed freqs')
     % bin_ax
     cla(bin_ax); hold(bin_ax,'on')
     for ic = 1:n_ch

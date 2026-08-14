@@ -8,7 +8,7 @@ stim_ON_2f_std  = cellfun(@std,ex.model.stim_ON_2f_vec(1:iamp));
 
 per_amp_noise  = cellfun(@median,ex.model.stim_OFF_2f_vec(1:iamp)); % (trials x tested_amps)
 per_amp_noise_mad = cellfun(@(x) mad(x,1)*mad_to_std, ex.model.stim_OFF_2f_vec(1:iamp));
-min_amplitude_limit = ex.info.stimulus.min_amplitude_limit;
+min_amplitude_limit = ex.info.stimulus(1).min_amplitude_limit;
 
 softplus = @(p,x) (p(1)/p(2))*(log1p(exp(p(2).*(x-p(3))))) + 0; % Fix lower asymptote to 0
 

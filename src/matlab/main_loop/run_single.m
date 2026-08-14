@@ -16,6 +16,7 @@ ex.info.experiment.exp_time_start = datetime('now', 'TimeZone', 'America/Los_Ang
 ex = select_next_dialog(ex);
 
 while ~ex.exp_done % While testing current stimulus frequency
+    %% Increment counters
     ex.counter.iamp = ex.counter.iamp + 1;
     ex.decision(ex.counter.iamp).resp_found = 0;
     ex.decision(ex.counter.iamp).amp_done = 0;
@@ -26,137 +27,111 @@ while ~ex.exp_done % While testing current stimulus frequency
     ex.info.experiment.amp_time_start = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
 
     %% UPDATE GUI
-    app.Label_current_amp.Text = string(ex.info.stimulus.amplitude_spl);
+    app.Label_current_amp.Text = string(ex.info.stimulus(1).amplitude_spl);
 
-    %% INSPECT SIGNALS REMINDER
-    if isnat(ex.last_signal_inspection)
-        ex.last_signal_inspection = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
-    end
-    time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.last_signal_inspection;
-    if time_diff >= minutes(5)
-        ex.last_signal_inspection = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss'); 
-    end
+    %% EXPERIMENTER REMINDERS
+    ex = experimenter_reminders(ex);
 
-    while ~ex.decision(ex.counter.iamp).amp_done % While testing current stimulus amplitude
-        
-        %% INSPECT SIGNALS REMINDER
-        if isnat(ex.last_signal_inspection)
-            ex.last_signal_inspection = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
-        end
-        time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.last_signal_inspection;
-        if time_diff >= minutes(5)
-            ex.last_signal_inspection = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
-        end
-        
-        %% HEALTH CHECK
-        time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.health(ex.counter.ihealth).time_stamp;
-        if strcmp(app.DropDown_test_mode.Value, 'Timed')
-            if time_diff >= minutes(15)
-                fprintf('\nChecking animal health')
-                ex = check_health(ex,app,0);
-                fprintf('\n')
-            end
-        else
-            if time_diff >= minutes(20)
-                fprintf('\nChecking animal health')
-                ex = check_health(ex,app,0);
-                fprintf('\n')
-            end
-        end
-
-        %% TRACK TEMPERATURE
-        if isnat(ex.last_temp_check)
-            ex.last_temp_check = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
-        end
-        time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.last_temp_check;
+    %% CHECK HEALTH
+    time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.health(ex.counter.ihealth).time_stamp;
+    if strcmp(app.DropDown_test_mode.Value, 'Timed')
         if time_diff >= minutes(15)
-            ex.last_temp_check = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
+            fprintf('\nChecking animal health')
+            ex = check_health(ex,app,0);
+            fprintf('\n')
         end
-
-        %% CREATE BLOCK OF TRIALS
-        ex.counter.iblock = ex.counter.iblock + 1;
-        if strcmp(app.DropDown_test_mode.Value, 'Timed')
-            ex.counter.grand_iblock = ex.counter.grand_iblock + 1;
+    else
+        if time_diff >= minutes(20)
+            fprintf('\nChecking animal health')
+            ex = check_health(ex,app,0);
+            fprintf('\n')
         end
-        ex = create_new_stimuli_block(ex,app);
+    end
 
-        %% DATA COLLECTION
-        ex = setup_experiment_present_sound(ex,app); % Present stimuli and measure signals
+    %% CREATE BLOCK OF TRIALS
+    ex.counter.iblock = ex.counter.iblock + 1;
+    if strcmp(app.DropDown_test_mode.Value, 'Timed')
+        ex.counter.grand_iblock = ex.counter.grand_iblock + 1;
+    end
+    ex = create_new_stimuli_block(ex,app);
 
-        %% DATA PRE-PROCESSING
-        ex = preprocess_signal(ex,app);
+    %% DATA COLLECTION
+    ex = setup_experiment_present_sound(ex,app); % Present stimuli and measure signals
 
-        %% DATA ANALYSIS
+    %% DATA PRE-PROCESSING
+    ex = preprocess_signal(ex,app);
+
+    %% DATA ANALYSIS
+    if strcmp(app.DropDown_test_mode.Value, 'Adaptive')
+        fprintf('\nAnalyzing responses...\n')
+        ex = separate_subtract_bootstrap(ex,app);
+
+        %% BOOTSTRAPPING RESULTS
+        if ex.decision(ex.counter.iamp).resp_found % When there was a significant response found
+            ex.decision(ex.counter.iamp).amp_done = 1;
+            ex.decision(ex.counter.iamp).amp_done_reason = 'Response detected';
+        end
+    end
+
+    %% CHECK IF MAX (VALID) TRIALS PRESENTED OR TIME LIMIT MET
+    if strcmp(app.DropDown_test_mode.Value, 'Adaptive')
+        if size(ex.kept.trials_filtered,1) >= ex.info.trials.max_trials ... % Valid trials based only on analysis channel
+                && ex.decision(ex.counter.iamp).amp_done == 0 ...
+                && ex.decision(ex.counter.iamp).resp_found == 0
+            ex.decision(ex.counter.iamp).amp_done = 1;
+            ex.decision(ex.counter.iamp).current_amplitude = ex.info.stimulus(1).amplitude_spl;
+            ex.decision(ex.counter.iamp).amp_done_reason = 'Maximum trials reached';
+        end
+    elseif strcmp(app.DropDown_test_mode.Value, 'Static trial count')
+        if ex.valid_trials(ex.counter.iamp) >= ex.info.trials.max_trials ... % Valid trials based on all channels
+                && ex.decision(ex.counter.iamp).amp_done == 0 ...
+                && ex.decision(ex.counter.iamp).resp_found == 0
+            ex.decision(ex.counter.iamp).amp_done = 1;
+            ex.decision(ex.counter.iamp).current_amplitude = ex.info.stimulus(1).amplitude_spl;
+            ex.decision(ex.counter.iamp).amp_done_reason = 'Maximum trials reached';
+        end
+    elseif strcmp(app.DropDown_test_mode.Value, 'Timed')
+        if datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.info.experiment.amp_time_start >= minutes(ex.info.experiment.timer_dur_min)
+            ex.decision(ex.counter.iamp).amp_done = 1;
+            ex.decision(ex.counter.iamp).current_amplitude = ex.info.stimulus(1).amplitude_spl;
+            ex.decision(ex.counter.iamp).amp_done_reason = 'Experiment time reached';
+        end
+    end
+
+    % Progression counter
+    fprintf('  b%d·a%d\n', ex.counter.iblock, ex.counter.iamp);
+
+    %% SAVE RAW DATA
+    ex = plan_save_single_raw(ex,app);
+
+    %% CONTINUE TESTING?
+    if ex.decision(ex.counter.iamp).amp_done == 1
         if strcmp(app.DropDown_test_mode.Value, 'Adaptive')
-            fprintf('\nAnalyzing responses...\n')
-            ex = separate_subtract_bootstrap(ex,app);
-
-            %% BOOTSTRAPPING RESULTS
-            if ex.decision(ex.counter.iamp).resp_found % When there was a significant response found
-                ex.decision(ex.counter.iamp).amp_done = 1;
-                ex.decision(ex.counter.iamp).amp_done_reason = 'Response detected';
-            end
+            ex = model_response(ex,app);
         end
 
-        %% CHECK IF MAX (VALID) TRIALS PRESENTED OR TIME LIMIT MET
-        if strcmp(app.DropDown_test_mode.Value, 'Adaptive')
-            if size(ex.kept.trials_filtered,1) >= ex.info.trials.max_trials ... % Valid trials based only on analysis channel
-                    && ex.decision(ex.counter.iamp).amp_done == 0 ...
-                    && ex.decision(ex.counter.iamp).resp_found == 0
-                ex.decision(ex.counter.iamp).amp_done = 1;
-                ex.decision(ex.counter.iamp).current_amplitude = ex.info.stimulus.amplitude_spl;
-                ex.decision(ex.counter.iamp).amp_done_reason = 'Maximum trials reached';
-            end
-        elseif strcmp(app.DropDown_test_mode.Value, 'Static trial count')
-            if ex.valid_trials(ex.counter.iamp) >= ex.info.trials.max_trials ... % Valid trials based on all channels
-                    && ex.decision(ex.counter.iamp).amp_done == 0 ...
-                    && ex.decision(ex.counter.iamp).resp_found == 0
-                ex.decision(ex.counter.iamp).amp_done = 1;
-                ex.decision(ex.counter.iamp).current_amplitude = ex.info.stimulus.amplitude_spl;
-                ex.decision(ex.counter.iamp).amp_done_reason = 'Maximum trials reached';
+        if strcmp(app.DropDown_test_mode.Value, 'Adaptive') || strcmp(app.DropDown_test_mode.Value, 'Static trial count')
+            ex = make_decision_dialog(ex,app);
+        end
+
+        % End experiment?
+        if strcmp(app.DropDown_test_mode.Value, 'Adaptive') || strcmp(app.DropDown_test_mode.Value, 'Static trial count')
+            if ex.exp_done
+                if strcmp(app.DropDown_test_mode.Value, 'Adaptive')
+                    ex = save_session_data(ex, app);
+                end
+                return
+            else
+                ex = select_next_dialog(ex);
             end
         elseif strcmp(app.DropDown_test_mode.Value, 'Timed')
-            if datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.info.experiment.amp_time_start >= minutes(ex.info.experiment.timer_dur_min)
-                ex.decision(ex.counter.iamp).amp_done = 1;
-                ex.decision(ex.counter.iamp).current_amplitude = ex.info.stimulus.amplitude_spl;
-                ex.decision(ex.counter.iamp).amp_done_reason = 'Experiment time reached';
-            end
+            % Do not allow testing at a different amplitude at this time
+            % If I do, then I need to restructure some code particularly counters!
+            return
         end
-
-        % Progression counter
-        fprintf('  b%d·a%d\n', ex.counter.iblock, ex.counter.iamp);
-
-        %% SAVE RAW DATA
-        ex = plan_save_single_raw(ex,app);
-
-        %% CONTINUE TESTING?
-        if ex.decision(ex.counter.iamp).amp_done == 1
-            if strcmp(app.DropDown_test_mode.Value, 'Adaptive')
-                ex = model_response(ex,app);
-            end
-
-            if strcmp(app.DropDown_test_mode.Value, 'Adaptive') || strcmp(app.DropDown_test_mode.Value, 'Static trial count')
-                ex = make_decision_dialog(ex,app);
-            end
-
-            % End experiment?
-            if strcmp(app.DropDown_test_mode.Value, 'Adaptive') || strcmp(app.DropDown_test_mode.Value, 'Static trial count')
-                if ex.exp_done
-                    if strcmp(app.DropDown_test_mode.Value, 'Adaptive')
-                        ex = save_session_data(ex, app);
-                    end
-                    return
-                else
-                    ex = select_next_dialog(ex);
-                end
-            elseif strcmp(app.DropDown_test_mode.Value, 'Timed')
-                % Do not allow testing at a different amplitude at this time
-                % If I do, then I need to restructure some code particularly counters!
-                return
-            end
-        end
-
     end
+
+end
 end
 
 

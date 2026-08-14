@@ -6,7 +6,7 @@ for ifreq = 1:length(ex.info.stimulus)
     stim_freq = ex.info.stimulus(ifreq).frequency_hz;
     period_s = 1/stim_freq;
     period_samps = period_s*fs;
-    ramp_cycles = ex.info.stimulus.ramp_duration_cycles;
+    ramp_cycles = ex.info.stimulus(ifreq).ramp_duration_cycles;
     desired_freq_res = ex.info.stimulus(ifreq).desired_freq_res;
 
     % Select stimulus parameters

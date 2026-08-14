@@ -55,7 +55,10 @@ while redo
     % Make decison
     if strcmp(ex.info.experiment.exp_type,'Adaptive') || init_check ...
             || strcmp(ex.info.experiment.exp_type,'Static trial count')
+        
         % Alert experimenter
+        beep; pause(1); beep; pause(1); beep; pause(1)
+        
         % Ask experimenter to confirm or redo
         resp = input('Press Enter to confirm, or type "r" to remeasure: ', 's');
         while ~ismember(lower(strtrim(resp)), {'', 'r'})
@@ -63,7 +66,7 @@ while redo
         end
         close(myfig);
         redo = strcmpi(strtrim(resp), 'r');
-    elseif strcmp(ex.info.experiment.exp_type,'Timed') || strcmp(ex.info.experiment.exp_type,'Mixed stimuli')
+    elseif strcmp(ex.info.experiment.exp_type,'Timed') || strcmp(ex.info.experiment.exp_type,'Mixed freqs')
         pause(3)
         close(myfig);
         redo = false;

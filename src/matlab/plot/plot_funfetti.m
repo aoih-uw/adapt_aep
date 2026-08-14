@@ -8,12 +8,16 @@ end
 n_points = size(my_2f,2);
 channels    = [2, 3, 4];
 channel_name = {'2 mm', '4 mm', 'Skin'};
-target_freq = ex.info.stimulus.frequency_hz * 2;
+
+% Get current frequency idx
+freq_idx = get_current_freq_idx(ex);
+target_freq = ex.info.stimulus(freq_idx).frequency_hz * 2;
+target_freq_range = ex.info.stimulus(freq_idx).range_2f_hz;
+
 fft_ax = app.UIAxes_live_fft;
 bin_ax = app.UIAxes_funfetti;
 colors = {tableau_10('blue'), tableau_10('orange'), tableau_10('green')};
 n_ch   = numel(channels);
-target_freq_range = ex.info.stimulus.range_2f_hz;
 
 % fft_ax
 delete(allchild(fft_ax)); hold(fft_ax, 'on')

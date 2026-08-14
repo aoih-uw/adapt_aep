@@ -8,11 +8,11 @@ ex.counter.ihealth = 0;
 % Experiment mode specific counters
 if strcmp(app.DropDown_test_mode.Value,'Adaptive')
     ex.counter.iboot = 0;
-elseif strcmp(app.DropDown_test_mode.Value,'Mixed stimuli')
+elseif strcmp(app.DropDown_test_mode.Value,'Mixed freqs')
     ex.counter.ischedule = 0;
     ex.counter.N_not_enough_trials = 0;
 end
-if strcmp(app.DropDown_test_mode.Value,'Mixed stimuli') || strcmp(app.DropDown_test_mode.Value,'Timed')
+if strcmp(app.DropDown_test_mode.Value,'Mixed freqs') || strcmp(app.DropDown_test_mode.Value,'Timed')
         ex.counter.grand_iblock = 0;
 end
 
@@ -25,7 +25,7 @@ ex.last_temp_check = NaT;
 ex.last_signal_inspection = NaT;
 
 % Trial counter
-if ~strcmp(app.DropDown_test_mode.Value,'Mixed stimuli')
+if ~strcmp(app.DropDown_test_mode.Value,'Mixed freqs')
     for iamp = 1:100
         ex.trial_count(iamp) = 0;
         ex.decision(iamp).resp_found = 0;
