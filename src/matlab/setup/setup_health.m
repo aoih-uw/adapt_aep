@@ -12,12 +12,7 @@ else
     ex.info.trials.max_block_health = max_block_health;
 end
 
-% Remove all appended block/raw fields, only keep up to max_block_health
-if isfield(ex,'health')
-    if size(ex.health,2) > max_block_health
-        ex.health = ex.health(:,1:max_block_health);
-    end
-end
+% Assign health fields
 if ex.counter.ihealth > 0
     if isfield(ex.health(ex.counter.ihealth), 'time_stamp')
         % Keep the last set of health data to use in next set of health checks
@@ -43,4 +38,11 @@ else % We are setting up the health field for the first time, so we need to buil
         ex.health(ihealth).peak_threshold = NaN;
     end
     ex.template.health = ex.health(1);
+end
+
+% Remove all appended block/raw fields, only keep up to max_block_health
+if isfield(ex,'health')
+    if size(ex.health,2) > max_block_health
+        ex.health = ex.health(:,1:max_block_health);
+    end
 end

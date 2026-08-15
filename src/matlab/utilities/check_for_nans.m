@@ -1,7 +1,7 @@
 function check_for_nans(input_var,data_type)
 % 2 dimensional input data OK not 3
 
-if isempty(input_var)
+if any(isnan(input_var(:)))
     keyboard
 end
 

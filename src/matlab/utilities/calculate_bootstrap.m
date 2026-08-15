@@ -6,7 +6,7 @@ end
 % Bootstrap!
 bootstat = bootstrp(n_bootstrap,@mean,selected_vector);
 
-%% Calculate 99% CI
+%% Calculate 99.9% CI
 lower_CI = prctile(bootstat, 0.05);
 upper_CI = prctile(bootstat, 99.95);
 

@@ -53,7 +53,7 @@ freq_types = unique(uniq_stimuli(:,1));
 amplitudes = unique(uniq_stimuli(:,3));
 
 % Generate 2d heatmap
-heat_2d = zeros(length(freq_types), length(amplitudes));
+heat_2d = nan(length(freq_types), length(amplitudes));
 for i = 1:N_unique_stimuli
     my_r = find(freq_types == uniq_stimuli(i,1));
     my_c = find(amplitudes == uniq_stimuli(i,3));
@@ -61,7 +61,8 @@ for i = 1:N_unique_stimuli
 end
 
 % Draw the 2d heatmap
-imagesc(app.UIAxes_funfetti,heat_2d);
+h_img = imagesc(app.UIAxes_funfetti, heat_2d);
+set(h_img, 'AlphaData', ~isnan(heat_2d));
 xlim(app.UIAxes_funfetti,[0.5, length(amplitudes)+0.5]);
 ylim(app.UIAxes_funfetti,[0.5, length(freq_types)+0.5]);
 
@@ -112,8 +113,10 @@ hold(app.UIAxes_funfetti,'off')
 % Add text in each cell
 for my_r = 1:length(freq_types)
     for my_c = 1:length(amplitudes)
-        text(app.UIAxes_funfetti,my_c, my_r, sprintf('%1.1f%%', heat_2d(my_r,my_c)*100), ...
-            'HorizontalAlignment','center', 'VerticalAlignment','middle', 'FontSize', 11);
+        if ~isnan(heat_2d(my_r, my_c))
+            text(app.UIAxes_funfetti, my_c, my_r, sprintf('%1.1f%%', heat_2d(my_r,my_c)*100), ...
+                'HorizontalAlignment','center', 'VerticalAlignment','middle', 'FontSize', 11);
+        end
     end
 end
 
