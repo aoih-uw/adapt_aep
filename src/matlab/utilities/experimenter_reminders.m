@@ -1,4 +1,5 @@
 function ex = experimenter_reminders(ex)
+%% Helper function for reminding the experimenter to do these tasks
 
 % INSPECT SIGNALS
 if isnat(ex.last_signal_inspection)

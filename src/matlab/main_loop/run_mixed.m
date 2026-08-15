@@ -33,8 +33,8 @@ while ex.counter.ischedule < size(test_schedule,1)
     ex.counter.ischedule = ex.counter.ischedule+1;
     
     % Check if we already have enough trials for this stimulus type
-    N_trials_needed = ex.info.mixed.test_schedule(ex.counter.ischedule,3);
-    cur_stim_id = ex.info.mixed.test_schedule(ex.counter.ischedule,4);
+    N_trials_needed = ex.info.mixed.test_schedule(ex.counter.ischedule,4);
+    cur_stim_id = ex.info.mixed.test_schedule(ex.counter.ischedule,5);
     
     if ex.info.mixed.trial_counter(cur_stim_id) < N_trials_needed
         while ~batch_completed
@@ -64,7 +64,7 @@ while ex.counter.ischedule < size(test_schedule,1)
     end
 
     % REPORT PROGRESS
-    fprintf('  %5.1f%%\n', (sum(ex.info.mixed.trial_counter)/sum(ex.info.mixed.uniq_stimuli(:,3)))*100);
+    fprintf('  %5.1f%%\n', (sum(ex.info.mixed.trial_counter)/sum(ex.info.mixed.uniq_stimuli(:,4)))*100);
 
     %% SAVE RAW DATA
     if ex.counter.iblock > 0 % Only save if there is data in the block structure

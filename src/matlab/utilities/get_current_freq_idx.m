@@ -6,7 +6,7 @@ switch ex.info.experiment.exp_type
         ischedule = ex.counter.ischedule;
         cur_parameters = test_schedule(ischedule,:); % [stim_freq, stim_name, stim_amp, trials_needed, uniq_idx]
         stim_freq = cur_parameters(1);
-        freq_idx = find(ex.info.stim_freqs == stim_freq);
+        freq_idx = find(ex.info.mixed.stim_freqs == stim_freq);
     otherwise
         freq_idx = 1;
 end

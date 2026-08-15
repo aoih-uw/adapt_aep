@@ -15,7 +15,7 @@ for ifreq = 1:length(ex.info.stimulus)
     ex.info.stimulus(ifreq).ramp_duration_ms = ramp_duration_ms;
 
     % Make stimulus template
-    [tone_burst, total_sig_duration] = make_stimulus_template(fs, stim_freq,full_amp_stim_ON_ms,ramp_stim_ON_ms);
+    [tone_burst, total_sig_duration] = make_stimulus_template(fs, stim_freq,full_amp_duration_ms,ramp_duration_ms);
     ex.info.stimulus(ifreq).total_stimulus_duration_ms = total_sig_duration;
     ex.info.stimulus(ifreq).waveform = tone_burst;
 end

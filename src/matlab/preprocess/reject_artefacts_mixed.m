@@ -46,7 +46,7 @@ if n_valid_trials < trials_per_block
 else % There are enough trials
     ex.counter.N_not_enough_trials = 0;
     % Increment trial counter
-    cur_trial_type = ex.info.mixed.test_schedule(ischedule,4);
+    cur_trial_type = ex.info.mixed.test_schedule(ischedule,5);
     ex.info.mixed.trial_counter(cur_trial_type) = ...
         ex.info.mixed.trial_counter(cur_trial_type) + size(ex.kept.trials,1);
 end
