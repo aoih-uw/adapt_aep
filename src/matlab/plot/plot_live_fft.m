@@ -67,8 +67,8 @@ for ic = 1:n_ch
         c, 'FaceAlpha', 0.3, 'EdgeColor', 'none', 'HandleVisibility', 'off');
     plot(fft_ax, ff, vv, 'Color', c, 'LineWidth', 1.5);
     ylim(fft_ax, 'auto')
-    drawnow limitrate
 end
+drawnow limitrate
 
 xlabel(fft_ax, 'Frequency (Hz)');
 ylabel(fft_ax, 'Magnitude (\muV)');

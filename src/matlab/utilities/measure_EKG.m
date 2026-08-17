@@ -56,9 +56,6 @@ while redo
     if strcmp(ex.info.experiment.exp_type,'Adaptive') || init_check ...
             || strcmp(ex.info.experiment.exp_type,'Static trial count')
         
-        % Alert experimenter
-        beep; pause(1); beep; pause(1); beep; pause(1)
-        
         % Ask experimenter to confirm or redo
         resp = input('Press Enter to confirm, or type "r" to remeasure: ', 's');
         while ~ismember(lower(strtrim(resp)), {'', 'r'})

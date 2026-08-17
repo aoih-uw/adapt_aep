@@ -8,6 +8,13 @@ iblock = ex.counter.iblock;
 trials_per_block = ex.info.trials.trials_per_block;
 stimulus_block = ex.block(iblock).stimulus_block;
 fs = ex.info.recording.sampling_rate_hz;
+
+% Get current stimulus info
+freq_idx = get_current_freq_idx(ex);
+stim_freq = ex.info.stimulus(freq_idx).frequency_hz;
+current_amplitude = ex.info.mixed.test_schedule(ex.counter.ischedule,3); % [stim_freq, stim_name, stim_amp, trials_needed, uniq_idx]
+
+% Identify the first block # for the current stimulus
 if strcmp(app.DropDown_test_mode.Value, 'Mixed freqs') || strcmp(app.DropDown_test_mode.Value, 'Timed')
     N_trials_presented = ex.counter.grand_iblock*trials_per_block;
     if strcmp(app.DropDown_test_mode.Value, 'Mixed freqs')
@@ -87,21 +94,25 @@ if strcmp(app.DropDown_test_mode.Value, 'Timed') || strcmp(app.DropDown_test_mod
 end
 
 %% Update GUI
-if strcmp(app.DropDown_test_mode.Value, 'Mixed freqs')
-    app.Label_number_trials_presented.Text = string((iblock-first_block+1)*trials_per_block);
-else
-    app.Label_number_trials_presented.Text = string(N_trials_presented);
-end
 time_since_exp_start = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.info.experiment.exp_time_start;
 time_elapsed =  string(time_since_exp_start, 'hh:mm:ss');
 app.Label_time_elapsed.Text = time_elapsed;
 ex.info.experiment.total_time_elapsed = time_since_exp_start;
-if strcmp(app.DropDown_test_mode.Value, 'Mixed freqs') || strcmp(app.DropDown_test_mode.Value, 'Timed')
-    app.Label_grand_total.Text = string(N_trials_presented);
+
+%% Update command window
+% N trials presented
+if strcmp(app.DropDown_test_mode.Value, 'Mixed freqs')
+    n_presented = (iblock-first_block+1)*trials_per_block;
 else
-    grand_total_N_trials = sum(arrayfun(@(x) x, ex.trial_count(1:ex.counter.iamp)));
-    app.Label_grand_total.Text = string(grand_total_N_trials);
+    n_presented = N_trials_presented;
+end
+% Total trials presented
+if strcmp(app.DropDown_test_mode.Value, 'Mixed freqs') || strcmp(app.DropDown_test_mode.Value, 'Timed')
+    grand_total = N_trials_presented;
+else
+    grand_total = sum(ex.trial_count(1:ex.counter.iamp));
 end
 
+fprintf('Freq: %d | Amp: %d | Valid trials: %d | total: %d\n', stim_freq, current_amplitude, n_presented, grand_total);
 
 
