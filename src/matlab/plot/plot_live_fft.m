@@ -32,7 +32,7 @@ colors = {tableau_10('blue'), tableau_10('orange'), tableau_10('green')};
 n_ch   = numel(channels);
 
 % fft_ax
-cla(fft_ax); hold(fft_ax, 'on')
+delete(allchild(fft_ax)); hold(fft_ax, 'on')
 for ic = 1:n_ch
     sig = ex.raw(iblock).electrodes_microV(:,:,channels(ic));
     c = colors{ic};

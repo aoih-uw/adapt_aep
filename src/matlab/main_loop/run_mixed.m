@@ -37,7 +37,7 @@ while ex.counter.ischedule < size(test_schedule,1)
             end
 
             % REPORT PROGRESS
-            fprintf('  %5.1f%%\n', (sum(ex.info.mixed.trial_counter)/sum(ex.info.mixed.uniq_stimuli(:,4)))*100);
+            fprintf('| %2.1f%%\n', (sum(ex.info.mixed.trial_counter)/sum(ex.info.mixed.uniq_stimuli(:,4)))*100);
 
             % SAVE RAW DATA
             if ex.counter.iblock > 0 % Only save if there is data in the block structure

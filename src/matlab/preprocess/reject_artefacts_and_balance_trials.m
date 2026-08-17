@@ -63,4 +63,6 @@ if reject_rate > 0.5
     % Alert experimenter will do health check
     fprintf('More than half of the trials have been rejected.')
 end
-app.Label_rejection_rate.Text = sprintf('%d', n_valid_trials);
+
+% Report n_valid_trials
+fprintf(' | %d / %d Valid trials', n_valid_trials,n_trials_collected);

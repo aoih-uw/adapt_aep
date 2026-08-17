@@ -26,7 +26,6 @@ switch ex.info.experiment.exp_type
         ex.block(iblock).stim_freq = stim_freq;
         ex.block(iblock).stim_amp = current_amplitude;
         ex.block(iblock).unique_id = cur_parameters(5);
-        app.Label_current_amp.Text = string(current_amplitude);
 
     case 'Adaptive'
         stim_name = 'ONOFF';

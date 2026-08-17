@@ -33,6 +33,8 @@ end
     electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V] ...
     = init_present_sound_variables(ex, stimulus_block);
 
+fprintf('   Freq: %d | Amp: %d  \n', stim_freq, current_amplitude);
+
 %% Rip it
 if ex.test
     rec_data_mV = ex.mock_data;
@@ -65,7 +67,6 @@ for itrial = 1:size(stimulus_block,1)
 end
 
 %% Assign trial counts
-
 if strcmp(app.DropDown_test_mode.Value, 'Adaptive') || strcmp(app.DropDown_test_mode.Value, 'Static trial count')
     ex.trial_count(iamp) = N_trials_presented;
 elseif strcmp(app.DropDown_test_mode.Value, 'Timed')
@@ -112,7 +113,5 @@ if strcmp(app.DropDown_test_mode.Value, 'Mixed freqs') || strcmp(app.DropDown_te
 else
     grand_total = sum(ex.trial_count(1:ex.counter.iamp));
 end
-
-fprintf('Freq: %d | Amp: %d | Valid trials: %d | total: %d\n', stim_freq, current_amplitude, n_presented, grand_total);
 
 
