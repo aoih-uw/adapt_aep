@@ -53,14 +53,6 @@ end
 [p, ~, r, exitflag, ~, ~, J] = lsqcurvefit(@(p,x) softplus(p,x).*weight_vec, p0, ...
     amp_vec, cur_data.*weight_vec, lb, ub, optimset('Display','off'));
 
-% 
-J  = full(J);
-h  = diag(J*((J'*J)\J')); % leverage per amplitude level
-r  = r(:);
-s2 = (r'*r)/(numel(r)-numel(p));
-D  = (r.^2./(s2*numel(p))).*(h./(1-h).^2); % Cook's distance
-R  = corrcov(inv(J'*J));                   % parameter identifiability
-
 %% Identify trials with pinned or non-converged fits
 pinned = (isfinite(lb) & abs(p-lb) <= 1e-6*max(1,abs(lb))) | ...
          (isfinite(ub) & abs(p-ub) <= 1e-6*max(1,abs(ub)));

@@ -34,20 +34,7 @@ while ~ex.exp_done % While testing current stimulus frequency
         ex = experimenter_reminders(ex);
 
         %% CHECK HEALTH
-        time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.health(ex.counter.ihealth).time_stamp;
-        if strcmp(app.DropDown_test_mode.Value, 'Timed')
-            if time_diff >= minutes(15)
-                fprintf('\nChecking animal health')
-                ex = check_health(ex,app,0);
-                fprintf('\n')
-            end
-        else
-            if time_diff >= minutes(20)
-                fprintf('\nChecking animal health')
-                ex = check_health(ex,app,0);
-                fprintf('\n')
-            end
-        end
+        ex = check_health(ex,app,0);
 
         %% CREATE BLOCK OF TRIALS
         ex.counter.iblock = ex.counter.iblock + 1;

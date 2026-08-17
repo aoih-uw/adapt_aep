@@ -16,6 +16,7 @@ max_trials = meta.ON_OFF_max_trials;
 % Organized data
 ON_2f        = org_data.ON_2f;
 OFF_2f       = org_data.OFF_2f;
+OFF_fft_vals = org_data.OFF_fft_vals;
 phase_vec    = org_data.phase_vec;
 
 % Function specific vars
@@ -25,7 +26,7 @@ itvec = [10 100 500 1000 5000 10000];
 max_batches = max_trials/trials_per_block; % e.g. 130 trials in batches of 10
 
 % Preallocate
-bootstrp_sim = NaN(max_batches, 8, length(amp_vec), length(my_chans), length(itvec));
+bootstrp_sim = NaN(max_batches, 9, length(amp_vec), length(my_chans), length(itvec));
 resp_found_data = NaN(length(my_chans),length(amp_vec),length(itvec));
 growth_func_mean = NaN(length(my_chans),length(amp_vec));
 growth_func_sem = NaN(length(my_chans),length(amp_vec));
@@ -73,7 +74,8 @@ for iit = 1:length(itvec)
                 cur_mean = mean(cur_data,1);
                 cur_sem = std(cur_data,[],1)/sqrt(length(cur_data));
                 cur_off = OFF_2f(keep,iamp,1,ichan);
-                cur_noise_floor = median(cur_off(inc_select));
+                cur_noise_floor = mean(cur_off(inc_select));
+                cur_noise_floor_std = std(cur_off(inc_select));
 
                 % Run bootstrap on current batch of data
                 [bootstat, lower_CI, ~] = ...
@@ -94,7 +96,7 @@ for iit = 1:length(itvec)
                 % cur_batch_summary
                 % idx = N_trials in average
                 cur_batch_summary = [length(inc_select) resp_found cur_mean cur_sem ...
-                    cur_noise_floor cur_boot_mean cur_boot_std lower_CI];
+                    cur_noise_floor cur_boot_mean cur_boot_std lower_CI cur_noise_floor_std];
                 bootstrp_sim(ibatch,:,iamp,ichan,iit) = cur_batch_summary;
                 idx = idx+trials_per_block;
             end
@@ -198,7 +200,7 @@ for iamp = 1:(length(amp_vec)-3)
 
 end
 
-% Compare bias
+%% Compare bias
 compare_bias(all_data,ds_data,bottom_up,top_down,my_chans_name,trials_per_block)
 
 %% 2f based growth function
@@ -218,7 +220,42 @@ for iamp = 1:length(amp_vec)
     end
 end
 
-% Plot mean 2f amplitude /sem across batches and ID when resp_found
+%% SNR based threshold estimation
+% get the noise floor amplitude
+n_chan = length(my_chans);
+cur_amp = 7;
+figure; tiledlayout(2,n_chan,'Padding','tight','TileSpacing','tight');
+for ichan = 1:n_chan
+    chan_color = select_chan_color(ichan);
+    cur_mean       = bootstrp_sim(:,3,cur_amp,ichan,end);
+    cur_noise_mean = bootstrp_sim(:,5,cur_amp,ichan,end);
+    cur_noise_std  = bootstrp_sim(:,9,cur_amp,ichan,end);
+    nbatch = 1:10:length(cur_mean)*10;
+    threshold_criteria = cur_noise_mean + 5*cur_noise_std;
+
+    % Top row: noise floor amplitude +/- std
+    ax_top(ichan) = nexttile(ichan);
+    plot(nbatch,cur_noise_std,'-o','Color',chan_color,'MarkerFaceColor',chan_color)
+    title(my_chans_name{ichan})
+    if ichan == 1, ylabel('Noise floor (\muV)'), end
+    xlim([-5 130])
+    % Bottom row: 2f mean, colored by SNR criterion
+    if cur_mean(end) > threshold_criteria(end)
+        snr_color = tableau_10('green');
+    else
+        snr_color = tableau_10('red');
+    end
+    ax_bot(ichan) = nexttile(n_chan+ichan);
+    plot(nbatch,cur_mean,'-o','Color',snr_color,'MarkerFaceColor',snr_color)
+    hold on; plot(nbatch,threshold_criteria,'--','Color',[.5 .5 .5],'LineWidth',2)
+    xlabel('Trials in average')
+    if ichan == 1, ylabel('2f amplitude (\muV)'), end
+    xlim([-5 130])
+end
+linkaxes([ax_top ax_bot],'x'); linkaxes(ax_top,'y'); linkaxes(ax_bot,'y');
+sgtitle('How 2f and noise floor amplitude change as more trials are added to the average')
+
+%% Plot mean 2f amplitude /sem across batches and ID when resp_found
 for ichan = 1:length(my_chans)
     figure;
     tiledlayout(4,4,'Padding','tight','TileSpacing','tight');
@@ -290,6 +327,31 @@ for ichan = 1:length(my_chans)
     title(string(ichan))
 end
 sgtitle('Simulated Adaptive 2f Growth Functions')
+
+% Plot 2f based growth functions - linear fit
+figure; tiledlayout(1,3,'Padding','tight','TileSpacing','tight');
+for ichan = 1:length(my_chans)
+    nexttile
+    cur_color = select_chan_color(ichan);
+    cur_y = growth_func_mean(ichan,:);
+    cur_y_sem = growth_func_sem(ichan,:);
+
+    % Fit linear regression
+    keep = ~isnan(cur_y);
+    p_lin = polyfit(amp_vec(keep), cur_y(keep), 1);
+    x_vec = linspace(min(amp_vec),max(amp_vec),200);
+    y_vec = polyval(p_lin, x_vec);
+
+    errorbar(amp_vec,cur_y,cur_y_sem,'o','Color',cur_color,'MarkerFaceColor',cur_color,'LineWidth',2);
+    hold on;
+    plot(x_vec,y_vec,'-','Color',cur_color,'LineWidth',2);
+    xticks(amp_vec)
+    xlabel('Stimulus amplitude')
+    ylabel('Amplitude (\muV)')
+    title(string(ichan))
+end
+sgtitle('Simulated Adaptive 2f Growth Functions (Linear Fit)')
+
 
 % Apply Tufte styling
 apply_tufte

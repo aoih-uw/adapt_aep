@@ -234,6 +234,8 @@ if run_bootstrap
         % response found
         ex.decision(ex.counter.iamp).resp_found = 1;
         ex.decision(ex.counter.iamp).current_amplitude = current_amplitude;
+        ex.decision(ex.counter.iamp).amp_done = 1;
+                ex.decision(ex.counter.iamp).amp_done_reason = 'Response detected';
         fprintf('\nSignificant difference between ON and OFF responses found!\n')
     else
         ex.decision(ex.counter.iamp).resp_found = 0;
