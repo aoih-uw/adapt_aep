@@ -32,7 +32,7 @@ colors = {tableau_10('blue'), tableau_10('orange'), tableau_10('green')};
 n_ch   = numel(channels);
 
 % fft_ax
-delete(allchild(fft_ax)); hold(fft_ax, 'on')
+cla(fft_ax); hold(fft_ax, 'on')
 for ic = 1:n_ch
     sig = ex.raw(iblock).electrodes_microV(:,:,channels(ic));
     c = colors{ic};
@@ -61,10 +61,13 @@ for ic = 1:n_ch
     % Trim to display window
     my_mask  = freq_vec <= target_freq*2;
     ff = freq_vec(my_mask);  vv = fft_val(my_mask);  ss = fft_std(my_mask);
+    ff = ff(:).'; vv = vv(:).'; ss = ss(:).';
 
     fill(fft_ax, [ff, fliplr(ff)], [vv+ss, fliplr(vv-ss)], ...
         c, 'FaceAlpha', 0.3, 'EdgeColor', 'none', 'HandleVisibility', 'off');
     plot(fft_ax, ff, vv, 'Color', c, 'LineWidth', 1.5);
+    ylim(fft_ax, 'auto')
+    drawnow limitrate
 end
 
 xlabel(fft_ax, 'Frequency (Hz)');

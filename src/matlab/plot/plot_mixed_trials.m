@@ -1,4 +1,4 @@
-function ex = count_mixed_trials(ex,app)
+function ex = plot_mixed_trial_count(ex,app)
 %% Count which trials in the testing schedule have been presented and plot these counts to a heatmap
 % test_schedule: rows = n total trials to test, columns stimuli_type, stimulus_amplitude, n_trials_needed, unique_idx
 
@@ -125,6 +125,7 @@ colormap(app.UIAxes_funfetti,[linspace(1,blue(1),n)', linspace(1,blue(2),n)', li
 clim(app.UIAxes_funfetti, [0 1]);
 xticks(app.UIAxes_funfetti,1:length(amplitudes)); xticklabels(app.UIAxes_funfetti,amplitudes);
 yticks(app.UIAxes_funfetti,(1:length(freq_types))); yticklabels(app.UIAxes_funfetti, freq_types);
+grid(app.UIAxes_funfetti,'off')
 title(app.UIAxes_funfetti,'Mixed freqs Experiment Progress')
 ylabel(app.UIAxes_funfetti,'Stimulus Frequency (Hz)')
 xlabel(app.UIAxes_funfetti,'Amplitude (dB SPL)')

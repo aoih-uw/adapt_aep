@@ -1,6 +1,10 @@
 function ex = check_health(ex, app, init_check)
 %% Handles variables needed to call measure_EKG and saves EKG signals to ex.health structure
+if ~init_check
 time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.health(ex.counter.ihealth).time_stamp;
+else % This will be the first check
+    time_diff = 15;
+end
 if time_diff >= minutes(15)
     fprintf('\nChecking animal health')
     % Assign Variables

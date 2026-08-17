@@ -103,7 +103,5 @@ else
     app.Label_grand_total.Text = string(grand_total_N_trials);
 end
 
-%% Play sound after every present_sound() attempt has been completed
-beep
 
 

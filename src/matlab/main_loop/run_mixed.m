@@ -20,9 +20,6 @@ while ex.counter.ischedule < size(test_schedule,1)
     %% INCREMENT ISCHEDULE
     ex.counter.ischedule = ex.counter.ischedule+1;
 
-    %% EXPERIMENTER REMINDERS
-    ex = experimenter_reminders(ex);
-
     %% CHECK HEALTH
     ex = check_health(ex,app,0);
 
@@ -36,7 +33,7 @@ while ex.counter.ischedule < size(test_schedule,1)
         case 'Mixed freqs'
             if ex.info.mixed.trial_counter(cur_stim_id) < N_trials_needed
                 ex = run_batch(ex, app);
-                ex = count_mixed_trials(ex,app);
+                ex = plot_mixed_trials(ex,app);
             end
 
             % REPORT PROGRESS
