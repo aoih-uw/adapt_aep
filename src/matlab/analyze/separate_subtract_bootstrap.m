@@ -174,7 +174,7 @@ if run_bootstrap
     iboot = ex.counter.iboot;
     fprintf('\nStarting bootstrap calculation...\n')
     tic()
-    [bootstat, lower_CI, upper_CI] = calculate_bootstrap(n_bootstrap, diff_2f_vec);
+    [bootstat, lower_CI, upper_CI] = calculate_bootstrap(n_bootstrap, diff_2f_vec,99.9);
     fprintf('\nBootstrapping CI range: [ %.3f , %.3f ]',lower_CI, upper_CI)
     time_elapsed = toc();
     fprintf('\nBootstrap calculation time: %.3f\n', time_elapsed);
