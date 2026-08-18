@@ -2,23 +2,24 @@
 
 %% Assign Variables
 clearvars -except grand_ex_save
-save_dir = 'F:\2026\Research\July Midshipman\organized_data';
+save_dir = 'D:\2026\Research\August Midshipman\organized_data';
 info = grand_ex_save{1,1}.info;
 meta.subjid            = info.animal.subject_ID;
-meta.amp_vec           = sort(info.mixed.test_amplitudes);
+meta.amp_vecs           = info.mixed.test_amplitudes;
 meta.stim_type_vec     = info.mixed.stim_name;
-meta.stim_freq         = info.stimulus.frequency_hz;
-meta.my_chans          = [2,3,4];   % 2 = 2mm, 3 = 4mm, 4 = subcut
-meta.my_chans_name     = {'2 mm subcranial','4 mm subcranial','Subcutaneous'};
+meta.stim_freqs         = info.mixed.stim_freqs;
+meta.my_chans          = 1:4;
+meta.my_chans_name     = {'Forebrain','2 mm subcranial','4 mm subcranial','Subcutaneous'};
 meta.target_freq_range = 3;
 meta.trials_per_block  = info.trials.trials_per_block;
 meta.ON_OFF_max_trials = 130;
 
 % Metadata
 subjid = meta.subjid;
-amp_vec = meta.amp_vec;
+amp_vecs = meta.amp_vecs;
+[~, largest_amp_vec] = max(cellfun(@numel, amp_vecs));
 stim_type_vec = meta.stim_type_vec;
-stim_freq = meta.stim_freq;
+stim_freqs = meta.stim_freqs;
 my_chans = meta.my_chans;
 my_chans_name = meta.my_chans_name;
 target_freq_range = meta.target_freq_range;
@@ -26,15 +27,15 @@ trials_per_block = meta.trials_per_block;
 
 %% Preallocate
 % 2f magnitude bins
-ON_2f = NaN(2000, length(amp_vec), length(stim_type_vec), length(my_chans),'single');
-OFF_2f = NaN(2000, length(amp_vec), 1, length(my_chans),'single'); % Only valid for ONOFF stimuli
+ON_2f = NaN(2000, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(my_chans), length(stim_freqs),'single');
+OFF_2f = NaN(2000, length(amp_vecs{largest_amp_vec}), 1, length(my_chans), length(stim_freqs),'single'); % Only valid for ONOFF stimuli
 
 % FFTs
-freq_vec = NaN(2000, 201, length(amp_vec), length(stim_type_vec), length(my_chans),'single');
-ON_fft_vals = NaN(2000, 201, length(amp_vec), length(stim_type_vec), length(my_chans),'single');
-OFF_fft_vals = NaN(2000, 201, length(amp_vec), 1, length(my_chans),'single'); % Only valid for ONOFF stimuli
-low_lim= 0 ; up_lim = 1000; % Hz
-phase_vec = NaN(2000, 1, length(amp_vec), length(stim_type_vec), length(my_chans),'single');
+freq_vec = NaN(2000, 201, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(my_chans), length(stim_freqs),'single');
+ON_fft_vals = NaN(2000, 201, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(my_chans), length(stim_freqs),'single');
+OFF_fft_vals = NaN(2000, 201, length(amp_vecs{largest_amp_vec}), 1, length(my_chans), length(stim_freqs),'single'); % Only valid for ONOFF stimuli
+low_lim = 0 ; up_lim = 2000; % Hz
+phase_vec = NaN(2000, 1, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(my_chans), length(stim_freqs),'single');
 
 %% Begin searching through datasets
 % By individual files
@@ -43,12 +44,7 @@ for iname = 1:length(grand_ex_save)
     fprintf('%d\n', iname)
     % Load in vars necessary for processing data
     latency_samples = grand_ex_save{1,iname}.info.recording.latency_samples;
-    stimulus = grand_ex_save{1,iname}.info.stimulus.waveform;
     fs = grand_ex_save{1,iname}.info.recording.sampling_rate_hz;
-    ramp_duration_samples = grand_ex_save{1,iname}.info.stimulus.ramp_duration_ms/1e3*fs;
-    % target_freq = 130;
-    target_freq = grand_ex_save{1,iname}.info.stimulus.frequency_hz*2;
-    trim_stim_pre_dur_ms = grand_ex_save{1,iname}.info.stimulus.trim_stim_pre_dur_ms;
 
     % Get number of batches
     n_batches = size(grand_ex_save{1,iname}.raw_signals,2);
@@ -81,6 +77,20 @@ for iname = 1:length(grand_ex_save)
                 keyboard
             end
 
+            % Get current batch meta data and assign freq_idx
+            % N frequencies are identified here directly through the block
+            % level meta dat
+            cur_freq = grand_ex_save{1,iname}.block_level_info(ibatch).stim_freq;
+            freq_idx = find(info.mixed.stim_freqs == cur_freq);
+            stimulus = grand_ex_save{1,iname}.info.stimulus(freq_idx).waveform;
+            cur_amp_vec = amp_vecs{freq_idx};
+            ramp_duration_samples = grand_ex_save{1,iname}.info.stimulus(freq_idx).ramp_duration_ms/1e3*fs;
+            trim_stim_pre_dur_ms = grand_ex_save{1,iname}.info.stimulus(freq_idx).trim_stim_pre_dur_ms;
+
+            % Assign target frequency
+            % target_freq = 130;
+            target_freq = cur_freq*2;
+
             if ~isempty(kept_trials)
                 %% Calculate fft and find 2f bin
                 % Preallocate
@@ -89,7 +99,7 @@ for iname = 1:length(grand_ex_save)
                 temp_OFF_2f = NaN(n_trials,1);
 
                 % Get indices for populating matrices
-                amp_idx = find(amp_vec == round(grand_ex_save{1,iname}.block_level_info(ibatch).stim_amp)); % Round for sensitive doubles
+                amp_idx = find(cur_amp_vec == round(grand_ex_save{1,iname}.block_level_info(ibatch).stim_amp)); % Round for sensitive doubles
                 stim_type_idx = find(strcmp(stim_type_vec, ...
                     grand_ex_save{1,iname}.block_level_info(ibatch).stim_type));
 
@@ -99,12 +109,12 @@ for iname = 1:length(grand_ex_save)
                 end
 
                 % Find the first full NaN row to start populating from
-                start_row = find(isnan(ON_2f(:,amp_idx,stim_type_idx,ichan)), 1, 'first');
+                start_row = find(isnan(ON_2f(:,amp_idx,stim_type_idx,ichan,freq_idx)), 1, 'first');
                 
                 % Check that there are no NaN rows before the assigned start_row
                 if start_row > 1
                     prior_NaN_row = ...
-                        find(isnan(ON_2f(1:start_row-1,amp_idx,stim_type_idx,ichan)));
+                        find(isnan(ON_2f(1:start_row-1,amp_idx,stim_type_idx,ichan,freq_idx)));
                     if ~isempty(prior_NaN_row)
                         keyboard
                     end
@@ -128,7 +138,7 @@ for iname = 1:length(grand_ex_save)
                 end
 
                 % Make sure to keep phase_vec info
-                phase_vec(row_range, 1, amp_idx, stim_type_idx, ichan) = kept_phase;
+                phase_vec(row_range, 1, amp_idx, stim_type_idx, ichan,freq_idx) = kept_phase;
 
                 % Loop through stim_ON/stim_OFF
                 for itrial = 1:n_trials
@@ -151,7 +161,9 @@ for iname = 1:length(grand_ex_save)
                     end
 
                     % Calculate ON fft
-                    [~, tmp_freq_vec, tmp_fft_vals] = calc_fft(cur_trial, fs);
+                    [tmp_freq_vec, tmp_fft_vals] = calc_fft_complex(cur_trial, fs);
+                    
+                    % Get the bin at the target frequency
                     [temp_ON_2f(itrial), target_bin_loc] = ...
                         find_fft_bins(target_freq, target_freq_range, tmp_fft_vals, tmp_freq_vec);
 
@@ -159,9 +171,8 @@ for iname = 1:length(grand_ex_save)
                     freq_vec_range = find(tmp_freq_vec >=low_lim & tmp_freq_vec <= up_lim);
                     select_freq_vec = tmp_freq_vec(freq_vec_range);
                     select_fft_vals = tmp_fft_vals(freq_vec_range);
-                    freq_vec(row_range(itrial), 1:size(select_fft_vals,2), amp_idx, stim_type_idx, ichan) = select_freq_vec;
-
-                    ON_fft_vals(row_range(itrial), 1:size(select_fft_vals,2), amp_idx, stim_type_idx, ichan) = select_fft_vals;
+                    freq_vec(row_range(itrial), 1:size(select_fft_vals,2), amp_idx, stim_type_idx, ichan,freq_idx) = select_freq_vec;
+                    ON_fft_vals(row_range(itrial), 1:size(select_fft_vals,2), amp_idx, stim_type_idx, ichan,freq_idx) = select_fft_vals;
 
                     % Stim OFF for ONOFF Stim types
                     if strcmp(cur_stim_type, 'ONOFF')
@@ -174,7 +185,7 @@ for iname = 1:length(grand_ex_save)
                         end
 
                         % Calculate fft
-                        [~, tmp_freq_vec, tmp_fft_vals] = calc_fft(cur_trial_OFF, fs);
+                        [tmp_freq_vec, tmp_fft_vals] = calc_fft_complex(cur_trial_OFF, fs);
                         freq_vec_range = find(tmp_freq_vec >=low_lim & tmp_freq_vec <= up_lim);
                         select_freq_vec_OFF = tmp_freq_vec(freq_vec_range);
 
@@ -186,8 +197,9 @@ for iname = 1:length(grand_ex_save)
                         end
 
                         % Save OFF fft values
-                        OFF_fft_vals(row_range(itrial),1:size(select_fft_vals,2),amp_idx,1,ichan) = ...
+                        OFF_fft_vals(row_range(itrial),1:size(select_fft_vals,2),amp_idx,1,ichan,freq_idx) = ...
                             tmp_fft_vals(freq_vec_range);
+                        % Get OFF target frequency bin
                         [temp_OFF_2f(itrial), target_bin_loc] = ...
                             find_fft_bins(target_freq, target_freq_range, tmp_fft_vals, tmp_freq_vec);
                     end
@@ -199,11 +211,11 @@ for iname = 1:length(grand_ex_save)
                     keyboard
                 end
 
-                ON_2f(row_range,amp_idx,stim_type_idx,ichan) ...
+                ON_2f(row_range,amp_idx,stim_type_idx,ichan,freq_idx) ...
                     = temp_ON_2f;
 
                 if strcmp(cur_stim_type, 'ONOFF')
-                    OFF_2f(row_range,amp_idx,1,ichan) ...
+                    OFF_2f(row_range,amp_idx,1,ichan,freq_idx) ...
                         = temp_OFF_2f;
                 end
             end
@@ -222,5 +234,5 @@ org_data.phase_vec    = phase_vec;
 
 % Save organized data
 cd(save_dir)
-save(sprintf('subject_%d_target_%d_Hz',subjid,target_freq), ...
+save(sprintf('subject_%d_%s', subjid, datestr(now,'yyyymmdd')), ...
     'meta', 'org_data')

@@ -1,12 +1,12 @@
 % Assign vars
 clearvars
 addpath(genpath('\\wsl.localhost\ubuntu\home\aoih\adapt_aep\src\matlab'))
-subjid = 27;
-base_dir = 'F:\2026\Research\July Midshipman';
+subjid = 1;
+base_dir = 'D:\2026\Research\August Midshipman';
 cd(base_dir)
-% file_type = 'mixed_stimuli';
+file_type = 'mixed_stimuli';
 % file_type = 'benzo';
-stim_freq = 100;
+stim_freq = [];
 stim_amp = [];
 
 % Setup filename
@@ -31,7 +31,12 @@ end
 for iname = 1:size(my_names,2)
 current_file = my_names{iname};
 fprintf('Loading %s, %d/%d\n',current_file, iname, length(my_names))
+try
 S = load(current_file);
 ex = S.ex_save;
 grand_ex_save{iname} = ex;
+catch
+    disp(ME.message)
+    keyboard
+end
 end

@@ -1,9 +1,7 @@
-function [false_pos, false_neg, resp_found_data] = calculate_false_rate(amp_vec, itvec, bootstrp_sim, ...
-    resp_found_data, threshold, max_trials, my_chans,trials_per_block)
-% Assign function specific var
-last_batch_num = max_trials/trials_per_block;
+function [resp_found_data] = sim_trial_count_heatmap(amp_vec, itvec, bootstrp_sim, ...
+    resp_found_data, max_trials, my_chans,trials_per_block)
 
-% For each iamp and ichan find the first *stable* resp_found batch
+%% For each iamp and ichan find the first *stable* resp_found batch
 for iit = 1:length(itvec)
     for iamp = 1:length(amp_vec)
         for ichan = 1:length(my_chans)
@@ -23,42 +21,6 @@ for iit = 1:length(itvec)
         end
     end
 end
-
-% Assign vars
-false_pos = zeros(length(amp_vec),length(itvec));
-false_neg = zeros(length(amp_vec),length(itvec));
-
-% Only look at channel 2 data
-for iit = 1:length(itvec)
-    for iamp = 1:length(amp_vec)
-        cur_data = bootstrp_sim(:,2,iamp,2,iit);
-        if any(isnan(cur_data))
-            keyboard
-        end
-        ones_loc = cur_data == 1;
-        zeros_loc = cur_data == 0;
-        if amp_vec(iamp) < threshold
-            false_pos(iamp,iit) = sum(ones_loc);
-        elseif amp_vec(iamp) >= threshold
-            false_neg(iamp,iit) = sum(zeros_loc);
-        end
-    end
-end
-
-% Assign denomintors for each false rate type
-fp_attempts = last_batch_num*sum(amp_vec < threshold);
-fn_attempts = last_batch_num*sum(amp_vec >= threshold);
-
-%% Plot false rates
-figure;
-plot(itvec, (sum(false_pos,1)/fp_attempts)*100,'-o','Color',tableau_10('blue'),'LineWidth',2, 'MarkerFaceColor',tableau_10('blue'));
-hold on;
-plot(itvec, (sum(false_neg,1)/fn_attempts)*100,'-o','Color',tableau_10('orange'),'LineWidth',2,'MarkerFaceColor',tableau_10('orange'))
-xlabel('N Bootstrap Iterations')
-ylabel('% False Decisions')
-ytickformat('percentage')
-legend('False positive','False negative')
-title('False +/- detections by bootstrap iterations')
 
 %% Plot trial count heatmap
 % min num of trials needed to find reliable resp_found (i.e., no more no resp_found after resp_found)
