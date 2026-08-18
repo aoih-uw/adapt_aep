@@ -2,7 +2,7 @@
 clearvars
 addpath(genpath('\\wsl.localhost\ubuntu\home\aoih\adapt_aep\src\matlab'))
 subjid = 1;
-base_dir = 'D:\2026\Research\August Midshipman';
+base_dir = 'F:\2026\Research\August Midshipman';
 cd(base_dir)
 file_type = 'mixed_stimuli';
 % file_type = 'benzo';

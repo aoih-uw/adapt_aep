@@ -1,22 +1,22 @@
-function [resp_found_data] = sim_trial_count_heatmap(amp_vec, itvec, bootstrp_sim, ...
+function [resp_found_data] = sim_trial_count_heatmap(amp_vec, my_dataset, ...
     resp_found_data, max_trials, my_chans,trials_per_block)
 
 %% For each iamp and ichan find the first *stable* resp_found batch
-for iit = 1:length(itvec)
+for ii = 1:size(my_dataset,4)
     for iamp = 1:length(amp_vec)
         for ichan = 1:length(my_chans)
-            cur_data = bootstrp_sim(:,2,iamp,ichan,iit);
+            cur_data = my_dataset.resp_found(:,iamp,ichan,ii);
             n_filled = find(~isnan(cur_data),1,'last');   % [] if all NaN
             cur_data = cur_data(1:n_filled);
             last_no_resp = find(cur_data == 0,1,'last');
             if isempty(n_filled)                    % all NaN
-                resp_found_data(ichan,iamp,iit) = NaN;
+                resp_found_data(ichan,iamp,ii) = NaN;
             elseif isempty(last_no_resp)            % never a no-response
-                resp_found_data(ichan,iamp,iit) = trials_per_block;
+                resp_found_data(ichan,iamp,ii) = trials_per_block;
             elseif last_no_resp == n_filled         % final filled batch still no-response
-                resp_found_data(ichan,iamp,iit) = NaN;
+                resp_found_data(ichan,iamp,ii) = NaN;
             else
-                resp_found_data(ichan,iamp,iit) = (last_no_resp+1)*trials_per_block;
+                resp_found_data(ichan,iamp,ii) = (last_no_resp+1)*trials_per_block;
             end
         end
     end
@@ -29,7 +29,7 @@ cur_data = squeeze(resp_found_data(:,:,end));
 h = heatmap(cur_data);              % keep NaNs
 h.MissingDataColor = tableau_10('grey');   % grey out the NaN cells
 h.XDisplayLabels = string(amp_vec);
-h.YDisplayLabels = {'2 mm Subcranial', '4 mm Subcranial','Subcutaneous'};
+h.YDisplayLabels = {'EKG','2 mm Subcranial', '4 mm Subcranial','Subcutaneous'};
 h.ColorbarVisible = 'off';
 h.Colormap = interp1([0 1], [1 1 1; tableau_10('blue')], linspace(0,1,256));
 title('Number of trials needed to detect AEP response')

@@ -8,7 +8,7 @@ thresh_ci = NaN(size(lower_ci_vec,1), length(my_chans_name));
 p_chan = NaN(size(my_chans_name,2),4, size(lower_ci_vec,1));
 
 if yes_plot
-    figure; tiledlayout(1,3,'TileSpacing','tight','Padding','tight');
+    figure; tiledlayout(1,4,'TileSpacing','tight','Padding','tight');
 end
 
 % Loop through data
@@ -89,7 +89,7 @@ end
 
 % Plot change in threshold estimate across batches of 10
 if yes_plot
-    figure; tiledlayout(1,3,'Padding','tight','TileSpacing','tight');
+    figure; tiledlayout(1,4,'Padding','tight','TileSpacing','tight');
     for ichan = 1:length(my_chans_name)
         nexttile
         cur_color = select_chan_color(ichan);

@@ -16,6 +16,7 @@ my_chans_name = meta.my_chans_name;
 target_freq_range = meta.target_freq_range;
 trials_per_block = meta.trials_per_block;
 max_trials = meta.ON_OFF_max_trials;
+% max_trials = 240;
 
 % Organized data
 ON_2f        = org_data.ON_2f;
@@ -25,8 +26,8 @@ phase_vec    = org_data.phase_vec;
 
 % Function specific vars
 stim_type_idx = find(strcmp('ONOFF',stim_type_vec));
-itvec = [500 1000 5000 10000];
-CI_vec = [99.9 99 95];
+itvec = [5000];
+CI_vec = [99.9];
 % itvec = [5000];
 max_batches = max_trials/trials_per_block; % e.g. 130 trials in batches of 10
 
@@ -38,9 +39,7 @@ for ifreq = 1:length(stim_freqs)
     sz = [max_batches, length(amp_vec), length(my_chans)];
     cumu.n                    = NaN(sz);
     cumu.diff_mean            = NaN(sz);
-    cumu.diff_phase      = NaN(sz);
     cumu.noise_floor_mean     = NaN(sz);
-    cumu.noise_floor_mean_phase = NaN(sz);
     
     % Iterations
     sz = [max_batches, length(amp_vec), length(my_chans), length(itvec)];
@@ -50,18 +49,20 @@ for ifreq = 1:length(stim_freqs)
     iter.resp_found           = NaN(sz);
 
     % CI
-    sz = [max_batches, length(amp_vec), length(my_chans), length(itvec)];
+    sz = [max_batches, length(amp_vec), length(my_chans), length(CI_vec)];
     conf.boot_mean            = NaN(sz);
     conf.boot_std             = NaN(sz);
     conf.lower_ci             = NaN(sz);
     conf.resp_found           = NaN(sz);
 
-    % Other vectors
-    resp_found_data = NaN(length(my_chans),length(amp_vec),length(itvec));
+    % Resp found vectors
+    resp_found_int = NaN(length(my_chans),length(amp_vec),length(itvec));
+    resp_found_conf = NaN(length(my_chans),length(amp_vec),length(CI_vec));
+
+    % 2f Growth function vectors
     growth_func_mean = NaN(length(my_chans),length(amp_vec));
     growth_func_sem = NaN(length(my_chans),length(amp_vec));
     growth_func_noise_floor = NaN(length(my_chans),length(amp_vec));
-    my_dists = zeros(max(itvec),length(amp_vec));
 
     % Set to empty
     all_data = [];
@@ -82,6 +83,9 @@ for ifreq = 1:length(stim_freqs)
             keep = ~isnan(cur_phase) & ~isnan(diff_2f);
             cur_phase = cur_phase(keep);
             diff_2f = diff_2f(keep);
+            if size(diff_2f,1) < 260
+                fprintf('Not enough trials at %d dB and Channel %d\n', amp_vec(iamp), my_chans(ichan));
+            end
             phases = unique(cur_phase);
 
             % Set cumulative averaging idx
@@ -104,21 +108,16 @@ for ifreq = 1:length(stim_freqs)
                 % Calculate the mean across current cumulative batch of data
                 % Difference
                 cur_data = diff_2f(inc_select);
-                cur_mean = abs(mean(cur_data,1)); % Take abs to recover magnitude
-                cur_angle = angle(cur_data);
+                cur_mean = mean(cur_data,1); % Take abs to recover magnitude
                 
                 % Stim off @ 2f
                 cur_off = OFF_2f(keep,iamp,1,ichan,ifreq);
-                cur_noise_floor_mean = abs(mean(cur_off(inc_select)));
-                cur_noise_floor_angle = angle(cur_off(inc_select));
-                cur_noise_floor_std = [];
+                cur_noise_floor_mean = mean(cur_off(inc_select));
 
                 % Save to cumu
                 cumu.n(ibatch,iamp,ichan)                    = length(inc_select);
                 cumu.diff_mean(ibatch,iamp,ichan)            = cur_mean;
-                cumu.diff_phase(ibatch,iamp,ichan)           = cur_angle;
                 cumu.noise_floor_mean(ibatch,iamp,ichan)     = cur_noise_floor_mean;
-                cumu.noise_floor_phase(ibatch,iamp,ichan)    = cur_noise_floor_angle;
 
                 % Loop through N iterations
                 for iit = 1:length(itvec)
@@ -147,10 +146,10 @@ for ifreq = 1:length(stim_freqs)
                         simulate_bootstrap(n_bootstrap,cur_data,max(CI_vec));
 
                     % cur_batch_summary
-                    conf.boot_mean(ibatch,iamp,ichan,iit)            = cur_boot_mean;
-                    conf.boot_std(ibatch,iamp,ichan,iit)             = cur_boot_std;
-                    conf.lower_ci(ibatch,iamp,ichan,iit)             = lower_CI;
-                    conf.resp_found(ibatch,iamp,ichan,iit)           = resp_found;
+                    conf.boot_mean(ibatch,iamp,ichan,iCI)            = cur_boot_mean;
+                    conf.boot_std(ibatch,iamp,ichan,iCI)             = cur_boot_std;
+                    conf.lower_ci(ibatch,iamp,ichan,iCI)             = lower_CI;
+                    conf.resp_found(ibatch,iamp,ichan,iCI)           = resp_found;
                 end
                 % Progress cumulative counter
             idx = idx+trials_per_block;
@@ -158,103 +157,26 @@ for ifreq = 1:length(stim_freqs)
         end
     end
 
-    %% False +/- Identification
-    [resp_found_data] = calculate_false_rate(amp_vec, itvec, bootstrp_sim, ...
-        resp_found_data, max_trials, my_chans, trials_per_block);
+    %% Simulate trial count
+    % By n iteration
+    resp_found_int = sim_trial_count_heatmap(amp_vec, iter, ...
+        resp_found_int, max_trials, my_chans, trials_per_block);
+    % By CI interval
+    resp_found_conf = sim_trial_count_heatmap(amp_vec, conf, ...
+        resp_found_conf, max_trials, my_chans, trials_per_block);
 
     %% Estimate threshold based on lower CI value and estimate bias
     % Fit softplus to lower_CI growth functions and find zero-crossing threshold
     % Only look at highest bootstrap iteration data
 
-    % Load in data
-    lower_ci_vec = squeeze(bootstrp_sim(:,8,:,:,end)); % all_data channels
-    boot_std_vec = squeeze(bootstrp_sim(:,7,:,:,end));
+    % By n iteration
+    lower_ci_vec = conf.lower_ci(:,:,:,end); % use highest CI rate
+    boot_std_vec = conf.boot_std(:,:,:,end);
 
-    % all_data available data
-    [p, thresh_ci, stable_n] = ...
-        fit_low_CI_model(amp_vec, lower_ci_vec, boot_std_vec, ...
-        trials_per_block, max_trials, my_chans_name, 'all_data data',1);
+    [all_data, ds_data, bottom_up, top_down] = ...
+    plan_fit_low_CI(amp_vec, lower_ci_vec, boot_std_vec, trials_per_block, max_trials, my_chans_name);
 
-    % Save values
-    all_data.amp_vec = amp_vec;
-    all_data.p = p;
-    all_data.thresh_ci = thresh_ci;
-    all_data.stable_n = stable_n;
-
-    % Decreasing amplitude resolution
-    orig_res = diff(amp_vec(1:2));
-    ds_factors = [2 3 5 6];
-
-    for istep = 1:length(ds_factors)
-        % Downsample amplitude vector
-        cur_idx = 1:ds_factors(istep):length(amp_vec);
-        cur_idx(end) = length(amp_vec);
-        amp_vec_ds = amp_vec(cur_idx);
-
-        % Generate bias ID tag
-        my_tag = sprintf('Downsample by %d',ds_factors(istep));
-
-        [p, thresh_ci, stable_n] = ...
-            fit_low_CI_model(amp_vec_ds, lower_ci_vec(:,cur_idx,:), boot_std_vec(:,cur_idx,:), ...
-            trials_per_block, max_trials, my_chans_name, my_tag,1);
-
-        % Save values
-        ds_data(istep).amp_vec_ds = amp_vec_ds;
-        ds_data(istep).ds_factor = diff(amp_vec_ds(1:2));
-        ds_data(istep).p = p;
-        ds_data(istep).thresh_ci = thresh_ci;
-        ds_data(istep).stable_n = stable_n;
-
-    end
-
-    % Delete from bottom up
-    for iamp = 2:(length(amp_vec)-2) % Start at 2 since we already know what it looks like with all_data data points included
-        % Remove data points
-        amp_vec_ds = amp_vec(iamp:end);
-        cur_idx = find(ismember(amp_vec,amp_vec_ds));
-        n_points_deleted = length(amp_vec)-length(amp_vec_ds);
-
-        % Generate bias ID tag
-        my_tag = sprintf('Bottom-up %d points deleted',n_points_deleted);
-
-        [p, thresh_ci, stable_n] = ...
-            fit_low_CI_model(amp_vec_ds, lower_ci_vec(:,cur_idx,:), boot_std_vec(:,cur_idx,:), ...
-            trials_per_block, max_trials,my_chans_name, my_tag,0);
-
-        % Save values
-        bottom_up(iamp-1).amp_vec_ds = amp_vec_ds;
-        bottom_up(iamp-1).ds_factor = n_points_deleted;
-        bottom_up(iamp-1).p = p;
-        bottom_up(iamp-1).thresh_ci = thresh_ci;
-        bottom_up(iamp-1).stable_n = stable_n;
-
-    end
-
-    % Delete from top down
-    for iamp = 1:(length(amp_vec)-3)
-
-        % Delete data points
-        amp_vec_ds = amp_vec(1:end-iamp);
-        cur_idx = find(ismember(amp_vec,amp_vec_ds));
-        n_points_deleted = length(amp_vec)-length(amp_vec_ds);
-
-        % Generate bias ID tag
-        my_tag = sprintf('Top-down %d points deleted',n_points_deleted);
-
-        [p, thresh_ci, stable_n] = ...
-            fit_low_CI_model(amp_vec_ds, lower_ci_vec(:,cur_idx,:), boot_std_vec(:,cur_idx,:), ...
-            trials_per_block, max_trials,my_chans_name, my_tag,0);
-
-        % Save values
-        top_down(iamp).amp_vec_ds = amp_vec_ds;
-        top_down(iamp).ds_factor = n_points_deleted;
-        top_down(iamp).p = p;
-        top_down(iamp).thresh_ci = thresh_ci;
-        top_down(iamp).stable_n = stable_n;
-
-    end
-
-    %% Compare bias
+    % Compare bias
     compare_bias(all_data,ds_data,bottom_up,top_down,my_chans_name,trials_per_block)
 
     %% 2f based growth function
@@ -263,7 +185,7 @@ for ifreq = 1:length(stim_freqs)
         for ichan = 1:length(my_chans)
             cur_idx = resp_found_data(ichan,iamp,end)/trials_per_block;
             if isnan(cur_idx) % Get the mean and sem of the last measured batch
-                growth_func_mean(ichan,iamp) = bootstrp_sim(end,3,iamp,ichan,end);
+                growth_func_mean(ichan,iamp) = cumu.diff_mean(end,iamp,ichan);
                 growth_func_sem(ichan,iamp) = bootstrp_sim(end,4,iamp,ichan,end);
                 growth_func_noise_floor(ichan,iamp) = bootstrp_sim(end,5,iamp,ichan,end);
             else % Get the valid resp_found idx and extract its mean/sem

@@ -9,7 +9,7 @@ ub = 100-outer;
 lb = outer;
 
 % Bootstrap!
-bootstat = bootstrp(n_bootstrap, @(x) abs(mean(x)), selected_vector); 
+bootstat = bootstrp(n_bootstrap, @(x) mean(x), selected_vector); 
 % Average using complex numbers and then take the abs() to recover magnitude
 
 %% Calculate 99.9% CI
