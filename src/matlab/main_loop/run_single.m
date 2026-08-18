@@ -26,9 +26,6 @@ while ~ex.exp_done % While testing current stimulus frequency
     end
     ex.info.experiment.amp_time_start = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
 
-    %% UPDATE GUI
-    app.Label_current_amp.Text = string(ex.info.stimulus(1).amplitude_spl);
-    
     while ~ex.decision(ex.counter.iamp).amp_done % While testing current stimulus amplitude
         %% EXPERIMENTER REMINDERS
         ex = experimenter_reminders(ex);

@@ -58,11 +58,5 @@ n_trials_rejected = n_trials_collected - length(kept_trials_idx);
 n_valid_trials = length(kept_trials_idx);
 reject_rate = n_trials_rejected/n_trials_collected;
 
-%% Report rejection rate
-if reject_rate > 0.5
-    % Alert experimenter will do health check
-    fprintf('More than half of the trials have been rejected.')
-end
-
 % Report n_valid_trials
-fprintf(' | %d / %d Valid trials', n_valid_trials,n_trials_collected);
+fprintf(' %d / %d ', n_valid_trials,n_trials_collected);

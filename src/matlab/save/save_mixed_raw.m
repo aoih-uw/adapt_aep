@@ -1,6 +1,6 @@
 function ex = save_mixed_raw(ex,app)
 %% Saves raw data for mixed stimulus mode
-
+fprintf('\nSaving data...\n')
 % Assign variables
 iblock = ex.counter.iblock;
 ihealth = ex.counter.ihealth;

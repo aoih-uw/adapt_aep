@@ -17,7 +17,7 @@ while ~batch_completed
 
     %% CHECK TRIAL COUNT
     if ex.counter.N_not_enough_trials > 0
-        fprintf('Insufficient valid trials: Reattempting %d\n', ex.counter.N_not_enough_trials)
+        fprintf(' R: %d\n', ex.counter.N_not_enough_trials)
     elseif ex.counter.N_not_enough_trials == 0
         batch_completed = 1;
     end

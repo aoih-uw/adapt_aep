@@ -12,7 +12,11 @@ fs = ex.info.recording.sampling_rate_hz;
 % Get current stimulus info
 freq_idx = get_current_freq_idx(ex);
 stim_freq = ex.info.stimulus(freq_idx).frequency_hz;
-current_amplitude = ex.info.mixed.test_schedule(ex.counter.ischedule,3); % [stim_freq, stim_name, stim_amp, trials_needed, uniq_idx]
+if strcmp(app.DropDown_test_mode.Value, 'Mixed freqs')
+    current_amplitude = ex.info.mixed.test_schedule(ex.counter.ischedule,3); % [stim_freq, stim_name, stim_amp, trials_needed, uniq_idx]
+else
+    current_amplitude = ex.info.stimulus.amplitude_spl;
+end
 
 % Identify the first block # for the current stimulus
 if strcmp(app.DropDown_test_mode.Value, 'Mixed freqs') || strcmp(app.DropDown_test_mode.Value, 'Timed')
@@ -33,7 +37,7 @@ end
     electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V] ...
     = init_present_sound_variables(ex, stimulus_block);
 
-fprintf('   Freq: %d | Amp: %d  \n', stim_freq, current_amplitude);
+fprintf('%d Hz %d dB ', stim_freq, current_amplitude);
 
 %% Rip it
 if ex.test
@@ -101,12 +105,7 @@ app.Label_time_elapsed.Text = time_elapsed;
 ex.info.experiment.total_time_elapsed = time_since_exp_start;
 
 %% Update command window
-% N trials presented
-if strcmp(app.DropDown_test_mode.Value, 'Mixed freqs')
-    n_presented = (iblock-first_block+1)*trials_per_block;
-else
-    n_presented = N_trials_presented;
-end
+
 % Total trials presented
 if strcmp(app.DropDown_test_mode.Value, 'Mixed freqs') || strcmp(app.DropDown_test_mode.Value, 'Timed')
     grand_total = N_trials_presented;
@@ -114,4 +113,5 @@ else
     grand_total = sum(ex.trial_count(1:ex.counter.iamp));
 end
 
-
+% Update grand total
+fprintf('  %d', grand_total);

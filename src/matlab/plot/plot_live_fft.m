@@ -68,7 +68,6 @@ for ic = 1:n_ch
     plot(fft_ax, ff, vv, 'Color', c, 'LineWidth', 1.5);
     ylim(fft_ax, 'auto')
 end
-drawnow limitrate
 
 xlabel(fft_ax, 'Frequency (Hz)');
 ylabel(fft_ax, 'Magnitude (\muV)');
