@@ -6,8 +6,8 @@ if iblock == 1
     my_2f = []; my_2f_std = [];
 end
 n_points = size(my_2f,2);
-channels    = [2, 3, 4];
-channel_name = {'2 mm', '4 mm', 'Skin'};
+channels    = [1, 2, 3, 4];
+channel_name = {'Forebrain','2 mm', '4 mm', 'Skin'};
 
 % Get current frequency idx
 freq_idx = get_current_freq_idx(ex);
@@ -16,7 +16,7 @@ target_freq_range = ex.info.stimulus(freq_idx).range_2f_hz;
 
 fft_ax = app.UIAxes_live_fft;
 bin_ax = app.UIAxes_funfetti;
-colors = {tableau_10('blue'), tableau_10('orange'), tableau_10('green')};
+colors = {tableau_10('red'), tableau_10('blue'), tableau_10('orange'), tableau_10('teal')};
 n_ch   = numel(channels);
 
 % fft_ax

@@ -2,7 +2,7 @@
 
 %% Assign Variables
 clearvars -except grand_ex_save
-save_dir = 'D:\2026\Research\August Midshipman\organized_data';
+save_dir = 'F:\2026\Research\August Midshipman\organized_data';
 info = grand_ex_save{1,1}.info;
 meta.subjid            = info.animal.subject_ID;
 meta.amp_vecs           = info.mixed.test_amplitudes;

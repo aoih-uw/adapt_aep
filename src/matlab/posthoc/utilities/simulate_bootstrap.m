@@ -1,9 +1,9 @@
 function [cur_boot_mean, cur_boot_std, resp_found,lower_CI] = ...
-    simulate_bootstrap(n_bootstrap,my_data,my_CI)
+    simulate_bootstrap(n_bootstrap,cur_ON,cur_OFF,my_CI)
 
 % Run bootstrap on current batch of data
 [bootstat, lower_CI, ~] = ...
-    calculate_bootstrap(n_bootstrap, my_data,my_CI);
+    calculate_bootstrap(n_bootstrap, cur_ON,cur_OFF, my_CI);
 
 % Calculate distribution metrics
 cur_boot_mean = mean(bootstat);

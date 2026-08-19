@@ -29,7 +29,7 @@ cur_data = squeeze(resp_found_data(:,:,end));
 h = heatmap(cur_data);              % keep NaNs
 h.MissingDataColor = tableau_10('grey');   % grey out the NaN cells
 h.XDisplayLabels = string(amp_vec);
-h.YDisplayLabels = {'EKG','2 mm Subcranial', '4 mm Subcranial','Subcutaneous'};
+h.YDisplayLabels = {'Forebrain','2 mm Subcranial', '4 mm Subcranial','Subcutaneous'};
 h.ColorbarVisible = 'off';
 h.Colormap = interp1([0 1], [1 1 1; tableau_10('blue')], linspace(0,1,256));
 title('Number of trials needed to detect AEP response')

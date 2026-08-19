@@ -20,15 +20,16 @@ end
 % Assign variables
 % Get current frequency idx
 freq_idx = get_current_freq_idx(ex);
+stim_freq = ex.info.stimulus(freq_idx).frequency_hz;
 target_freq = ex.info.stimulus(freq_idx).frequency_hz * 2;
 target_freq_range = ex.info.stimulus(freq_idx).range_2f_hz;
 
 n_points = size(my_2f,2);
-channels    = [2, 3, 4];
-channel_name = {'2 mm', '4 mm', 'Skin'};
+channels    = [1, 2, 3, 4];
+channel_name = {'Forebrain','2 mm', '4 mm', 'Skin'};
 fft_ax = app.UIAxes_live_fft;
 bin_ax = app.UIAxes_funfetti;
-colors = {tableau_10('blue'), tableau_10('orange'), tableau_10('green')};
+colors = {tableau_10('red'), tableau_10('blue'), tableau_10('orange'), tableau_10('teal')};
 n_ch   = numel(channels);
 
 % fft_ax
@@ -59,7 +60,7 @@ for ic = 1:n_ch
     my_2f_std(ic,n_points+1) = std_target_bin_mag_vec;
 
     % Trim to display window
-    my_mask  = freq_vec <= target_freq*2;
+    my_mask  = freq_vec >= (stim_freq-(stim_freq/2)) & freq_vec <= target_freq*2;
     ff = freq_vec(my_mask);  vv = fft_val(my_mask);  ss = fft_std(my_mask);
     ff = ff(:).'; vv = vv(:).'; ss = ss(:).';
 
@@ -72,7 +73,7 @@ end
 xlabel(fft_ax, 'Frequency (Hz)');
 ylabel(fft_ax, 'Magnitude (\muV)');
 title(fft_ax, 'Live FFT Monitor');
-xlim(fft_ax, [0, target_freq*2]);
+xlim(fft_ax, [(stim_freq-(stim_freq/2)), target_freq*2]);
 xline(fft_ax, target_freq,'HandleVisibility', 'off');
 legend(fft_ax, channel_name)
 hold(fft_ax, 'off')

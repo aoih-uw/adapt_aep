@@ -77,16 +77,18 @@ for ifreq = 1:length(stim_freqs)
         for ichan = 1:length(my_chans)
             % Get all_data ON-OFF data
             cur_phase = squeeze(phase_vec(:,1,iamp,stim_type_idx,ichan,ifreq));
-            diff_2f = ON_2f(:,iamp,stim_type_idx,ichan,ifreq) - OFF_2f(:,iamp,1,ichan,ifreq);
+            cur_ON = ON_2f(:,iamp,stim_type_idx,ichan,ifreq);
+            cur_OFF = OFF_2f(:,iamp,1,ichan,ifreq);
 
             % Keep only real data
-            keep = ~isnan(cur_phase) & ~isnan(diff_2f);
+            keep = ~isnan(cur_phase) & ~isnan(cur_ON) & ~isnan(cur_OFF);
             cur_phase = cur_phase(keep);
-            diff_2f = diff_2f(keep);
-            if size(diff_2f,1) < 260
+            cur_ON = cur_ON(keep);
+            cur_OFF = cur_OFF(keep);
+            phases = unique(cur_phase);
+            if size(cur_ON,1) < 260
                 fprintf('Not enough trials at %d dB and Channel %d\n', amp_vec(iamp), my_chans(ichan));
             end
-            phases = unique(cur_phase);
 
             % Set cumulative averaging idx
             idx = 1;
@@ -107,12 +109,13 @@ for ifreq = 1:length(stim_freqs)
 
                 % Calculate the mean across current cumulative batch of data
                 % Difference
-                cur_data = diff_2f(inc_select);
-                cur_mean = mean(cur_data,1); % Take abs to recover magnitude
+                cur_ON = cur_ON(keep);
+                cur_OFF = cur_OFF(keep);
+                cur_mean = abs(mean(cur_ON,1)); % Take abs to recover magnitude
                 
                 % Stim off @ 2f
-                cur_off = OFF_2f(keep,iamp,1,ichan,ifreq);
-                cur_noise_floor_mean = mean(cur_off(inc_select));
+                cur_OFF_2f= OFF_2f(keep,iamp,1,ichan,ifreq);
+                cur_noise_floor_mean = mean(cur_OFF_2f(inc_select));
 
                 % Save to cumu
                 cumu.n(ibatch,iamp,ichan)                    = length(inc_select);
@@ -125,7 +128,7 @@ for ifreq = 1:length(stim_freqs)
                    
                     % Simulate bootstrap
                     [cur_boot_mean, cur_boot_std, resp_found,lower_CI] = ...
-                        simulate_bootstrap(n_bootstrap,cur_data,max(CI_vec));
+                        simulate_bootstrap(n_bootstrap,cur_ON,cur_OFF,max(CI_vec));
 
                     % cur_batch_summary
                     % idx = N_trials in average
@@ -138,18 +141,18 @@ for ifreq = 1:length(stim_freqs)
 
                 % Loop through CI intervals
                 for iCI =  1:length(CI_vec)
-                    n_bootstrap = max(itvec);
-                    cur_CI = CI_vec(iCI);
-
-                    % Simulate bootstrap
-                    [cur_boot_mean, cur_boot_std, resp_found,lower_CI] = ...
-                        simulate_bootstrap(n_bootstrap,cur_data,max(CI_vec));
-
-                    % cur_batch_summary
-                    conf.boot_mean(ibatch,iamp,ichan,iCI)            = cur_boot_mean;
-                    conf.boot_std(ibatch,iamp,ichan,iCI)             = cur_boot_std;
-                    conf.lower_ci(ibatch,iamp,ichan,iCI)             = lower_CI;
-                    conf.resp_found(ibatch,iamp,ichan,iCI)           = resp_found;
+                    % n_bootstrap = max(itvec);
+                    % cur_CI = CI_vec(iCI);
+                    % 
+                    % % Simulate bootstrap
+                    % [cur_boot_mean, cur_boot_std, resp_found,lower_CI] = ...
+                    %     simulate_bootstrap(n_bootstrap,cur_data,max(CI_vec));
+                    % 
+                    % % cur_batch_summary
+                    % conf.boot_mean(ibatch,iamp,ichan,iCI)            = cur_boot_mean;
+                    % conf.boot_std(ibatch,iamp,ichan,iCI)             = cur_boot_std;
+                    % conf.lower_ci(ibatch,iamp,ichan,iCI)             = lower_CI;
+                    % conf.resp_found(ibatch,iamp,ichan,iCI)           = resp_found;
                 end
                 % Progress cumulative counter
             idx = idx+trials_per_block;

@@ -37,7 +37,7 @@ while ex.counter.ischedule < size(test_schedule,1)
             end
 
             % REPORT PROGRESS
-fprintf(' %2.1f%%\n', mean(min(ex.info.mixed.trial_counter(:) ./ ex.info.mixed.uniq_stimuli(:,4), 1)) * 100);
+            fprintf(' %2.1f%%\n', mean(min(ex.info.mixed.trial_counter(:) ./ ex.info.mixed.uniq_stimuli(:,4), 1)) * 100);
             % SAVE RAW DATA
             if ex.counter.iblock > 0 % Only save if there is data in the block structure
                 if ex.counter.iblock >= (ex.info.mixed.N_trials_per_file/ex.info.trials.trials_per_block) || ...
