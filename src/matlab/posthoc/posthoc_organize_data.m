@@ -9,10 +9,10 @@ meta.amp_vecs           = info.mixed.test_amplitudes;
 meta.stim_type_vec     = info.mixed.stim_name;
 meta.stim_freqs         = info.mixed.stim_freqs;
 meta.my_chans          = 1:4;
-meta.my_chans_name     = {'Forebrain','2 mm subcranial','4 mm subcranial','Subcutaneous'};
+meta.my_chans_name     = {'Forebrain','Subcranial', 'Subcutaneous', 'NO DATA'};
 meta.target_freq_range = 3;
 meta.trials_per_block  = info.trials.trials_per_block;
-meta.ON_OFF_max_trials = 130;
+meta.ON_OFF_max_trials = 260;
 
 % Metadata
 subjid = meta.subjid;

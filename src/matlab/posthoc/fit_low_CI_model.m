@@ -109,5 +109,4 @@ if yes_plot
     sgtitle(sprintf('%s: Lower CI-based threshold value estimate',my_tag))
     linkaxes
     ylim([95 140])
-    xlim([0 140])
 end

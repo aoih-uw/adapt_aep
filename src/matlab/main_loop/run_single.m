@@ -27,11 +27,6 @@ while ~ex.exp_done % While testing current stimulus frequency
     ex.info.experiment.amp_time_start = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
 
     while ~ex.decision(ex.counter.iamp).amp_done % While testing current stimulus amplitude
-        %% EXPERIMENTER REMINDERS
-        ex = experimenter_reminders(ex);
-
-        %% CHECK HEALTH
-        ex = check_health(ex,app,0);
 
         %% CREATE BLOCK OF TRIALS
         ex.counter.iblock = ex.counter.iblock + 1;

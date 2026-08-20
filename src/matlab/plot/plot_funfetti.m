@@ -7,7 +7,7 @@ if iblock == 1
 end
 n_points = size(my_2f,2);
 channels    = [1, 2, 3, 4];
-channel_name = {'Forebrain','2 mm', '4 mm', 'Skin'};
+channel_name = {'Forebrain','Subcranial', 'Subcutaneous', 'NO DATA'};
 
 % Get current frequency idx
 freq_idx = get_current_freq_idx(ex);

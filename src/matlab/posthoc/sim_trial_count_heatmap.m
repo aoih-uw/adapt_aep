@@ -1,22 +1,24 @@
-function [resp_found_data] = sim_trial_count_heatmap(amp_vec, my_dataset, ...
-    resp_found_data, max_trials, my_chans,trials_per_block)
+function resp_found_vec = sim_trial_count_heatmap(amp_vec, simu,...
+    resp_found_vec, max_trials, my_chans,trials_per_block)
 
 %% For each iamp and ichan find the first *stable* resp_found batch
-for ii = 1:size(my_dataset,4)
-    for iamp = 1:length(amp_vec)
-        for ichan = 1:length(my_chans)
-            cur_data = my_dataset.resp_found(:,iamp,ichan,ii);
-            n_filled = find(~isnan(cur_data),1,'last');   % [] if all NaN
-            cur_data = cur_data(1:n_filled);
-            last_no_resp = find(cur_data == 0,1,'last');
-            if isempty(n_filled)                    % all NaN
-                resp_found_data(ichan,iamp,ii) = NaN;
-            elseif isempty(last_no_resp)            % never a no-response
-                resp_found_data(ichan,iamp,ii) = trials_per_block;
-            elseif last_no_resp == n_filled         % final filled batch still no-response
-                resp_found_data(ichan,iamp,ii) = NaN;
-            else
-                resp_found_data(ichan,iamp,ii) = (last_no_resp+1)*trials_per_block;
+for ii = 1:size(simu.resp_found,4)
+    for iii = 1:size(simu.resp_found,5)
+        for iamp = 1:length(amp_vec)
+            for ichan = 1:length(my_chans)
+                cur_data = simu.resp_found(:,iamp,ichan,ii,iii);
+                n_filled = find(~isnan(cur_data),1,'last');   % [] if all NaN
+                cur_data = cur_data(1:n_filled);
+                last_no_resp = find(cur_data == 0,1,'last');
+                if isempty(n_filled)                    % all NaN
+                    resp_found_vec(ichan,iamp,ii,iii) = NaN;
+                elseif isempty(last_no_resp)            % never a no-response
+                    resp_found_vec(ichan,iamp,ii,iii) = trials_per_block;
+                elseif last_no_resp == n_filled         % final filled batch still no-response
+                    resp_found_vec(ichan,iamp,ii,iii) = NaN;
+                else
+                    resp_found_vec(ichan,iamp,ii,iii) = (last_no_resp+1)*trials_per_block;
+                end
             end
         end
     end
@@ -24,19 +26,20 @@ end
 
 %% Plot trial count heatmap
 % min num of trials needed to find reliable resp_found (i.e., no more no resp_found after resp_found)
+% Plot only the max iteration and CI values
 figure;
-cur_data = squeeze(resp_found_data(:,:,end));
+cur_data = squeeze(resp_found_vec(:,:,end,end));
 h = heatmap(cur_data);              % keep NaNs
 h.MissingDataColor = tableau_10('grey');   % grey out the NaN cells
 h.XDisplayLabels = string(amp_vec);
-h.YDisplayLabels = {'Forebrain','2 mm Subcranial', '4 mm Subcranial','Subcutaneous'};
+h.YDisplayLabels = {'Forebrain','Subcranial', 'Subcutaneous', 'NO DATA'};
 h.ColorbarVisible = 'off';
 h.Colormap = interp1([0 1], [1 1 1; tableau_10('blue')], linspace(0,1,256));
 title('Number of trials needed to detect AEP response')
 h.XLabel = 'Stimulus Amplitude (dB SPL)';
 
 %% Calculate time needed
-adaptive_trials = squeeze(resp_found_data(:,:,end));
+adaptive_trials = squeeze(resp_found_vec(:,:,end));
 adaptive_trials(isnan(adaptive_trials)) = max_trials;
 static_trials = ones(size(adaptive_trials,1),size(adaptive_trials,2))*max_trials;
 time_mat = ones(size(adaptive_trials,1),size(adaptive_trials,2))*(600/1000/60); % 600 ms in minutes
@@ -54,3 +57,5 @@ xlabel('Stimulus Amplitude')
 ylabel('Cumulative time testing (min)')
 title('Over 15 minutes saved using adaptive trial presentation')
 legend('Adaptive trial presentation','Static trial count')
+
+ 
