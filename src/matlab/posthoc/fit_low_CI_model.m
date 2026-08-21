@@ -62,6 +62,7 @@ end
 
 if yes_plot
     sgtitle(sprintf('%s: Softplus fit to lower CI value',my_tag))
+    linkaxes
 end
 
 % Find N trials at which threshold estimate stabilizes

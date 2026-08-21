@@ -1,11 +1,6 @@
+function grand_ex_save = posthoc_load_my_file(subjid,base_dir,file_type)
 % Assign vars
-clearvars
-addpath(genpath('C:\Users\Aoi Hunsaker\Desktop\adapt_aep\src\matlab\'))
-subjid = 28;
-base_dir = 'F:\2026\Research\August Midshipman';
 cd(base_dir)
-file_type = 'mixed_freqs';
-% file_type = 'benzo';
 stim_freq = [];
 stim_amp = [];
 

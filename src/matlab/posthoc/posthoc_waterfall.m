@@ -115,6 +115,3 @@ for ifreq = 1:length(stim_freqs)
         end
     end
 end
-
-% Apply tufte styling
-apply_tufte

@@ -1,8 +1,7 @@
 %% Load your data first with load_my_file
-
+function [meta, org_data] = posthoc_organize_data(grand_ex_save, base_dir, save_dir)
 %% Assign Variables
 clearvars -except grand_ex_save
-save_dir = 'F:\2026\Research\August Midshipman\organized_data';
 info = grand_ex_save{1,1}.info;
 meta.subjid            = info.animal.subject_ID;
 meta.amp_vecs           = info.mixed.test_amplitudes;
@@ -13,6 +12,8 @@ meta.my_chans_name     = {'Forebrain','Subcranial', 'Subcutaneous', 'NO DATA'};
 meta.target_freq_range = 3;
 meta.trials_per_block  = info.trials.trials_per_block;
 meta.ON_OFF_max_trials = 260;
+meta.experiment_date = info.experiment.exp_date;
+meta.data_path = save_dir;
 
 % Metadata
 subjid = meta.subjid;
