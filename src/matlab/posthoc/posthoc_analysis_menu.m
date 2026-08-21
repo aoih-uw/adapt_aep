@@ -6,10 +6,10 @@ end
 clearvars
 addpath(genpath('C:\Users\Aoi Hunsaker\Desktop\adapt_aep\src\matlab\'))
 subjid = 29;
-base_dir = 'D:\2026\Research\August Midshipman';
-save_dir = 'D:\2026\Research\August Midshipman\organized_data';
+base_dir = 'F:\2026\Research\August Midshipman';
+save_dir = 'F:\2026\Research\August Midshipman\organized_data';
 file_type = 'mixed_freqs';
-figure_loc = 'C:\Users\AEP\Downloads';
+figure_loc = 'F:\2026\Research\August Midshipman\organized_data\figure_slides';
 
 %% Load
 fprintf('\nLoading data...\n')
