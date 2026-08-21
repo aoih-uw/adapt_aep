@@ -1,14 +1,13 @@
 %% Load your data first with load_my_file
 function [meta, org_data] = posthoc_organize_data(grand_ex_save, base_dir, save_dir)
 %% Assign Variables
-clearvars -except grand_ex_save
 info = grand_ex_save{1,1}.info;
 meta.subjid            = info.animal.subject_ID;
 meta.amp_vecs           = info.mixed.test_amplitudes;
 meta.stim_type_vec     = info.mixed.stim_name;
 meta.stim_freqs         = info.mixed.stim_freqs;
-meta.my_chans          = 1:4;
-meta.my_chans_name     = {'Forebrain','Subcranial', 'Subcutaneous', 'NO DATA'};
+meta.my_chans          = 1:3;
+meta.my_chans_name     = {'Forebrain','Subcranial', 'Subcutaneous'};
 meta.target_freq_range = 3;
 meta.trials_per_block  = info.trials.trials_per_block;
 meta.ON_OFF_max_trials = 260;
@@ -236,4 +235,4 @@ org_data.phase_vec    = phase_vec;
 % Save organized data
 cd(save_dir)
 save(sprintf('subject_%d_%s', subjid, datestr(now,'yyyymmdd')), ...
-    'meta', 'org_data')
+    'meta', 'org_data','-v7.3')
