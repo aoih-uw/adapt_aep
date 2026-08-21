@@ -13,7 +13,13 @@ fprintf('\n')
 
 ex = app.ex;
 ex.info.experiment.exp_time_start = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
+
+% Select 140 dB automatically for timed
+if strcmp(app.DropDown_test_mode.Value, 'Timed')
+    ex.info.stimulus.amplitude_spl = 140;
+else
 ex = select_next_dialog(ex);
+end
 
 while ~ex.exp_done % While testing current stimulus frequency
     %% Increment counters
