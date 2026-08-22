@@ -30,12 +30,14 @@ trials_per_block = meta.trials_per_block;
 ON_2f = NaN(2000, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(my_chans), length(stim_freqs),'single');
 OFF_2f = NaN(2000, length(amp_vecs{largest_amp_vec}), 1, length(my_chans), length(stim_freqs),'single'); % Only valid for ONOFF stimuli
 
-% FFTs
-freq_vec = NaN(2000, 201, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(my_chans), length(stim_freqs),'single');
-ON_fft_vals = NaN(2000, 201, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(my_chans), length(stim_freqs),'single');
-OFF_fft_vals = NaN(2000, 201, length(amp_vecs{largest_amp_vec}), 1, length(my_chans), length(stim_freqs),'single'); % Only valid for ONOFF stimuli
-low_lim = 0 ; up_lim = 2000; % Hz
+% FFTs- allocated on first trial, once the true bin count is known
+freq_vec = []; ON_fft_vals = []; OFF_fft_vals = [];
+n_bins = [];
+low_lim = 0 ; up_lim = 2000;
 phase_vec = NaN(2000, 1, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(my_chans), length(stim_freqs),'single');
+
+% before the iname loop
+model_sample_length = [];
 
 %% Begin searching through datasets
 % By individual files
@@ -110,18 +112,28 @@ for iname = 1:length(grand_ex_save)
 
                 % Find the first full NaN row to start populating from
                 start_row = find(isnan(ON_2f(:,amp_idx,stim_type_idx,ichan,freq_idx)), 1, 'first');
-                
-                % Check that there are no NaN rows before the assigned start_row
-                if start_row > 1
-                    prior_NaN_row = ...
-                        find(isnan(ON_2f(1:start_row-1,amp_idx,stim_type_idx,ichan,freq_idx)));
-                    if ~isempty(prior_NaN_row)
-                        keyboard
-                    end
+              
+                %% CHECKS
+              if isempty(start_row)
+                    error('organize_data:Full', ...
+                        'ON_2f row capacity (%d) exhausted at amp %d, type %d, chan %d, freq %d', ...
+                        size(ON_2f,1), amp_idx, stim_type_idx, ichan, freq_idx);
                 end
-                row_range = start_row:start_row+n_trials-1;
 
-                % Extract ON/OFF periods
+                % There must be no filled rows beyond the first empty one
+                if any(~isnan(ON_2f(start_row:end,amp_idx,stim_type_idx,ichan,freq_idx)))
+                    error('organize_data:RowGap', ...
+                        'Gap in ON_2f rows at start_row %d (amp %d, type %d, chan %d, freq %d)', ...
+                        start_row, amp_idx, stim_type_idx, ichan, freq_idx);
+                end
+
+                row_range = start_row:start_row+n_trials-1;
+                if row_range(end) > size(ON_2f,1)
+                    error('organize_data:Overflow', ...
+                        'Batch of %d trials overflows row capacity %d', n_trials, size(ON_2f,1));
+                end
+
+                %% Extract ON/OFF periods
                 cur_stim_type = grand_ex_save{1,iname}.block_level_info(ibatch).stim_type;
                 if strcmp(cur_stim_type, 'trim')
                     [stim_ON , stim_OFF] = extract_stim_ON_OFF( ...
@@ -152,11 +164,16 @@ for iname = 1:length(grand_ex_save)
 
                     % Save very first sample length of stim_ON to ensure all
                     % other stim ons have the same length
-                    if itrial == 1 && iname == 1 && ichan == 1 && ibatch == 1
+                    if isempty(model_sample_length)
                         model_sample_length = size(cur_trial,2);
                     else
-                        if ~size(cur_trial,2) == model_sample_length
+                        if size(cur_trial,2) ~= model_sample_length
                             keyboard
+                            error('organize_data:ONLength', ...
+                            ['stim_ON length %d ~= expected %d ' ...
+                             '(file %d, batch %d, chan %d, trial %d)'], ...
+                            size(cur_trial,2), model_sample_length, ...
+                            iname, ibatch, ichan, itrial);
                         end
                     end
 
@@ -171,37 +188,57 @@ for iname = 1:length(grand_ex_save)
                     freq_vec_range = find(tmp_freq_vec >=low_lim & tmp_freq_vec <= up_lim);
                     select_freq_vec = tmp_freq_vec(freq_vec_range);
                     select_fft_vals = tmp_fft_vals(freq_vec_range);
-                    freq_vec(row_range(itrial), 1:size(select_fft_vals,2), amp_idx, stim_type_idx, ichan,freq_idx) = select_freq_vec;
-                    ON_fft_vals(row_range(itrial), 1:size(select_fft_vals,2), amp_idx, stim_type_idx, ichan,freq_idx) = select_fft_vals;
+
+                    % Preallocate if this is the first time we are setting
+                    % n_bins
+                    if isempty(n_bins)
+                        n_bins = numel(freq_vec_range);
+                        ON_fft_vals  = NaN(2000, n_bins, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(my_chans), length(stim_freqs),'single');
+                        OFF_fft_vals = NaN(2000, n_bins, length(amp_vecs{largest_amp_vec}), 1, length(my_chans), length(stim_freqs),'single');
+                    elseif numel(freq_vec_range) ~= n_bins
+                        error('organize_data:BinCount', ...
+                            'FFT bin count %d ~= expected %d (fs=%g, N=%d, file %d, batch %d)', ...
+                            numel(freq_vec_range), n_bins, fs, numel(cur_trial), iname, ibatch);
+                    end
+                    ON_fft_vals(row_range(itrial), 1:n_bins, amp_idx, stim_type_idx, ichan,freq_idx) = select_fft_vals;
 
                     % Stim OFF for ONOFF Stim types
                     if strcmp(cur_stim_type, 'ONOFF')
                         cur_trial_OFF = stim_OFF(itrial,:);
-                        cur_trial_OFF(isnan(cur_trial_OFF)) = [];
+
+                        if any(isnan(cur_trial_OFF))
+                            error('organize_data:OFFNaN', ...
+                                'NaNs in stim_OFF (file %d, batch %d, chan %d, trial %d)', ...
+                                iname, ibatch, ichan, itrial);
+                        end
 
                         % Check if we get the expected sample length
-                        if ~size(cur_trial_OFF,2) == model_sample_length
-                            keyboard
+                        if size(cur_trial_OFF,2) ~= model_sample_length
+                            error('organize_data:OFFLength', ...
+                                'stim_OFF length %d ~= expected %d', ...
+                                size(cur_trial_OFF,2), model_sample_length);
                         end
 
                         % Calculate fft
-                        [tmp_freq_vec, tmp_fft_vals] = calc_fft_complex(cur_trial_OFF, fs);
-                        freq_vec_range = find(tmp_freq_vec >=low_lim & tmp_freq_vec <= up_lim);
-                        select_freq_vec_OFF = tmp_freq_vec(freq_vec_range);
+                        [tmp_freq_vec_OFF, tmp_fft_vals_OFF] = calc_fft_complex(cur_trial_OFF, fs);
+                        freq_vec_range_OFF = find(tmp_freq_vec_OFF >= low_lim & tmp_freq_vec_OFF <= up_lim);
+                        select_freq_vec_OFF = tmp_freq_vec_OFF(freq_vec_range_OFF);
 
-                        % Check for any size mismatches between ON OFF periods,
-                        % there should not be
-                        if any(size(cur_trial) ~= size(cur_trial_OFF)) || ...
-                                any(select_freq_vec_OFF ~= select_freq_vec)
-                            keyboard
+                        % Check for size mismatches between ON/OFF periods
+                        if ~isequal(size(cur_trial), size(cur_trial_OFF)) || ...
+                                ~isequal(select_freq_vec_OFF, select_freq_vec)
+                            error('organize_data:ONOFFMismatch', ...
+                                'ON/OFF window or frequency axis mismatch (file %d, batch %d, chan %d, trial %d)', ...
+                                iname, ibatch, ichan, itrial);
                         end
 
                         % Save OFF fft values
-                        OFF_fft_vals(row_range(itrial),1:size(select_fft_vals,2),amp_idx,1,ichan,freq_idx) = ...
-                            tmp_fft_vals(freq_vec_range);
+                        OFF_fft_vals(row_range(itrial),1:n_bins,amp_idx,1,ichan,freq_idx) = ...
+                            tmp_fft_vals_OFF(freq_vec_range_OFF);
+
                         % Get OFF target frequency bin
-                        [temp_OFF_2f(itrial), target_bin_loc] = ...
-                            find_fft_bins(target_freq, target_freq_range, tmp_fft_vals, tmp_freq_vec);
+                        [temp_OFF_2f(itrial), target_bin_loc_OFF] = ...
+                            find_fft_bins(target_freq, target_freq_range, tmp_fft_vals_OFF, tmp_freq_vec_OFF);
                     end
                 end
 
@@ -227,7 +264,7 @@ end
 % Organize data into org_data
 org_data.ON_2f        = ON_2f;
 org_data.OFF_2f       = OFF_2f;
-org_data.freq_vec     = freq_vec;
+org_data.freq_vec     = select_freq_vec;
 org_data.ON_fft_vals  = ON_fft_vals;
 org_data.OFF_fft_vals = OFF_fft_vals;
 org_data.phase_vec    = phase_vec;
