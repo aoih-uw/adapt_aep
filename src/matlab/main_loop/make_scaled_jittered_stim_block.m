@@ -32,7 +32,7 @@ stim_ON = waveform(:).'; % force row
 
 % Set POST stimulus duration depending on stimulus frequency
 if cur_freq < 100
-    post_stim = zeros(1, round(fs*600/1e3)); %  600 ms
+    post_stim = zeros(1, round(fs*200/1e3)); %  200 ms
 elseif cur_freq >= 100 && cur_freq < 200
     post_stim = zeros(1,round(fs*100/1e3)); % 100 ms
 elseif cur_freq >= 200 && cur_freq <= 800
