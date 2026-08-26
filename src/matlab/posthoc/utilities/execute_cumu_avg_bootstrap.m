@@ -71,7 +71,7 @@ for ichan = 1:length(my_chans)
             % Save to cumu
             cumu.n(ibatch,iamp,ichan)                    = length(inc_select);
             cumu.diff_mean_2f(ibatch,iamp,ichan)            = cur_diff_mean; % current batch of stim off (vector)
-            cumu.diff_sem_2f(ibatch,iamp,ichan)             = 0;
+            cumu.diff_sem_2f(ibatch,iamp,ichan)             = cur_diff_sem;
             cumu.noise_floor_mean_2f(ibatch,iamp,ichan)     = cur_noise_floor_mean; % stim OFF just at 2f
             cumu.noise_floor_sem_2f(ibatch,iamp,ichan)         = cur_noise_floor_sem; % Will figure equation out later
 
