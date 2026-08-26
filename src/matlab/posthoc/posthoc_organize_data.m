@@ -112,9 +112,9 @@ for iname = 1:length(grand_ex_save)
 
                 % Find the first full NaN row to start populating from
                 start_row = find(isnan(ON_2f(:,amp_idx,stim_type_idx,ichan,freq_idx)), 1, 'first');
-              
+
                 %% CHECKS
-              if isempty(start_row)
+                if isempty(start_row)
                     error('organize_data:Full', ...
                         'ON_2f row capacity (%d) exhausted at amp %d, type %d, chan %d, freq %d', ...
                         size(ON_2f,1), amp_idx, stim_type_idx, ichan, freq_idx);
@@ -170,16 +170,16 @@ for iname = 1:length(grand_ex_save)
                         if size(cur_trial,2) ~= model_sample_length
                             keyboard
                             error('organize_data:ONLength', ...
-                            ['stim_ON length %d ~= expected %d ' ...
-                             '(file %d, batch %d, chan %d, trial %d)'], ...
-                            size(cur_trial,2), model_sample_length, ...
-                            iname, ibatch, ichan, itrial);
+                                ['stim_ON length %d ~= expected %d ' ...
+                                '(file %d, batch %d, chan %d, trial %d)'], ...
+                                size(cur_trial,2), model_sample_length, ...
+                                iname, ibatch, ichan, itrial);
                         end
                     end
 
                     % Calculate ON fft
                     [tmp_freq_vec, tmp_fft_vals] = calc_fft_complex(cur_trial, fs);
-                    
+
                     % Get the bin at the target frequency
                     [temp_ON_2f(itrial), target_bin_loc] = ...
                         find_fft_bins(target_freq, target_freq_range, tmp_fft_vals, tmp_freq_vec);
@@ -255,6 +255,7 @@ for iname = 1:length(grand_ex_save)
                     OFF_2f(row_range,amp_idx,1,ichan,freq_idx) ...
                         = temp_OFF_2f;
                 end
+
             end
         end
     end

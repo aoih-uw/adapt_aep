@@ -1,10 +1,10 @@
 function [all_data] = ...
-    plan_fit_low_CI(amp_vec, lower_ci_vec, boot_std_vec, trials_per_block, max_trials, my_chans_name)
-
+    plan_fit_low_CI(amp_vec, lower_ci_vec, boot_std_vec, trials_per_block, max_trials, my_chans_name, my_params)
+cur_freq = my_params.cur_freq;
 % All_data available data
 [p, thresh_ci, stable_n] = ...
     fit_low_CI_model(amp_vec, lower_ci_vec, boot_std_vec, ...
-    trials_per_block, max_trials, my_chans_name, 'Full dataset',1);
+    trials_per_block, max_trials, my_chans_name, cur_freq,'Full dataset',1);
 
 % Save values
 all_data.amp_vec = amp_vec;
