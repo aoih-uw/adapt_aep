@@ -1,6 +1,6 @@
 function [growth_func_mean, growth_func_sem, growth_func_noise_floor] = ...
     plot_2f_growth_func(cumu, resp_found_vec, amp_vec, my_chans, my_chans_name, ...
-                        trials_per_block, cur_freq, use_sigmoid)
+                        trials_per_block, cur_freq, use_sigmoid, plot_linear)
 
 %% 2f based growth function (SOFTPLUS)
     % Generate vector for plotting 2f based growth function
@@ -55,6 +55,7 @@ function [growth_func_mean, growth_func_sem, growth_func_noise_floor] = ...
     sgtitle(sprintf('%d Hz: Simulated Adaptive 2f Growth Functions (Softplus)',cur_freq));
     linkaxes
 
+    if plot_linear
     %% Plot 2f based growth functions - linear fit
     figure; tiledlayout(1,length(my_chans),'Padding','tight','TileSpacing','tight');
     for ichan = 1:length(my_chans)
@@ -79,3 +80,4 @@ function [growth_func_mean, growth_func_sem, growth_func_noise_floor] = ...
     end
     sgtitle(sprintf('%d Hz: Simulated Adaptive 2f Growth Functions (Linear)',cur_freq));
     linkaxes
+    end

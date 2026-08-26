@@ -1,6 +1,6 @@
 function [p_chan, thresh_ci, stable_n] = ...
     fit_low_CI_model(amp_vec, lower_ci_vec, boot_std_vec, ...
-    trials_per_block, max_trials, my_chans_name, my_tag, yes_plot)
+    trials_per_block, max_trials, my_chans_name, cur_freq, my_tag, yes_plot)
 
 % Preallocate
 x_vec = linspace(min(amp_vec), max(amp_vec), 2000);
@@ -8,7 +8,7 @@ thresh_ci = NaN(size(lower_ci_vec,1), length(my_chans_name));
 p_chan = NaN(size(my_chans_name,2),4, size(lower_ci_vec,1));
 
 if yes_plot
-    figure; tiledlayout(1,4,'TileSpacing','tight','Padding','tight');
+    figure; tiledlayout(1,length(my_chans_name),'TileSpacing','tight','Padding','tight');
 end
 
 % Loop through data
@@ -61,7 +61,7 @@ for ichan = 1:length(my_chans_name)
 end
 
 if yes_plot
-    sgtitle(sprintf('%s: Softplus fit to lower CI value',my_tag))
+    sgtitle(sprintf('%d Hz %s: Softplus fit to lower CI value',cur_freq,my_tag))
     linkaxes
 end
 
@@ -90,7 +90,7 @@ end
 
 % Plot change in threshold estimate across batches of 10
 if yes_plot
-    figure; tiledlayout(1,4,'Padding','tight','TileSpacing','tight');
+    figure; tiledlayout(1,length(my_chans_name),'Padding','tight','TileSpacing','tight');
     for ichan = 1:length(my_chans_name)
         nexttile
         cur_color = select_chan_color(ichan);
@@ -107,7 +107,7 @@ if yes_plot
         xlabel('N trials in AEP average')
         ylabel('Estimated threshold (dB SPL)')
     end
-    sgtitle(sprintf('%s: Lower CI-based threshold value estimate',my_tag))
+    sgtitle(sprintf('%d Hz %s: Lower CI-based threshold value estimate',cur_freq,my_tag))
     linkaxes
     ylim([95 140])
 end

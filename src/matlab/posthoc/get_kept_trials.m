@@ -58,3 +58,8 @@ else
     kept_jitter = [];
     kept_phase = [];
 end
+
+% Check for no kept trials
+% Means that we are currently at a end batch or intermediate batch
+% This processing script only cares about the first batch and then accounts
+% for the intermediate and end batches at the same time

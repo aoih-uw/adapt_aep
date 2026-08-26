@@ -1,9 +1,10 @@
 function [cumu, simu] = execute_cumu_avg_bootstrap(my_params, cumu, simu)
 %% Simulate cumulative averaging and bootstrap algorithm
 % Assign vars
-my_chans = my_params.my_chans;  amp_vec = my_params.amp_vec;
+my_chans = my_params.my_chans;  my_chans_name = my_params.my_chans_name; amp_vec = my_params.amp_vec;
 phase_vec = my_params.phase_vec;  ON_2f = my_params.ON_2f;  OFF_2f = my_params.OFF_2f;
 stim_type_idx = my_params.stim_type_idx;  ifreq = my_params.ifreq;
+cur_freq = my_params.cur_freq;
 max_batches = my_params.max_batches;  trials_per_block = my_params.trials_per_block;
 itvec = my_params.itvec;  CI_vec = my_params.CI_vec;
 for ichan = 1:length(my_chans)
@@ -60,41 +61,35 @@ for ichan = 1:length(my_chans)
             n_batch = length(inc_select);
             cur_ON_batch = cur_ON(inc_select); % Complex vector of ON fft vals for current cumulative batch
             cur_OFF_batch = cur_OFF(inc_select); % Complex vector of OFF fft vals for current cumulative batch
-            cur_diff_mean = abs(mean(cur_ON_batch)) - abs(mean(cur_OFF_batch)); % Mean diff for current cumulative batch of trials
-            cur_diff_sem = (abs(std(cur_ON_batch)) - abs(std(cur_OFF_batch)))/sqrt(n_batch);
-
+            cur_diff_mean = abs(mean(cur_ON_batch)) - abs(mean(cur_OFF_batch)); % Mean diff for current cumulative batch of trial
+            cur_diff_sem = (abs(std(cur_ON_batch - cur_OFF_batch)))/sqrt(length(cur_ON_batch));
+            
             % Stim off @ 2f
             cur_noise_floor_mean = abs(mean(cur_OFF_batch));
-            cur_noise_floor_sem = abs(std(cur_OFF_batch));
+            cur_noise_floor_sem = (abs(std(cur_OFF_batch)))/sqrt(length(cur_OFF_batch));
 
             % Save to cumu
             cumu.n(ibatch,iamp,ichan)                    = length(inc_select);
             cumu.diff_mean_2f(ibatch,iamp,ichan)            = cur_diff_mean; % current batch of stim off (vector)
             cumu.diff_sem_2f(ibatch,iamp,ichan)             = cur_diff_sem;
             cumu.noise_floor_mean_2f(ibatch,iamp,ichan)     = cur_noise_floor_mean; % stim OFF just at 2f
-            cumu.noise_floor_sem_2f(ibatch,iamp,ichan)         = cur_noise_floor_sem;
+            cumu.noise_floor_sem_2f(ibatch,iamp,ichan)         = cur_noise_floor_sem; % Will figure equation out later
 
-            % Loop through N iterations
+            % Loop through N bootstrap iterations (all CI levels share one run)
             for iit = 1:length(itvec)
-                for iCI = 1:length(CI_vec)
-                    % Select current parameters
-                    n_bootstrap = itvec(iit);
-                    cur_CI = CI_vec(iCI);
+                n_bootstrap = itvec(iit);
 
-                    % Simulate bootstrap
-                    [cur_boot_mean, cur_boot_sem, resp_found,lower_CI] = ...
-                        simulate_bootstrap(n_bootstrap,cur_ON,cur_OFF,cur_CI);
+                [bootstat, lower_CI_all] = ...
+                    calculate_bootstrap(n_bootstrap, cur_ON_batch, cur_OFF_batch, CI_vec);
 
-                    % cur_batch_summary
-                    % idx = N_trials in average
-                    simu.boot_mean(ibatch,iamp,ichan,iit,iCI)            = cur_boot_mean;
-                    simu.boot_sem(ibatch,iamp,ichan,iit,iCI)             = cur_boot_sem;
-                    simu.lower_ci(ibatch,iamp,ichan,iit,iCI)             = lower_CI;
-                    simu.resp_found(ibatch,iamp,ichan,iit,iCI)           = resp_found;
-                end
+                simu.boot_mean(ibatch,iamp,ichan,iit,:) = mean(bootstat);
+                simu.boot_sem(ibatch,iamp,ichan,iit,:)  = std(bootstat);
+                simu.lower_ci(ibatch,iamp,ichan,iit,:)  = lower_CI_all;
+                simu.resp_found(ibatch,iamp,ichan,iit,:) = lower_CI_all > 0;
             end
             % Progress cumulative counter
             idx = idx+trials_per_block;
         end
     end
+    sgtitle(sprintf('Channel: %s; Frequency: %d Hz',my_chans_name{ichan}, cur_freq))
 end

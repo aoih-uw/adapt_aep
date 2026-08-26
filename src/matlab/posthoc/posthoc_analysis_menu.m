@@ -1,8 +1,4 @@
 %% posthoc analysis menu
-% Setup
-if ~strcmp(questdlg('Clear all variables?','Confirm','Yes','No','No'),'Yes')
-    return
-end
 clearvars
 addpath(genpath('C:\Users\Aoi Hunsaker\Desktop\adapt_aep\src\matlab\'))
 subjid = 29;
