@@ -83,7 +83,8 @@ for ichan = 1:length(my_chans_name)
             stable_n(ichan) = n_trials(1);
         elseif  ~isnan(y_vec(last_bad+1))
             stable_n(ichan) = n_trials(last_bad+1);
-
+        elseif isnan(y_vec(last_bad+1))
+            fprintf('last bad + 1 was NaN')
         end
     end
 end
@@ -99,7 +100,7 @@ if yes_plot
         hold on;
         xline(stable_n(ichan),'--','Color',cur_color,'LineWidth',1.5)
         % Tolerance fill
-        xf = [min(n_trials) max(n_trials)];
+        xf = [min(n_trials) 260];
         yf = thresh_ci(end,ichan) + [-tol tol];
         fill([xf fliplr(xf)],[yf(1) yf(1) yf(2) yf(2)],cur_color, ...
             'FaceAlpha',0.15,'EdgeColor','none','HandleVisibility','off')
@@ -110,4 +111,5 @@ if yes_plot
     sgtitle(sprintf('%d Hz %s: Lower CI-based threshold value estimate',cur_freq,my_tag))
     linkaxes
     ylim([95 140])
+    xlim([0 260])
 end

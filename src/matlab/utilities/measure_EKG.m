@@ -84,5 +84,5 @@ function [rec_data_mV, ekg_sig_microV] = run_ekg(stimulus_block, input_channels,
     electrode_idx, hydrophone_idx, electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V);
 
 % Save measurement
-ekg_sig_microV = rec_data_mV(:,:,electrode_idx(1)).*1e3; % Just get the EKG channel data and convert to microV
+ekg_sig_microV = rec_data_mV(:,:,electrode_idx(end)).*1e3; % Just get the EKG channel data and convert to microV
 end 

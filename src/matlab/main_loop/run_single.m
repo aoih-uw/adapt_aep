@@ -34,6 +34,9 @@ while ~ex.exp_done % While testing current stimulus frequency
 
     while ~ex.decision(ex.counter.iamp).amp_done % While testing current stimulus amplitude
 
+        %% CHECK HEALTH
+        ex = check_health(ex,app,init_check);
+
         %% CREATE BLOCK OF TRIALS
         ex.counter.iblock = ex.counter.iblock + 1;
         if strcmp(app.DropDown_test_mode.Value, 'Timed')
