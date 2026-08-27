@@ -1,6 +1,4 @@
 % Function posthoc_waterfall
-clearvars -except grand_ex_save meta org_data
-
 % Assign vars
 % Metadata
 subjid = meta.subjid;

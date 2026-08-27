@@ -35,7 +35,7 @@ for ichan = 1:length(my_chans)
         phases = unique(cur_phase);
 
         % See if we have enough trials
-        if size(cur_ON,1) < 260
+        if size(cur_ON,1) < max_batches*trials_per_block
             fprintf('Not enough trials at %d dB and Channel %d\n', amp_vec(iamp), my_chans(ichan));
         end
 

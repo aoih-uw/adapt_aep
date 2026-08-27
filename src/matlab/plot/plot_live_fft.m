@@ -25,8 +25,8 @@ target_freq = ex.info.stimulus(freq_idx).frequency_hz * 2;
 target_freq_range = ex.info.stimulus(freq_idx).range_2f_hz;
 
 n_points = size(my_2f,2);
-channels    = [1, 2, 3];
-channel_name = {'Forebrain','Subcranial', 'Subcutaneous'};
+channels    = 1:ex.info.channels.n_channels;
+channel_name = ex.info.channels.names;
 fft_ax = app.UIAxes_live_fft;
 bin_ax = app.UIAxes_funfetti;
 colors = {tableau_10('red'), tableau_10('blue'), tableau_10('orange'), tableau_10('teal')};

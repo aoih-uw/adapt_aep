@@ -1,6 +1,4 @@
 %% posthoc_bootstrap_simulation
-clearvars -except grand_ex_save meta org_data
-
 %% Assign variables
 % Metadata
 subjid = meta.subjid;
@@ -29,7 +27,7 @@ phase_vec    = org_data.phase_vec;
 % Function specific vars
 stim_type_idx = find(strcmp('ONOFF',stim_type_vec));
 itvec = [100 1000 5000];
-CI_vec = [90 95 99 99.9];
+CI_vec = [90 95 99];
 % itvec = [5000];
 max_batches = max_trials/trials_per_block; % e.g. 130 trials in batches of 10
 
@@ -56,7 +54,6 @@ for ifreq = 1:length(stim_freqs)
 
     % Bootstrap decision tracking vectors
     resp_found_vec = NaN(length(my_chans),length(amp_vec),length(itvec),length(CI_vec));
-    inconsistent_vec = NaN(length(my_chans),length(amp_vec),length(itvec),length(CI_vec));
 
     % 2f Growth function vectors
     growth_func_mean = NaN(length(my_chans),length(amp_vec));
