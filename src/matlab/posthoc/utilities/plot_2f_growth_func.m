@@ -3,7 +3,7 @@ function [growth_func_mean, growth_func_sem, growth_func_noise_floor] = ...
                         trials_per_block, cur_freq, use_sigmoid, plot_linear)
 
 %% 2f based growth function (SOFTPLUS)
-    % Generate vector for plotting 2f based growth function
+   %% Generate vector simulating live experiment with uneven trial counts based on bootstrap decisions
     for iamp = 1:length(amp_vec)
         for ichan = 1:length(my_chans)
             cur_idx = resp_found_vec(ichan,iamp,end,end)/trials_per_block;

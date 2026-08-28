@@ -74,7 +74,8 @@ sgtitle(sprintf('Inconsistent decision: %d Hz ', cur_freq))
 end
 
 %% Calculate time needed
-% adaptive_trials = squeeze(resp_found_vec(:,:,end));
+% % For a 600 ms stimulus, and test at 8 amplitudes
+% adaptive_trials = squeeze(resp_found_vec(:,1:2:16,end));
 % adaptive_trials(isnan(adaptive_trials)) = max_trials;
 % static_trials = ones(size(adaptive_trials,1),size(adaptive_trials,2))*max_trials;
 % time_mat = ones(size(adaptive_trials,1),size(adaptive_trials,2))*(600/1000/60); % 600 ms in minutes

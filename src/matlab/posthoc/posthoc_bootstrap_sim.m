@@ -83,6 +83,25 @@ for ifreq = 1:length(stim_freqs)
     [cumu, simu] = execute_cumu_avg_bootstrap(my_params, cumu, simu);
     toc()
 
+    %% Plot 2f and noise floor amplitude across batches
+    c = parula(max_trials/trials_per_block);
+    figure; tiledlayout(2,length(my_chans),"TileSpacing",'tight','Padding','tight')
+    n = max_trials/trials_per_block;
+    for ichan = 1:length(my_chans)
+        nexttile(ichan); hold on;
+        title(my_chans_name{ichan});
+        if ichan == 1, ylabel('2f Magnitude (\muV)'); end
+        for i = 1:n
+            plot(amp_vec,cumu.diff_mean_2f(i,:,ichan),'Color',c(i,:));
+        end
+        nexttile(ichan+length(my_chans)); hold on;
+        if ichan == 1, ylabel('Noise Floor at 2f bin (\muV)'); end
+        for i = 1:n
+            plot(amp_vec,cumu.noise_floor_mean_2f(i,:,ichan),'Color',c(i,:));
+        end
+    end
+    colormap(parula);
+
     %% Simulate adaptive trial count
     % By n iteration
     resp_found_vec = sim_trial_count_heatmap(amp_vec, simu,...
@@ -90,8 +109,8 @@ for ifreq = 1:length(stim_freqs)
 
     %% Plot 2f growth functions
     [growth_func_mean, growth_func_sem, growth_func_noise_floor] = ...
-    plot_2f_growth_func(cumu, resp_found_vec, amp_vec, my_chans, my_chans_name, ...
-                        trials_per_block, stim_freqs(ifreq), use_sigmoid,plot_linear);
+        plot_2f_growth_func(cumu, resp_found_vec, amp_vec, my_chans, my_chans_name, ...
+        trials_per_block, stim_freqs(ifreq), use_sigmoid,plot_linear);
 
     %% Plot mean 2f amplitude across batches and ID when resp_found
     for ichan = 1:length(my_chans)
@@ -138,9 +157,9 @@ for ifreq = 1:length(stim_freqs)
     boot_sem_vec = simu.boot_sem(:,:,:,end,end);
 
     [all_data] = ...
-        plan_fit_low_CI(amp_vec, lower_ci_vec, boot_sem_vec, trials_per_block, max_trials, my_chans_name, my_params);
+        plan_fit_low_CI(amp_vec, lower_ci_vec, boot_sem_vec, trials_per_block, max_trials, my_chans_name, my_params, resp_found_vec);
 
-    %% REVIST ANOTHER TIME 
+    %% REVIST ANOTHER TIME
     % Revisit bias calculation another time
     % compare_bias(all_data,ds_data,bottom_up,top_down,my_chans_name,trials_per_block)
 
@@ -157,7 +176,7 @@ for ifreq = 1:length(stim_freqs)
     %     cur_noise_sem  = cumu.noise_floor_sem_2f(:,cur_amp,ichan,end,end);
     %     nbatch = 1:10:length(cur_mean)*10;
     %     threshold_criteria = cur_noise_mean + my_std*cur_noise_sem;
-    % 
+    %
     %     % Top row: noise floor amplitude +/- std
     %     ax_top(ichan) = nexttile(ichan);
     %     errorbar(nbatch,cur_noise_mean,cur_noise_sem,'-o','Color',chan_color,'MarkerFaceColor',chan_color)
@@ -177,7 +196,7 @@ for ifreq = 1:length(stim_freqs)
     % end
     % sgtitle(sprintf('%d Hz @ %d dB: SNR based threshold %d STD ',stim_freqs(ifreq), cur_amp,my_std));
 
-   fprintf('%d Hz',stim_freqs(ifreq))
-   toc()
+    fprintf('%d Hz',stim_freqs(ifreq))
+    toc()
 end
 
