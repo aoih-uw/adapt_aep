@@ -21,7 +21,7 @@ while ex.counter.ischedule < size(test_schedule,1)
     ex.counter.ischedule = ex.counter.ischedule+1;
 
     %% CHECK HEALTH
-    ex = check_health(ex,app,init_check);
+    ex = check_health(ex,app,0);
 
     %% CHECK TRIAL COUNT
     % Check if we already have enough trials for this stimulus type
