@@ -6,8 +6,8 @@ meta.subjid            = info.animal.subject_ID;
 meta.amp_vecs           = info.mixed.test_amplitudes;
 meta.stim_type_vec     = info.mixed.stim_name;
 meta.stim_freqs         = info.mixed.stim_freqs;
-meta.my_chans          = 1:3;
-meta.my_chans_name     = {'Forebrain','Subcranial', 'Subcutaneous'};
+meta.my_chans          = 1:info.channels.n_channels;
+meta.my_chans_name     = info.channels.names;
 meta.target_freq_range = 3;
 meta.trials_per_block  = info.trials.trials_per_block;
 meta.ON_OFF_max_trials = 260;
@@ -26,15 +26,16 @@ target_freq_range = meta.target_freq_range;
 trials_per_block = meta.trials_per_block;
 
 %% Preallocate
+max_rows = meta.ON_OFF_max_trials*2;
 % 2f magnitude bins
-ON_2f = NaN(2000, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(my_chans), length(stim_freqs),'single');
-OFF_2f = NaN(2000, length(amp_vecs{largest_amp_vec}), 1, length(my_chans), length(stim_freqs),'single'); % Only valid for ONOFF stimuli
+ON_2f = NaN(max_rows, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(my_chans), length(stim_freqs),'single');
+OFF_2f = NaN(max_rows, length(amp_vecs{largest_amp_vec}), 1, length(my_chans), length(stim_freqs),'single'); % Only valid for ONOFF stimuli
 
 % FFTs- allocated on first trial, once the true bin count is known
 freq_vec = []; ON_fft_vals = []; OFF_fft_vals = [];
 n_bins = [];
 low_lim = 0 ; up_lim = 2000;
-phase_vec = NaN(2000, 1, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(my_chans), length(stim_freqs),'single');
+phase_vec = NaN(meta.ON_OFF_max_trials*2, 1, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(my_chans), length(stim_freqs),'single');
 
 % before the iname loop
 model_sample_length = [];
@@ -112,9 +113,9 @@ for iname = 1:length(grand_ex_save)
 
                 % Find the first full NaN row to start populating from
                 start_row = find(isnan(ON_2f(:,amp_idx,stim_type_idx,ichan,freq_idx)), 1, 'first');
-              
+
                 %% CHECKS
-              if isempty(start_row)
+                if isempty(start_row)
                     error('organize_data:Full', ...
                         'ON_2f row capacity (%d) exhausted at amp %d, type %d, chan %d, freq %d', ...
                         size(ON_2f,1), amp_idx, stim_type_idx, ichan, freq_idx);
@@ -170,16 +171,16 @@ for iname = 1:length(grand_ex_save)
                         if size(cur_trial,2) ~= model_sample_length
                             keyboard
                             error('organize_data:ONLength', ...
-                            ['stim_ON length %d ~= expected %d ' ...
-                             '(file %d, batch %d, chan %d, trial %d)'], ...
-                            size(cur_trial,2), model_sample_length, ...
-                            iname, ibatch, ichan, itrial);
+                                ['stim_ON length %d ~= expected %d ' ...
+                                '(file %d, batch %d, chan %d, trial %d)'], ...
+                                size(cur_trial,2), model_sample_length, ...
+                                iname, ibatch, ichan, itrial);
                         end
                     end
 
                     % Calculate ON fft
                     [tmp_freq_vec, tmp_fft_vals] = calc_fft_complex(cur_trial, fs);
-                    
+
                     % Get the bin at the target frequency
                     [temp_ON_2f(itrial), target_bin_loc] = ...
                         find_fft_bins(target_freq, target_freq_range, tmp_fft_vals, tmp_freq_vec);
@@ -193,8 +194,8 @@ for iname = 1:length(grand_ex_save)
                     % n_bins
                     if isempty(n_bins)
                         n_bins = numel(freq_vec_range);
-                        ON_fft_vals  = NaN(2000, n_bins, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(my_chans), length(stim_freqs),'single');
-                        OFF_fft_vals = NaN(2000, n_bins, length(amp_vecs{largest_amp_vec}), 1, length(my_chans), length(stim_freqs),'single');
+                        ON_fft_vals  = NaN(max_rows, n_bins, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(my_chans), length(stim_freqs),'single');
+                        OFF_fft_vals = NaN(max_rows, n_bins, length(amp_vecs{largest_amp_vec}), 1, length(my_chans), length(stim_freqs),'single');
                     elseif numel(freq_vec_range) ~= n_bins
                         error('organize_data:BinCount', ...
                             'FFT bin count %d ~= expected %d (fs=%g, N=%d, file %d, batch %d)', ...
@@ -255,6 +256,7 @@ for iname = 1:length(grand_ex_save)
                     OFF_2f(row_range,amp_idx,1,ichan,freq_idx) ...
                         = temp_OFF_2f;
                 end
+
             end
         end
     end

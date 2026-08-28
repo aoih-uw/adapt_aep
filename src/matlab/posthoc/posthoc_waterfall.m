@@ -1,6 +1,4 @@
 % Function posthoc_waterfall
-clearvars -except grand_ex_save meta org_data
-
 % Assign vars
 % Metadata
 subjid = meta.subjid;
@@ -52,7 +50,6 @@ for ifreq = 1:length(stim_freqs)
             % Loop through amplitudes
             for iamp = 1:length(amp_vec)
                 % Get current amplitude, stim type, and chanel data
-                cur_freq_vec = squeeze(freq_vec(:,:,iamp, itype, ichan,ifreq));
                 cur_fft_vals_ON  = squeeze(ON_fft_vals(:,:,iamp, itype, ichan,ifreq));
                 if strcmp(stim_type_vec{itype},'ONOFF')
                     cur_fft_vals_OFF = squeeze(OFF_fft_vals(:,:,iamp, 1, ichan,ifreq));
@@ -62,8 +59,7 @@ for ifreq = 1:length(stim_freqs)
                 cur_phase_vec = squeeze(phase_vec(:,:,iamp,itype,ichan,ifreq));
 
                 % Remove NaN rows that were extras for preallocation
-                nan_rows = any(isnan(cur_freq_vec),2) | any(isnan(cur_fft_vals_ON),2);
-                cur_freq_vec(nan_rows,:) = [];
+                nan_rows = any(isnan(cur_fft_vals_ON),2) | any(isnan(cur_fft_vals_OFF),2);
                 cur_fft_vals_ON(nan_rows,:) = [];
                 if strcmp(stim_type_vec{itype},'ONOFF')
                     cur_fft_vals_OFF(nan_rows,:) = [];
@@ -95,7 +91,7 @@ for ifreq = 1:length(stim_freqs)
 
                 for idata = 1:size(cur_mean,1)
                     nexttile(idata); hold on;
-                    plot(cur_freq_vec(1,:), cur_mean(idata,:)+cumu_offset(idata), 'LineWidth',2, 'Color',cur_color)
+                    plot(freq_vec(1,:), cur_mean(idata,:)+cumu_offset(idata), 'LineWidth',2, 'Color',cur_color)
                     text(105, cur_mean(idata,1)+cumu_offset(idata), num2str(amp_vec(iamp)), 'Color',cur_color)
                     cumu_offset(idata) = cumu_offset(idata) + max(cur_mean(idata,:));
                     xlim([0 1000])

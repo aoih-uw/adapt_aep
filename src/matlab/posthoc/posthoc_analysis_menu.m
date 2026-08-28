@@ -1,15 +1,11 @@
 %% posthoc analysis menu
-% Setup
-if ~strcmp(questdlg('Clear all variables?','Confirm','Yes','No','No'),'Yes')
-    return
-end
 clearvars
 addpath(genpath('C:\Users\Aoi Hunsaker\Desktop\adapt_aep\src\matlab\'))
-subjid = 29;
-base_dir = 'F:\2026\Research\August Midshipman';
-save_dir = 'F:\2026\Research\August Midshipman\organized_data';
+subjid = 31;
+base_dir = 'D:\2026\Research\August Midshipman';
+save_dir = 'D:\2026\Research\August Midshipman\organized_data';
+figure_loc = 'D:\2026\Research\August Midshipman\organized_data\figure_slides';
 file_type = 'mixed_freqs';
-figure_loc = 'F:\2026\Research\August Midshipman\organized_data\figure_slides';
 
 %% Load
 fprintf('\nLoading data...\n')

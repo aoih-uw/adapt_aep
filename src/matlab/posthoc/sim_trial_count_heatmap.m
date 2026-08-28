@@ -1,6 +1,6 @@
 function resp_found_vec = sim_trial_count_heatmap(amp_vec, simu,...
-    resp_found_vec, max_trials, my_chans, my_chans_name, trials_per_block, itvec, CI_vec)
-
+    resp_found_vec, max_trials, my_chans, my_chans_name, trials_per_block, itvec, CI_vec,my_params)
+cur_freq = my_params.cur_freq;
 %% For each iamp and ichan find the first *stable* resp_found batch
 for ii = 1:length(itvec)
     for iii = 1:length(CI_vec)
@@ -41,7 +41,7 @@ h.XDisplayLabels = string(amp_vec);
 h.YDisplayLabels = my_chans_name;
 h.ColorbarVisible = 'off';
 h.Colormap = interp1([0 1], [1 1 1; tableau_10('blue')], linspace(0,1,256));
-title('Number of trials needed to detect AEP response')
+title(sprintf('N Trials Needed: %d Hz ',cur_freq))
 h.XLabel = 'Stimulus Amplitude (dB SPL)';
 
 %% Plot inconsistent decision rates by CI rate and n_bootstrap
@@ -69,11 +69,13 @@ set(gca,'XTick',1:length(CI_vec),'XTickLabel',string(CI_vec), ...
     'YTick',1:length(itvec),'YTickLabel',string(itvec))
 xlabel('Confidence Interval')
 ylabel('N Bootstrap Iterations')
-title(my_chans_name{ichan})
+title(sprintf('Channel: %s',my_chans_name{ichan}))
+sgtitle(sprintf('Inconsistent decision: %d Hz ', cur_freq))
 end
 
 %% Calculate time needed
-% adaptive_trials = squeeze(resp_found_vec(:,:,end));
+% % For a 600 ms stimulus, and test at 8 amplitudes
+% adaptive_trials = squeeze(resp_found_vec(:,1:2:16,end));
 % adaptive_trials(isnan(adaptive_trials)) = max_trials;
 % static_trials = ones(size(adaptive_trials,1),size(adaptive_trials,2))*max_trials;
 % time_mat = ones(size(adaptive_trials,1),size(adaptive_trials,2))*(600/1000/60); % 600 ms in minutes
