@@ -1,7 +1,7 @@
 %% posthoc analysis menu
 clearvars
 addpath(genpath('C:\Users\Aoi Hunsaker\Desktop\adapt_aep\src\matlab\'))
-subjid = 30;
+subjid = 31;
 base_dir = 'F:\2026\Research\August Midshipman';
 save_dir = 'F:\2026\Research\August Midshipman\organized_data';
 figure_loc = 'F:\2026\Research\August Midshipman\organized_data\figure_slides';
@@ -15,6 +15,10 @@ grand_ex_save = posthoc_load_my_file(subjid,base_dir,file_type); % Load in data
 fprintf('\nOrganizing data...\n')
 [meta, org_data] = posthoc_organize_data(grand_ex_save, base_dir, ...
     save_dir); % preprocess data
+
+%% Hydrophone signal
+fprintf('Plotting hydrophone signal');
+posthoc_hydrophone_analysis
 
 %% Waterfall
 fprintf('\nPlotting waterfall...\n')

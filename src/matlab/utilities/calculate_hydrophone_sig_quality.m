@@ -36,7 +36,8 @@ elseif strcmp(ex.info.experiment.exp_type, 'Adaptive') || (isfield(ex.info,'mixe
         latency_samples, period_length_samples, ramp_duration_samples,...
         [], jitter_vec);
 else
-    error('Unrecognized test mode')
+    keyboard
+    % error('Unrecognized test mode')
 end
 
 % Filter the stim OFF signal to only include the current stimulus frequency
@@ -69,7 +70,6 @@ if ex.block(iblock).hydrophone.tank_nf_rms >= 110
     fprintf(['Noise floor in tank is high %1.2f dB SPL. Ensure pump is properly in subjects mouth,\n' ...
         'confirm hydrophone location, look at hydrophone signal on oscilloscope, and see if \n' ...
         'hydrophone amp is overloading\n'],ex.block(iblock).hydrophone.tank_nf_rms)
-    keyboard
 end
 ex.block(iblock).hydrophone.tank_nf_rms_mad = median(abs(ex.block(iblock).hydrophone.tank_nf_rms-stim_OFF_dB))*mad_to_std;
 

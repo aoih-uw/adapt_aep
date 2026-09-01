@@ -16,8 +16,8 @@ trials_per_block = meta.trials_per_block;
 
 % Organized data
 freq_vec     = org_data.freq_vec;
-ON_fft_vals  = org_data.ON_fft_vals;
-OFF_fft_vals = org_data.OFF_fft_vals;
+ON_fft  = org_data.ON_fft;
+OFF_fft = org_data.OFF_fft;
 phase_vec    = org_data.phase_vec;
 
 % Function specific vars
@@ -50,9 +50,9 @@ for ifreq = 1:length(stim_freqs)
             % Loop through amplitudes
             for iamp = 1:length(amp_vec)
                 % Get current amplitude, stim type, and chanel data
-                cur_fft_vals_ON  = squeeze(ON_fft_vals(:,:,iamp, itype, ichan,ifreq));
+                cur_fft_vals_ON  = squeeze(ON_fft(:,:,iamp, itype, ichan,ifreq));
                 if strcmp(stim_type_vec{itype},'ONOFF')
-                    cur_fft_vals_OFF = squeeze(OFF_fft_vals(:,:,iamp, 1, ichan,ifreq));
+                    cur_fft_vals_OFF = squeeze(OFF_fft(:,:,iamp, 1, ichan,ifreq));
                 else
                     cur_fft_vals_OFF = [];
                 end

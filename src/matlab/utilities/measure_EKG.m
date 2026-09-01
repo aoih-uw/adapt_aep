@@ -8,7 +8,7 @@ fs = ex.info.recording.sampling_rate_hz;
 %% Assign Variables
 % Findpeaks vars
 minDist = fs*.25;
-sample_dur_s = 1;
+sample_dur_s = 6;
 stimulus_block = zeros(1,fs*sample_dur_s); % Take a 12 second reading of the EKG
 ds_rate = 10;
 
@@ -34,7 +34,7 @@ while redo
     ekg_sig_microV_abs = abs(ekg_sig_microV);
     
     % Assign peak_threshold using 99 percentile
-    peak_threshold = prctile(ekg_sig_microV_abs,99);
+    peak_threshold = prctile(ekg_sig_microV_abs,99.9);
     
     % Find peaks
     [pks, locs] = findpeaks(ekg_sig_microV_abs, 'MinPeakHeight', peak_threshold, ...

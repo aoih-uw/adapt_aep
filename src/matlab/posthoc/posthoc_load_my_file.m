@@ -22,16 +22,16 @@ else
     my_names = {files.name};
 end
 
-% Load in files
-for iname = 1:size(my_names,2)
-current_file = my_names{iname};
-fprintf('Loading %s, %d/%d\n',current_file, iname, length(my_names))
-try
-S = load(current_file);
-ex = S.ex_save;
-grand_ex_save{iname} = ex;
-catch
-    disp(ME.message)
-    keyboard
-end
+grand_ex_save = {};
+count = 0;
+for iname = 1:numel(my_names)
+    current_file = my_names{iname};
+    fprintf('Loading %s, %d/%d\n', current_file, iname, numel(my_names))
+    try
+        S = load(current_file);
+        count = count + 1;
+        grand_ex_save{count} = S.ex_save;
+    catch ME
+        fprintf('  Skipping %s: %s\n', current_file, ME.message);
+    end
 end
