@@ -116,7 +116,7 @@ for ifreq = 1:length(stim_freqs)
     %% Plot mean 2f amplitude across batches and ID when resp_found
     for ichan = 1:length(my_chans)
         figure;
-        tiledlayout(4,4,'Padding','tight','TileSpacing','tight');
+        tiledlayout(5,4,'Padding','tight','TileSpacing','tight');
         for iamp = 1:length(amp_vec)
             nexttile; hold on;
 

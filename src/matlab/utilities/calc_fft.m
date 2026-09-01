@@ -1,7 +1,10 @@
 function [N, freq_vec, fft_vals] = calc_fft(stimulus, fs)
 %% Calculate the fft and save only the 1st half of the results (i.e., the positive values.)
 % Ensure there are no NaNs prior to 
-if ~isvector(stimulus), error('calc_fft: expects a vector'); end
+if ~isvector(stimulus)
+    keyboard
+    % error('calc_fft: expects a vector'); 
+end
 check_for_nans(stimulus,'signal')
 
 stimulus = stimulus(:)'; % force row

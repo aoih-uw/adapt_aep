@@ -32,7 +32,7 @@ max_rows = meta.ON_OFF_max_trials*3;
 n_bins = [];
 model_sample_length = [];
 low_lim = 0 ; up_lim = 2000;
-phase_vec = NaN(meta.ON_OFF_max_trials*2, 1, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(my_chans), length(stim_freqs),'single');
+phase_vec = NaN(max_rows, 1, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(my_chans), length(stim_freqs),'single');
 
 % AEPs
 % 2f magnitude bins
@@ -45,8 +45,8 @@ freq_vec = []; ON_fft = []; OFF_fft = [];
 % Hydrophone
 hydro_ds_rate = 4;
 % Time domain (77632 # of samples of longest stimuli /4 to downsample)
-hydro_ON_time = NaN(meta.ON_OFF_max_trials*2, 77632/hydro_ds_rate, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(stim_freqs),'single');
-hydro_OFF_time = NaN(meta.ON_OFF_max_trials*2, 77632/hydro_ds_rate, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(stim_freqs),'single');
+hydro_ON_time = NaN(max_rows, 77632/hydro_ds_rate, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(stim_freqs),'single');
+hydro_OFF_time = NaN(max_rows, 77632/hydro_ds_rate, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(stim_freqs),'single');
 
 % FFTs
 hydro_ON_fft = [];

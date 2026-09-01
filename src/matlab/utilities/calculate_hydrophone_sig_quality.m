@@ -36,7 +36,8 @@ elseif strcmp(ex.info.experiment.exp_type, 'Adaptive') || (isfield(ex.info,'mixe
         latency_samples, period_length_samples, ramp_duration_samples,...
         [], jitter_vec);
 else
-    error('Unrecognized test mode')
+    keyboard
+    % error('Unrecognized test mode')
 end
 
 % Filter the stim OFF signal to only include the current stimulus frequency
