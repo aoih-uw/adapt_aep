@@ -69,7 +69,6 @@ if ex.block(iblock).hydrophone.tank_nf_rms >= 110
     fprintf(['Noise floor in tank is high %1.2f dB SPL. Ensure pump is properly in subjects mouth,\n' ...
         'confirm hydrophone location, look at hydrophone signal on oscilloscope, and see if \n' ...
         'hydrophone amp is overloading\n'],ex.block(iblock).hydrophone.tank_nf_rms)
-    keyboard
 end
 ex.block(iblock).hydrophone.tank_nf_rms_mad = median(abs(ex.block(iblock).hydrophone.tank_nf_rms-stim_OFF_dB))*mad_to_std;
 

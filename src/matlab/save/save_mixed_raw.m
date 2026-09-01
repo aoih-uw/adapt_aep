@@ -32,6 +32,12 @@ ex_save.health = ex.health(1:ihealth);
 
 % Save
 save(fullfile(folder, filename), 'ex_save', '-v7.3');
+fullpath = fullfile(folder, filename);
+% Ensure file is saved
+info = whos('-file', fullpath);
+if isempty(info) || ~any(strcmp({info.name}, 'ex_save'))
+keyboard
+end
 
 % Reset block, health, and counters
 ex = setup_block(ex);

@@ -113,7 +113,7 @@ if strcmp(app.DropDown_test_mode.Value,'Mixed freqs')
     ex.info.mixed.stim_name         = {'ONOFF'};
     ex.info.mixed.stim_freqs        = [55 100 410];
     ex.info.mixed.max_trials        = [260 260 260];
-    ex.info.mixed.test_amplitudes   = {95:3:140, 95:3:140, 95:3:140};
+    ex.info.mixed.test_amplitudes   = {83:3:140, 95:3:140, 116:3:140};
     ex.info.mixed.N_trials_per_file = 200;
 
     % Preallocate test schedule
