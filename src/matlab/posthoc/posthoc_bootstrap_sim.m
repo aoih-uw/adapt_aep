@@ -21,7 +21,7 @@ plot_linear = 0;
 % Organized data
 ON_2f        = org_data.ON_2f;
 OFF_2f       = org_data.OFF_2f;
-OFF_fft_vals = org_data.OFF_fft_vals;
+OFF_fft = org_data.OFF_fft;
 phase_vec    = org_data.phase_vec;
 
 % Function specific vars
@@ -100,6 +100,7 @@ for ifreq = 1:length(stim_freqs)
             plot(amp_vec,cumu.noise_floor_mean_2f(i,:,ichan),'Color',c(i,:));
         end
     end
+    sgtitle('Cumulative averaging across batches')
     colormap(parula);
 
     %% Simulate adaptive trial count
