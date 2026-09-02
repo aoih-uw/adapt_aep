@@ -36,6 +36,10 @@ while ex.counter.ischedule < size(test_schedule,1)
                 ex = plot_mixed_trials(ex,app);
             end
 
+            % Note when 100% trials are measured
+            ex.info.mixed.test_schedule(ex.info.mixed.test_schedule(:,5) == cur_stim_id,6) = ...
+                ex.info.mixed.trial_counter(cur_stim_id) >= N_trials_needed;
+            
             % REPORT PROGRESS
             fprintf(' %2.1f%%\n', mean(min(ex.info.mixed.trial_counter(:) ./ ex.info.mixed.uniq_stimuli(:,4), 1)) * 100);
             % SAVE RAW DATA

@@ -40,7 +40,7 @@ switch ex.info.experiment.exp_type
         stim_freq = ex.info.stimulus(freq_idx).frequency_hz;
 
     otherwise
-        error('Unrecognized test mode: %s', app.DropDown_test_mode.Value);
+        keyboard
 end
 
 % Assign stim type

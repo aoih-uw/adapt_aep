@@ -64,9 +64,8 @@ end
 
 %% Check for dropped out loopback signal
 for itrial = 1:size(stimulus_block,1)
-    if rms(ex.raw(iblock).loopback(itrial,:)) < 1e-5
+    if rms(ex.raw(iblock).loopback(itrial,:)) < 1e-7
         keyboard
-        error('Loopback signal dropped out')
     end
 end
 

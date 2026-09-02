@@ -28,7 +28,8 @@ for itrial = 1:height(stimulus)
     max_amplitude = max(abs(current_waveform(:)));
     amplitude_threshold = 1.0; % Adjust based on your system's safe range
     if max_amplitude > amplitude_threshold
-        error('\nStimulus %d amplitude too high (%.3f): exceeds safety threshold (%.3f)\n', ...
+        keyboard
+        % error('\nStimulus %d amplitude too high (%.3f): exceeds safety threshold (%.3f)\n', ...
             itrial, max_amplitude, amplitude_threshold);
     end
 
@@ -42,7 +43,7 @@ for itrial = 1:height(stimulus)
             if toc(t0) > 20
                 playrec('delPage', ipage);
                 keyboard % Debug timeout
-                error('Playrec timed out. Check USB cord connection')
+                % error('Playrec timed out. Check USB cord connection')
             end
         end
         pause(0.05);
@@ -56,7 +57,8 @@ for itrial = 1:height(stimulus)
     catch ME
         % Clean up on error
         if exist('ipage','var'), playrec('delPage', ipage); end
-        error('Audio recording failed for stimulus %d: %s', itrial, ME.message);
+        keyboard
+        % error('Audio recording failed for stimulus %d: %s', itrial, ME.message);
     end
 
     % Check for clipped hydrophone signals

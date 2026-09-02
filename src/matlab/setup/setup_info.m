@@ -113,7 +113,7 @@ if strcmp(app.DropDown_test_mode.Value,'Mixed freqs')
     ex.info.mixed.stim_name         = {'ONOFF'};
     ex.info.mixed.stim_freqs        = [55 100 410];
     ex.info.mixed.max_trials        = [260 260 260];
-    ex.info.mixed.test_amplitudes   = {95:3:140, 95:3:140, 95:3:140};
+    ex.info.mixed.test_amplitudes   = {83:3:140, 95:3:140, 116:3:140};
     ex.info.mixed.N_trials_per_file = 200;
 
     % Preallocate test schedule
@@ -154,6 +154,8 @@ if strcmp(app.DropDown_test_mode.Value,'Mixed freqs')
     test_schedule_rand = test_schedule(rand_idx,:);
     [uniq_vals,~,uniq_idx] = unique(test_schedule_rand,'rows');
     test_schedule_rand = [test_schedule_rand uniq_idx];
+    % Setup completed 100% tracking column
+    test_schedule_rand = [test_schedule_rand zeros(size(test_schedule_rand,1),1)];
     ex.info.mixed.test_schedule = test_schedule_rand;
     ex.info.mixed.uniq_stimuli = uniq_vals;
     ex.info.mixed.N_unique_stimuli = size(uniq_vals,1);

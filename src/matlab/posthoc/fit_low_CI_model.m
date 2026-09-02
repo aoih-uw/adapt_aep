@@ -14,12 +14,15 @@ stable_n = [];
         for ichan = 1:length(my_chans_name)
             cur_idx = resp_found_vec(ichan,iamp,end,end)/trials_per_block;
             if isnan(cur_idx) % Get the mean and sem of the last measured batch
+                cur_idx = size(lower_ci_vec,1);  % no response found: all batches used
                 growth_func_mean(ichan,iamp) = lower_ci_vec(end,iamp,ichan);
                 growth_func_std(ichan,iamp) = boot_std_vec(end,iamp,ichan);
             else % Get the valid resp_found idx and extract its mean/sem
                 growth_func_mean(ichan,iamp) = lower_ci_vec(cur_idx,iamp,ichan);
                 growth_func_std(ichan,iamp) = boot_std_vec(cur_idx,iamp,ichan);
             end
+            % Trial count for scaling point size
+            growth_func_trials(ichan,iamp) = cur_idx;
         end
     end
 
@@ -57,7 +60,12 @@ for ichan = 1:length(my_chans_name)
         if yes_plot
             plot(x_vec,y_vec,'Color',cur_color,'LineWidth',1.5)
             hold on;
-            plot(amp_vec, cur_y, 'o','Color',cur_color)
+
+            % Scale point opacity based on trial count
+            alpha = growth_func_trials(ichan,:) / max(growth_func_trials(ichan,:));
+            scatter(amp_vec, cur_y, 36*1.5, cur_color, 'filled', ...
+                'AlphaData', alpha, 'MarkerFaceAlpha', 'flat', ...
+                'MarkerEdgeColor', cur_color)
             yline(0,'--')
             xline(thresh_ci(ichan), '--', sprintf('%.2f', thresh_ci(ichan)))
             xlabel('Stimulus Amplitude')

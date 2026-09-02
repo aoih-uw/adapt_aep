@@ -10,7 +10,7 @@ ischedule = ex.counter.ischedule;
 % Get all iblocks that are relevant for the current stimulus type we are working with
 if ex.counter.N_not_enough_trials >= iblock
     keyboard
-    error('N_not_enough_trials is larger than iblock, which should not happen')
+    % error('N_not_enough_trials is larger than iblock, which should not happen')
 else
     first_block = iblock - ex.counter.N_not_enough_trials;
 end

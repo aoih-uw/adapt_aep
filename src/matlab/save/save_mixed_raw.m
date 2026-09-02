@@ -11,7 +11,8 @@ timestamp_str = char(ex.info.experiment.exp_time_end);
 
 % Set folder path and filemenames 
 folder = get_subject_folder(ex);
-filename = sprintf('%s_raw_data_%s_%s.mat', ex.info.animal.filename_root, ex.info.experiment.test_tag, timestamp_str);
+filename = sprintf('%s_raw_data_%s_%s_%04d.mat', ex.info.animal.filename_root, ...
+    ex.info.experiment.test_tag, timestamp_str, ex.counter.ischedule);
 
 % Extract only required fields
 ex_save = struct();
@@ -31,7 +32,14 @@ ex_save.raw_signals = ex.raw(1:iblock);
 ex_save.health = ex.health(1:ihealth);
 
 % Save
-save(fullfile(folder, filename), 'ex_save', '-v7.3');
+fpath = fullfile(folder, filename);
+save(fpath, 'ex_save', '-v7.3');
+fid = fopen(fpath, 'r');
+hdr = fread(fid, 20, '*char')';
+fclose(fid);
+if ~contains(hdr, 'MAT-file')
+    keyboeeard
+end
 
 % Reset block, health, and counters
 ex = setup_block(ex);
