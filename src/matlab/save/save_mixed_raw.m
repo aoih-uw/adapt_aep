@@ -38,7 +38,7 @@ fid = fopen(fpath, 'r');
 hdr = fread(fid, 20, '*char')';
 fclose(fid);
 if ~contains(hdr, 'MAT-file')
-    keyboeeard
+    keyboard
 end
 
 % Reset block, health, and counters
