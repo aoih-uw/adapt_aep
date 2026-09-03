@@ -20,34 +20,23 @@ else
 end
 
 %% Assign upper/lower bounds and initial parameter values
-% Find where the signal first exceeds the noise_floor by a
-% fraction of the total range
-signal_range = max(cur_data) - cur_data(1) ;
-amp_range = max(amp_vec) - min(amp_vec);
-rise_idx = find(cur_data > (cur_data(1) + 0.2*signal_range), 1, 'first');
-if isempty(rise_idx)
-    rise_idx = round(length(amp_vec)/2);
-end
-
 % Init
+rise_idx = find(cur_data > (cur_data(1) + 0.2*(max(cur_data)-cur_data(1))), 1, 'first');
+if isempty(rise_idx), rise_idx = round(length(amp_vec)/2); end
 x0_init = amp_vec(rise_idx);
-x0_init = min(x0_init, median(amp_vec));
 
-upper_span = max(max(amp_vec) - x0_init, 0.1*amp_range);
-a_init = (max(cur_data) - cur_data(rise_idx)) / upper_span; % Slope of the upper arrm
-k_init = 5 / upper_span;
-p0 = [a_init,k_init,x0_init];
+base = cur_data(amp_vec < min(amp_vec) + 0.3*range(amp_vec));
+a_init = (max(cur_data) - cur_data(rise_idx)) / max(max(amp_vec) - x0_init, 5);
 
-% Upper/lower bound
-lb = [0, 0.5/upper_span, min(amp_vec) - range(amp_vec)/2];   % keep k off 0
-ub = [Inf, 10/upper_span, max(amp_vec)-5];  % cap knee sharpness
-
-% If we have a free noise floor parameter
+p0 = [a_init, 0.3, x0_init];
+lb = [0,   0.05, min(amp_vec)];
+ub = [Inf, 1.0,  max(amp_vec)];
 if isempty(noise_floor)
-    p0 = [p0 min(cur_data)];
-    lb = [lb min(cur_data) - 0.5*range(cur_data)];
-    ub = [ub max(cur_data)];
+    p0 = [p0 median(base)];
+    lb = [lb min(base) - range(base)];
+    ub = [ub max(base)];
 end
+p0 = min(max(p0, lb), ub);
 
 %% Fit model
 [p, ~, r, exitflag, ~, ~, J] = lsqcurvefit(@(p,x) softplus(p,x).*weight_vec, p0, ...
