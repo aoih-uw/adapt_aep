@@ -27,6 +27,7 @@ if isempty(noise_floor)
 else
     base = noise_floor;
 end
+p0 = min(max(p0, lb), ub);
 
 % after `base` is computed, before the fit
 s = max(std(cur_data(amp_vec < min(amp_vec) + 0.3*range(amp_vec))), eps);
