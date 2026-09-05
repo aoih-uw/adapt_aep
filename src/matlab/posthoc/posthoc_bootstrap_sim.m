@@ -1,9 +1,14 @@
 %% posthoc_bootstrap_simulation
 %% OUTPUT
-% resp_found_vec
-% inconsistent_vec
-% twof_growth_func
-% low_growth_func
+% MAIN STRUCT
+    % sim_results(ifreq)
+% SUBFIELDS
+    % resp_found_vec(chan, amp,n_boot,CI)
+    % inconsistent_vec(chan, amp,n_boot,CI)
+    % twof/low_growth.mean/sem/noise_floor(chan,amp)
+    % twof/low_growth.x/y_vec(1,:,chan)
+    % low_growth.thresh_ci(chan)
+    % low_growth.p(chan,4)
 
 %% Assign variables
 % Metadata
@@ -31,16 +36,21 @@ phase_vec    = org_data.phase_vec;
 
 % Function specific vars
 stim_type_idx = find(strcmp('ONOFF',stim_type_vec));
-itvec = [100 1000 5000];
-CI_vec = [90 95 99];
+itvec = [5000];
+CI_vec = [99];
 % itvec = [5000];
+g = 0.25; 
 max_batches = max_trials/trials_per_block; % e.g. 130 trials in batches of 10
 
 % Loop through first by frequency
 for ifreq = 1:length(stim_freqs)
     tic()
+    field_name = sprintf('c%d',ifreq);
+    cur_freq = stim_freqs(ifreq);
+    
     % Assign current frequency amp_vec
     amp_vec = amp_vecs{ifreq};
+    
     %% Preallocate matrices
     % Cumulative trial averaging matrix
     sz = [max_batches, length(amp_vec), length(my_chans)];
@@ -48,14 +58,23 @@ for ifreq = 1:length(stim_freqs)
     cumu.diff_mean_2f            = NaN(sz);
     cumu.diff_sem_2f             =  NaN(sz);
     cumu.noise_floor_mean_2f     = NaN(sz);
-    cumu.noise_floor_sem_2f      =  NaN(sz);
+    cumu.noise_floor_sem_2f      =  NaN(sz);    
+    cumu.logBF_ON                = NaN(sz);
+    cumu.logBF_OFF               = NaN(sz);
+    cumu.stop_resp = NaN(length(amp_vec), length(my_chans));
+    cumu.stop_null = NaN(length(amp_vec), length(my_chans));
 
     % Simulation
     sz = [max_batches, length(amp_vec), length(my_chans), length(itvec), length(CI_vec)];
-    simu.boot_mean            = NaN(sz);
-    simu.boot_sem             = NaN(sz);
-    simu.lower_ci             = NaN(sz);
-    simu.resp_found           = NaN(sz);
+    simu.diff.mean              = NaN(sz);
+    simu.diff.sem               = NaN(sz);
+    simu.diff.lower_ci          = NaN(sz);
+    simu.diff.resp_found        = NaN(sz);
+
+    simu.noise.mean             = NaN(sz);
+    simu.noise.sem              = NaN(sz);
+    simu.noise.lower_ci         = NaN(sz);
+    simu.noise.resp_found       = NaN(sz);
 
     % Bootstrap decision tracking vectors
     resp_found_vec = NaN(length(my_chans),length(amp_vec),length(itvec),length(CI_vec));
@@ -77,6 +96,7 @@ for ifreq = 1:length(stim_freqs)
     my_params.trials_per_block = trials_per_block;
     my_params.itvec            = itvec;
     my_params.CI_vec           = CI_vec;
+    my_params.g = g;
 
     %% Execute cumulative averaging/bootstrapping simulation
     tic()
@@ -84,30 +104,17 @@ for ifreq = 1:length(stim_freqs)
     toc()
 
     %% Plot 2f and noise floor amplitude across batches
-    c = nebula(max_trials/trials_per_block);
-    figure; tiledlayout(2,length(my_chans),"TileSpacing",'tight','Padding','tight')
-    n = max_trials/trials_per_block;
-    for ichan = 1:length(my_chans)
-        nexttile(ichan); hold on;
-        title(my_chans_name{ichan});
-        if ichan == 1, ylabel('2f Magnitude (\muV)'); end
-        for i = 1:n
-            plot(amp_vec,cumu.diff_mean_2f(i,:,ichan),'Color',c(i,:));
-        end
-        nexttile(ichan+length(my_chans)); hold on;
-        if ichan == 1, ylabel('Noise Floor at 2f bin (\muV)'); end
-        for i = 1:n
-            plot(amp_vec,cumu.noise_floor_mean_2f(i,:,ichan),'Color',c(i,:));
-        end
-    end
-    sgtitle('Cumulative averaging across batches')
-    colormap(nebula);
+    [cumu_noise, cumu_diff] = plot_cumulative_sigs...
+    (max_trials,trials_per_block,my_chans,my_chans_name,amp_vec,cumu);
+
+    % Plot Liklihood Ratio test results
+    plot_logBF(cumu, amp_vec, my_chans, my_chans_name, cur_freq)
 
     %% Simulate adaptive trial count
     % By n iteration
     [resp_found_vec, inconsistent_vec] = sim_trial_count_heatmap(amp_vec, simu,...
         resp_found_vec, max_trials, my_chans, my_chans_name, trials_per_block, itvec, CI_vec,my_params);
-
+    
     %% Plot 2f growth functions
     [twof_growth_func] = plot_2f_growth_func...
         (cumu, resp_found_vec, amp_vec, my_chans, my_chans_name, ...
@@ -118,11 +125,11 @@ for ifreq = 1:length(stim_freqs)
     % Only look at highest bootstrap iteration data
 
     % By n iteration
-    lower_ci_vec = simu.lower_ci(:,:,:,end,end); % use highest CI rate and n_bootstrap
-    boot_sem_vec = simu.boot_sem(:,:,:,end,end);
+    lower_ci_vec = simu.diff.lower_ci(:,:,:,end,end); % use highest CI rate and n_bootstrap
+    noise_floor = simu.noise.mean(:,:,:,end,end);
 
-    [low_growth_func] = ...
-    fit_low_CI_model(amp_vec, lower_ci_vec, boot_sem_vec, resp_found_vec, ...
+    [low_growth] = ...
+    fit_low_CI_model(amp_vec, lower_ci_vec, resp_found_vec, noise_floor,...
     trials_per_block, max_trials, my_chans_name, my_params.cur_freq, 'Full dataset', 1);
 
     %% Plot mean 2f amplitude across batches and ID when resp_found
@@ -133,7 +140,7 @@ for ifreq = 1:length(stim_freqs)
             nexttile; hold on;
 
             batch_num  = cumu.n(:,iamp,ichan);
-            resp_found = simu.resp_found(:,iamp,ichan,end,end); % Use highest iteration and CI numbers
+            resp_found = simu.diff.resp_found(:,iamp,ichan,end,end); % Use highest iteration and CI numbers
             batch_mean = cumu.diff_mean_2f(:,iamp,ichan);
             batch_sem  = cumu.diff_sem_2f(:,iamp,ichan);
 
@@ -161,6 +168,10 @@ for ifreq = 1:length(stim_freqs)
         hold off;
     end
 
+    % Convert simulation results to long form table
+    sim_results(ifreq) = convert_sim_data_to_long(subjid, cur_freq, amp_vec, itvec, CI_vec, ...
+    resp_found_vec, twof_growth_func, low_growth, my_chans, my_chans_name);
+    
     %% Report progress
     fprintf('%d Hz',stim_freqs(ifreq))
     toc()

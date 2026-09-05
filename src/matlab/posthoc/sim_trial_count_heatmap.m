@@ -6,7 +6,7 @@ for ii = 1:length(itvec)
     for iii = 1:length(CI_vec)
         for iamp = 1:length(amp_vec)
             for ichan = 1:length(my_chans)
-                cur_data = simu.resp_found(:,iamp,ichan,ii,iii);
+                cur_data = simu.diff.resp_found(:,iamp,ichan,ii,iii);
                 n_filled = find(~isnan(cur_data),1,'last');   % [] if all NaN
                 cur_data = cur_data(1:n_filled);
 
@@ -17,7 +17,7 @@ for ii = 1:length(itvec)
                 elseif isempty(last_no_resp)            % never a no-response
                     resp_found_vec(ichan,iamp,ii,iii) = trials_per_block;
                 elseif last_no_resp == n_filled         % final filled batch still no-response
-                    resp_found_vec(ichan,iamp,ii,iii) = NaN;
+                    resp_found_vec(ichan,iamp,ii,iii) = max_trials;
                 else
                     resp_found_vec(ichan,iamp,ii,iii) = (last_no_resp+1)*trials_per_block;
                 end
@@ -35,6 +35,7 @@ end
 % Plot only the max iteration and CI values
 figure;
 cur_data = squeeze(resp_found_vec(:,:,end,end));
+cur_data(cur_data == max_trials) = NaN;
 h = heatmap(cur_data);              % keep NaNs
 h.MissingDataColor = tableau_10('grey');   % grey out the NaN cells
 h.XDisplayLabels = string(amp_vec);
