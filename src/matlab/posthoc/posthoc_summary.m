@@ -1,5 +1,6 @@
 %% posthoc_summary
 summary_loc = 'D:\2026\Research\Aug Sept Midshipman\pre_summary';
+presum_loc = 'D:\2026\Research\Aug Sept Midshipman\pre_summary';
 cd(summary_loc)
 
 subjids = 29:35;
