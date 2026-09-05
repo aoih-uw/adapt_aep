@@ -1,10 +1,10 @@
 %% posthoc analysis menu
 clearvars
 addpath(genpath('C:\Users\Aoi Hunsaker\Desktop\adapt_aep\src\matlab\'))
-subjid = 35;
-base_dir = 'F:\2026\Research\August Midshipman';
-save_dir = 'F:\2026\Research\August Midshipman\organized_data';
-figure_loc = 'F:\2026\Research\August Midshipman\organized_data\figure_slides';
+subjid = 37;
+base_dir = 'F:\2026\Research\Aug Sept Midshipman\raw_data';
+save_dir = 'F:\2026\Research\Aug Sept Midshipman\sorted_data';
+figure_loc = 'F:\2026\Research\Aug Sept Midshipman\sorted_data\figure_slides';
 file_type = 'mixed_freqs';
 
 %% Load
@@ -29,7 +29,7 @@ fprintf('\nSimulating adapt_aep...\n')
 posthoc_bootstrap_sim % Main analysis script
 
 %% Apply Tufte styling
-% apply_tufte
+apply_tufte
 
 %% Save figs
-% save_figs_to_ppt(meta,figure_loc)
+save_figs_to_ppt(meta,figure_loc)
