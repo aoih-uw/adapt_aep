@@ -3,12 +3,13 @@
 %% PREPROCESSING
 clearvars
 addpath(genpath('C:\Users\Aoi Hunsaker\Desktop\adapt_aep\src\matlab\'))
-subjid = 34;
+subjid = 38;
 base_dir = 'D:\2026\Research\Aug Sept Midshipman\raw_data';
 save_dir = 'D:\2026\Research\Aug Sept Midshipman\sorted_data';
 figure_loc = 'D:\2026\Research\Aug Sept Midshipman\sorted_data\figure_slides';
 summary_loc = 'D:\2026\Research\Aug Sept Midshipman\pre_summary';
 file_type = 'mixed_freqs';
+% file_type = 'benzo';
 
 %% Load
 fprintf('\nLoading data...\n')
@@ -23,6 +24,9 @@ fprintf('\nSorting data...\n')
 fprintf('Plotting hydrophone signal');
 posthoc_hydrophone_analysis
 % Output hydro_results
+
+%% 2f Amplitude consistency across time
+posthoc_resp_consist
 
 %% Waterfall
 fprintf('\nPlotting waterfall...\n')

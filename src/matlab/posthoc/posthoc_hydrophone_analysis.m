@@ -30,6 +30,7 @@ hydro_OFF_time       = org_data.hydro_OFF_time;
 hydro_ON_fft         = org_data.hydro_ON_fft;
 hydro_OFF_fft        = org_data.hydro_OFF_fft;
 freq_vec             = org_data.freq_vec;
+freq_vec_OFF         = org_data.freq_vec_OFF;
 
 % Preallocate
 max_amp_length = max(cellfun(@length,amp_vecs));
@@ -48,11 +49,15 @@ for ifreq = 1:length(stim_freqs)
 
     % Calculate noise floor dB Values
     for iamp = 1:length(amp_vec)
-        cur_data = squeeze(hydro_OFF_fft(:,:,iamp,1,ifreq));
+        if ndims(hydro_OFF_fft) > 2
+            cur_data = squeeze(hydro_OFF_fft(:,:,iamp,1,ifreq));
+        else
+            cur_data = hydro_OFF_fft;
+        end
         cur_data(all(isnan(cur_data),2),:) = [];
         for itrial = 1:size(cur_data,1)
-            targ_idx = find(freq_vec == target_freq);
-            if freq_vec(targ_idx) ~= target_freq
+            targ_idx = find(freq_vec_OFF == target_freq);
+            if freq_vec_OFF(targ_idx) ~= target_freq
                 keyboard
             end
             cur_trial = cur_data(itrial,targ_idx);
@@ -197,7 +202,11 @@ hydro_results.ON = hydro_ON;
 
 % Plot Noise floor and stim ON dB Values
 figure; tiledlayout(1,length(stim_freqs),'TileSpacing','compact','Padding','compact')
-box_width = 0.5*min(diff(larg_amp_vec));
+if length(larg_amp_vec) > 1
+    box_width = 0.5*min(diff(larg_amp_vec));
+else
+    box_width = 1;
+end
 
 for ifreq = 1:length(stim_freqs)
     cur_color = select_chan_color(ifreq);
