@@ -1,36 +1,5 @@
 %% create_cross_subj_summary_table
-subjids = [28 33 34 35 36 37];
-sort_loc = 'D:\2026\Research\Aug Sept Midshipman\sorted_data';
-presum_loc = 'D:\2026\Research\Aug Sept Midshipman\pre_summary';
-
-%% Make datasets
-for isubj = 1:length(subjids)
-    cd(sort_loc)
-    cur_subj = subjids(isubj);
-    myname = sprintf('subject_%d_*',cur_subj);
-    files = dir(myname);
-    if isempty(files)
-        fprintf('No files found')
-    else
-        my_names = {files.name};
-    end
-
-    for iname = 1:numel(my_names)
-        current_file = my_names{iname};
-        fprintf('Loading %s, %d/%d\n', current_file, iname, numel(my_names))
-        try
-            load(current_file);
-        end
-    end
-
-    posthoc_hydrophone_analysis % hydro_results
-    posthoc_bootstrap_sim % sim_results
-
-    cd(presum_loc)
-    save(sprintf('subject_%d',cur_subj),'hydro_results','sim_results')
-end
-
-%% Load in presummary tables
+%% Load in presummary tables by subject and combine into one mega table
 subjids = [28 33 34 35 36 37 38];
 sort_loc = 'D:\2026\Research\Aug Sept Midshipman\sorted_data';
 presum_loc = 'D:\2026\Research\Aug Sept Midshipman\pre_summary';
