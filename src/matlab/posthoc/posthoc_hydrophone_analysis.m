@@ -30,7 +30,11 @@ hydro_OFF_time       = org_data.hydro_OFF_time;
 hydro_ON_fft         = org_data.hydro_ON_fft;
 hydro_OFF_fft        = org_data.hydro_OFF_fft;
 freq_vec             = org_data.freq_vec;
-freq_vec_OFF         = org_data.freq_vec_OFF;
+if isfield(org_data,'freq_vec_OFF')
+    freq_vec_OFF         = org_data.freq_vec_OFF;
+else
+    freq_vec_OFF = freq_vec;
+end
 
 % Preallocate
 max_amp_length = max(cellfun(@length,amp_vecs));
