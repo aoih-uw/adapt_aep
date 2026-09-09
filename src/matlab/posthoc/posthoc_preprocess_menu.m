@@ -1,6 +1,6 @@
 %% posthoc preprocess menu
 clearvars
-subjids = [41];
+subjids = [42];
 for isubj = 1:length(subjids)
     cur_subj = subjids(isubj);
     cur_subj

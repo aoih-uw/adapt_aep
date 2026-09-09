@@ -1,6 +1,6 @@
 %% create_cross_subj_summary_table
 %% Load in presummary tables by subject and combine into one mega table
-subjids = [28 33 34 35 36 38 39 40];
+subjids = [28 33 34 35 36 38 39 40 41 42];
 sort_loc = 'D:\2026\Research\Aug Sept Midshipman\sorted_data';
 presum_loc = 'D:\2026\Research\Aug Sept Midshipman\pre_summary';
 cd(presum_loc)
@@ -31,3 +31,5 @@ rf_T = vertcat(all_sim.resp_found);
 lowCI_T = vertcat(all_sim.lowCI);
 thresh_T = vertcat(all_sim.threshold);
 mp_T = vertcat(all_sim.model_p);
+
+save('all_subj','rf_T',"lowCI_T","thresh_T","mp_T")
