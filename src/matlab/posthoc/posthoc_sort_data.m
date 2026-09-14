@@ -375,10 +375,12 @@ for iname = 1:length(grand_ex_save)
 
                     % Get OFF target frequency bin
                     if strcmp(meta.exp_type,'Timed')
-                        target_freq_range = diff(tmp_freq_vec_OFF(1:2));
+                        target_freq_range_OFF = diff(tmp_freq_vec_OFF(1:2));
+                    else
+                        target_freq_range_OFF = target_freq_range;
                     end
                     [temp_OFF_2f(itrial), ~] = ...
-                        find_fft_bins(target_freq, target_freq_range, tmp_fft_vals_OFF, tmp_freq_vec_OFF);
+                        find_fft_bins(target_freq, target_freq_range_OFF, tmp_fft_vals_OFF, tmp_freq_vec_OFF);
                 end
 
                 %% Populate ON_2f and OFF_2f bin magnitude matrices

@@ -1,6 +1,11 @@
-function [resp_found_vec, inconsistent_vec] = sim_trial_count_heatmap(amp_vec, simu,...
-    resp_found_vec, max_trials, my_chans, my_chans_name, trials_per_block, itvec, CI_vec,my_params)
+function [resp_stable, resp_first, inconsistent_vec] = sim_trial_count_heatmap(amp_vec, simu,...
+     max_trials, my_chans, my_chans_name, trials_per_block, itvec, CI_vec,my_params)
+% Assign Variables
+resp_first = NaN(length(my_chans),length(amp_vec),length(itvec),length(CI_vec));
+resp_stable = NaN(length(my_chans),length(amp_vec),length(itvec),length(CI_vec));
+inconsistent_vec = false(length(my_chans),length(amp_vec),length(itvec),length(CI_vec));
 cur_freq = my_params.cur_freq;
+
 %% For each iamp and ichan find the first *stable* resp_found batch
 for ii = 1:length(itvec)
     for iii = 1:length(CI_vec)
@@ -10,16 +15,26 @@ for ii = 1:length(itvec)
                 n_filled = find(~isnan(cur_data),1,'last');   % [] if all NaN
                 cur_data = cur_data(1:n_filled);
 
+                % find the first resp_found
+                first_resp = find(cur_data == 1,1,'first');
+                if isempty(n_filled)                    % all NaN
+                    resp_first(ichan,iamp,ii,iii) = NaN;
+                elseif isempty(first_resp)            % No response at any point
+                    resp_first(ichan,iamp,ii,iii) = max_trials;
+                else
+                    resp_first(ichan,iamp,ii,iii) = first_resp*trials_per_block;
+                end
+
                 % Find the last stable resp_found batch
                 last_no_resp = find(cur_data == 0,1,'last');
                 if isempty(n_filled)                    % all NaN
-                    resp_found_vec(ichan,iamp,ii,iii) = NaN;
+                    resp_stable(ichan,iamp,ii,iii) = NaN;
                 elseif isempty(last_no_resp)            % never a no-response
-                    resp_found_vec(ichan,iamp,ii,iii) = trials_per_block;
+                    resp_stable(ichan,iamp,ii,iii) = trials_per_block;
                 elseif last_no_resp == n_filled         % final filled batch still no-response
-                    resp_found_vec(ichan,iamp,ii,iii) = max_trials;
+                    resp_stable(ichan,iamp,ii,iii) = max_trials;
                 else
-                    resp_found_vec(ichan,iamp,ii,iii) = (last_no_resp+1)*trials_per_block;
+                    resp_stable(ichan,iamp,ii,iii) = (last_no_resp+1)*trials_per_block;
                 end
 
                 % Find inconsistent bootstrap decision across all available
@@ -34,7 +49,7 @@ end
 % min num of trials needed to find reliable resp_found (i.e., no more no resp_found after resp_found)
 % Plot only the max iteration and CI values
 figure;
-cur_data = squeeze(resp_found_vec(:,:,end,end));
+cur_data = squeeze(resp_stable(:,:,end,end));
 cur_data(cur_data == max_trials) = NaN;
 h = heatmap(cur_data);              % keep NaNs
 h.MissingDataColor = tableau_10('grey');   % grey out the NaN cells
@@ -76,7 +91,7 @@ end
 
 %% Calculate time needed
 % % For a 600 ms stimulus, and test at 8 amplitudes
-% adaptive_trials = squeeze(resp_found_vec(:,1:2:16,end));
+% adaptive_trials = squeeze(resp_stable(:,1:2:16,end));
 % adaptive_trials(isnan(adaptive_trials)) = max_trials;
 % static_trials = ones(size(adaptive_trials,1),size(adaptive_trials,2))*max_trials;
 % time_mat = ones(size(adaptive_trials,1),size(adaptive_trials,2))*(600/1000/60); % 600 ms in minutes
