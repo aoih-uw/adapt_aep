@@ -102,12 +102,12 @@ for ifreq = 1:length(stim_freqs)
     [cumu, simu] = execute_cumu_avg_bootstrap(my_params, cumu, simu);
     toc()
 
-    %% Plot 2f and noise floor amplitude across batches
-    [cumu_noise, cumu_diff] = plot_cumulative_sigs...
-    (max_trials,trials_per_block,my_chans,my_chans_name,amp_vec,cumu);
+    % %% Plot 2f and noise floor amplitude across batches
+    % [cumu_noise, cumu_diff] = plot_cumulative_sigs...
+    % (max_trials,trials_per_block,my_chans,my_chans_name,amp_vec,cumu);
 
-    % Plot Liklihood Ratio test results
-    plot_logBF(cumu, amp_vec, my_chans, my_chans_name, cur_freq)
+    % % Plot Liklihood Ratio test results
+    % plot_logBF(cumu, amp_vec, my_chans, my_chans_name, cur_freq)
 
     %% Simulate adaptive trial count
     % By n iteration
@@ -131,41 +131,41 @@ for ifreq = 1:length(stim_freqs)
     fit_low_CI_model(amp_vec, lower_ci_vec, resp_stable, noise_floor,...
     trials_per_block, max_trials, my_chans_name, my_params.cur_freq, 'Full dataset', 1);
 
-    %% Plot mean 2f amplitude across batches and ID when resp_found
-    for ichan = 1:length(my_chans)
-        figure;
-        tiledlayout(5,4,'Padding','tight','TileSpacing','tight');
-        for iamp = 1:length(amp_vec)
-            nexttile; hold on;
-
-            batch_num  = cumu.n(:,iamp,ichan);
-            resp_found = simu.diff.resp_found(:,iamp,ichan,end,end); % Use highest iteration and CI numbers
-            batch_mean = cumu.diff_mean_2f(:,iamp,ichan);
-            batch_sem  = cumu.diff_sem_2f(:,iamp,ichan);
-
-            % Sort batch data
-            [batch_num, si] = sort(batch_num);
-            batch_mean = batch_mean(si);
-            batch_sem  = batch_sem(si);
-            resp_found = resp_found(si);
-
-            % Create error fill
-            x_vec  = batch_num(:).';
-            lo = (batch_mean - batch_sem).';
-            hi = (batch_mean + batch_sem).';
-            fill([x_vec fliplr(x_vec)], [lo fliplr(hi)], [.7 .7 .7], ...
-                'FaceAlpha',.25,'EdgeColor','none','HandleVisibility','off');
-            plot(x_vec, batch_mean, 'Color',[.7 .7 .7],'HandleVisibility','off');
-
-            % Plot raw data
-            scatter(batch_num(resp_found==1),batch_mean(resp_found==1),40,tableau_10('green'),'filled');
-            scatter(batch_num(resp_found==0),batch_mean(resp_found==0),40,tableau_10('red'),'filled');
-            title(sprintf('%d dB',amp_vec(iamp)));
-            xlabel('N trials in average'); ylabel('Amplitude (\muV)');
-        end
-        sgtitle(sprintf('%d Hz; Channel %d', stim_freqs(ifreq), my_chans(ichan)));
-        hold off;
-    end
+    % %% Plot mean 2f amplitude across batches and ID when resp_found
+    % for ichan = 1:length(my_chans)
+    %     figure;
+    %     tiledlayout(5,4,'Padding','tight','TileSpacing','tight');
+    %     for iamp = 1:length(amp_vec)
+    %         nexttile; hold on;
+    % 
+    %         batch_num  = cumu.n(:,iamp,ichan);
+    %         resp_found = simu.diff.resp_found(:,iamp,ichan,end,end); % Use highest iteration and CI numbers
+    %         batch_mean = cumu.diff_mean_2f(:,iamp,ichan);
+    %         batch_sem  = cumu.diff_sem_2f(:,iamp,ichan);
+    % 
+    %         % Sort batch data
+    %         [batch_num, si] = sort(batch_num);
+    %         batch_mean = batch_mean(si);
+    %         batch_sem  = batch_sem(si);
+    %         resp_found = resp_found(si);
+    % 
+    %         % Create error fill
+    %         x_vec  = batch_num(:).';
+    %         lo = (batch_mean - batch_sem).';
+    %         hi = (batch_mean + batch_sem).';
+    %         fill([x_vec fliplr(x_vec)], [lo fliplr(hi)], [.7 .7 .7], ...
+    %             'FaceAlpha',.25,'EdgeColor','none','HandleVisibility','off');
+    %         plot(x_vec, batch_mean, 'Color',[.7 .7 .7],'HandleVisibility','off');
+    % 
+    %         % Plot raw data
+    %         scatter(batch_num(resp_found==1),batch_mean(resp_found==1),40,tableau_10('green'),'filled');
+    %         scatter(batch_num(resp_found==0),batch_mean(resp_found==0),40,tableau_10('red'),'filled');
+    %         title(sprintf('%d dB',amp_vec(iamp)));
+    %         xlabel('N trials in average'); ylabel('Amplitude (\muV)');
+    %     end
+    %     sgtitle(sprintf('%d Hz; Channel %d', stim_freqs(ifreq), my_chans(ichan)));
+    %     hold off;
+    % end
 
     % Convert simulation results to long form table
     sim_results(ifreq) = convert_sim_data_to_long(subjid, cur_freq, amp_vec, itvec, CI_vec, ...
