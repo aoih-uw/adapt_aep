@@ -4,6 +4,9 @@
 subjid = meta.subjid;
 amp_vecs = meta.amp_vecs;
 stim_type_vec = meta.stim_type_vec;
+if ~iscell(stim_type_vec)
+    stim_type_vec = {stim_type_vec};
+end
 if isfield(meta, 'stim_freqs')
     stim_freqs = meta.stim_freqs;
 else
@@ -51,19 +54,13 @@ for ifreq = 1:length(stim_freqs)
             for iamp = 1:length(amp_vec)
                 % Get current amplitude, stim type, and chanel data
                 cur_fft_vals_ON  = squeeze(ON_fft(:,:,iamp, itype, ichan,ifreq));
-                if strcmp(stim_type_vec{itype},'ONOFF')
-                    cur_fft_vals_OFF = squeeze(OFF_fft(:,:,iamp, 1, ichan,ifreq));
-                else
-                    cur_fft_vals_OFF = [];
-                end
+                cur_fft_vals_OFF = squeeze(OFF_fft(:,:,iamp, 1, ichan,ifreq));
                 cur_phase_vec = squeeze(phase_vec(:,:,iamp,itype,ichan,ifreq));
 
                 % Remove NaN rows that were extras for preallocation
-                nan_rows = any(isnan(cur_fft_vals_ON),2) | any(isnan(cur_fft_vals_OFF),2);
+                nan_rows = all(isnan(cur_fft_vals_ON),2) | all(isnan(cur_fft_vals_OFF),2);
                 cur_fft_vals_ON(nan_rows,:) = [];
-                if strcmp(stim_type_vec{itype},'ONOFF')
-                    cur_fft_vals_OFF(nan_rows,:) = [];
-                end
+                cur_fft_vals_OFF(nan_rows,:) = [];
                 cur_phase_vec(nan_rows,:) = [];
 
                 % Ensure same phases

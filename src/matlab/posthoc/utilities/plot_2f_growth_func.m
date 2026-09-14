@@ -1,5 +1,5 @@
-function [twof_growth_func] = ...
-    plot_2f_growth_func(cumu, resp_found_vec, amp_vec, my_chans, my_chans_name, ...
+function [twof_growth_func, fit_quality] = ...
+    plot_2f_growth_func(cumu, resp_stable, amp_vec, my_chans, my_chans_name, ...
     trials_per_block, cur_freq, use_sigmoid, plot_linear)
 %% 2f based growth function (SOFTPLUS)
 my_reso = 200;
@@ -14,12 +14,12 @@ twof_growth_func.y_vec = NaN(1,my_reso,length(my_chans));
 %% Generate vector simulating live experiment with uneven trial counts based on bootstrap decisions
 for iamp = 1:length(amp_vec)
     for ichan = 1:length(my_chans)
-        cur_idx = resp_found_vec(ichan,iamp,end,end)/trials_per_block;
+        cur_idx = resp_stable(ichan,iamp,end,end)/trials_per_block;
 
         if isnan(cur_idx) % Get the mean and sem of the last measured batch
             twof_growth_func.mean(ichan,iamp) = cumu.diff_mean_2f(end,iamp,ichan);
             twof_growth_func.sem(ichan,iamp) = cumu.diff_sem_2f(end,iamp,ichan);
-            twof_growth_func.noise_floor(ichan,iamp) = cumu.noise_floor_mean_2f(end,iamp,ichan);
+            twof_growth_func.noise_floor(ichan,iamp) = cumu.noise_floor_mean_2f(end,iamp,ichan); % cur_OFF_batch value
         else % Get the valid resp_found idx and extract its mean/sem
             twof_growth_func.mean(ichan,iamp) = cumu.diff_mean_2f(cur_idx,iamp,ichan);
             twof_growth_func.sem(ichan,iamp) = cumu.diff_sem_2f(cur_idx,iamp,ichan);
@@ -28,7 +28,13 @@ for iamp = 1:length(amp_vec)
     end
 end
 
-% Plot 2f growth functions
+%% Plot 2f growth functions
+% Preallocate fit quality variables
+n_chan = length(my_chans_name);
+fit_quality.resnorm  = NaN(n_chan,1);
+fit_quality.exitflag = NaN(n_chan,1);
+fit_quality.pinned   = NaN(n_chan,4);
+
 figure; tiledlayout(1,length(my_chans),'Padding','tight','TileSpacing','tight');
 for ichan = 1:length(my_chans)
     nexttile
@@ -44,9 +50,13 @@ for ichan = 1:length(my_chans)
         y_vec = logistic(p, x_vec);
     else
         % Fit softplus
-        [p, cur_data, cur_data_sem, softplus] = param_softplus(cur_y,cur_y_sem,amp_vec, [],0); % Fit to the raw data without correction
+        [p, cur_data, cur_data_sem, softplus, fq] = param_softplus(cur_y,cur_y_sem,amp_vec, [],0); % Fit to the raw data without correction
         x_vec = linspace(min(amp_vec),max(amp_vec),my_reso);
         y_vec = softplus(p, x_vec);
+
+        fit_quality.resnorm(ichan)  = fq.resnorm;
+        fit_quality.exitflag(ichan) = fq.exitflag;
+        fit_quality.pinned(ichan,:) = fq.pinned;
     end
 
     twof_growth_func.x_vec(1,:,ichan) = x_vec;
