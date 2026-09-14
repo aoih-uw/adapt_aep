@@ -34,7 +34,7 @@ posthoc_bootstrap_sim % Main analysis script
 
 %% Save preprocessed data 
 cd(summary_loc)
-save(sprintf('subject_%d_presum_%s', subjid, datestr(now,'yyyymmdd')), ...
+save(sprintf('subject_%d', subjid), ...
     'meta', 'hydro_results', 'sim_results', '-v7.3');
 
 % %% Apply Tufte styling

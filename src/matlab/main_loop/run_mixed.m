@@ -51,3 +51,7 @@ while ex.counter.ischedule < size(test_schedule,1)
             end
     end
 end
+
+% Flush to prevent the last data file from corruption
+cool = 1;
+save('cool',"cool");
