@@ -1,4 +1,4 @@
-function [p, cur_data, trials_needed, softplus, fit_quality] ...
+function [p, cur_data, trials_needed, softplus, fit_ok, pinned] ...
     = param_softplus(cur_data, trials_needed, amp_vec, noise_floor,weight_data)
 
 %% Assing vars
@@ -41,13 +41,10 @@ ub = [Inf, Inf,  max(amp_vec) inf];
 p0 = min(max(p0, lb), ub);
 
 %% Fit model
-[p, resnorm, ~, exitflag, ~, ~, ~] = lsqcurvefit(@(p,x) tf(softplus(p,x)).*weight_vec, p0, ...
+[p, ~, r, exitflag, ~, ~, J] = lsqcurvefit(@(p,x) tf(softplus(p,x)).*weight_vec, p0, ...
     amp_vec, tf(cur_data).*weight_vec, lb, ub, optimset('Display','off'));
 
 %% Identify trials with pinned or non-converged fits
 pinned = (isfinite(lb) & abs(p-lb) <= 1e-6*max(1,abs(lb))) | ...
          (isfinite(ub) & abs(p-ub) <= 1e-6*max(1,abs(ub)));
-
-fit_quality.resnorm  = resnorm;
-fit_quality.exitflag = exitflag;
-fit_quality.pinned   = pinned(:).';
+fit_ok = exitflag > 0 && ~any(pinned);

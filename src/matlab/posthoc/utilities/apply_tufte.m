@@ -6,22 +6,15 @@ for f = 1:numel(figs)
     set(figs(f), 'Color', 'w');
     axs = findall(figs(f), 'Type', 'axes');
 for a = 1:numel(axs)
-    ax = axs(a);
-    isHeat = ~isempty(findall(ax, 'Type', 'image')) || ...
-             ~isempty(findall(ax, 'Type', 'surface'));
-    box(ax, 'off');
-    set(ax, 'TickDir', 'out', ...
-            'LineWidth', 0.75, ...
-            'Color', 'none', ...
-            'FontName', 'Inter', ...
-            'XColor', [0.2 0.2 0.2], ...
-            'YColor', [0.2 0.2 0.2]);
-    ax.TickLength = [0.02 0.02];
-    if isHeat
-        box(ax, 'on');
-        set(ax, 'XColor', 'k', 'YColor', 'k', 'LineWidth', 0.75, 'TickLength', [0 0]);
-        ax.Layer = 'top';
-    end
+        ax = axs(a);
+        box(ax, 'off');                         % remove top/right spines
+        set(ax, 'TickDir', 'out', ...           % ticks point outward
+'LineWidth', 0.75, ...              % thin axes
+'Color', 'none', ...                % no background fill
+'FontName', 'Inter', ...
+'XColor', [0.2 0.2 0.2], ...
+'YColor', [0.2 0.2 0.2]);
+        ax.TickLength = [0.02 0.02];
 end
     lgs = findall(figs(f), 'Type', 'legend');
 for l = 1:numel(lgs)

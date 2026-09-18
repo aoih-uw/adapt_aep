@@ -1,8 +1,9 @@
-function [low_growth, fit_quality] = ...
-    fit_low_CI_model(amp_vec, lower_ci_vec, resp_stable, noise_floor,...
+function [low_growth] = ...
+    fit_low_CI_model(amp_vec, lower_ci_vec, resp_found_vec, noise_floor,...
     trials_per_block, max_trials, my_chans_name, cur_freq, my_tag, yes_plot)
 
 my_reso = 2000;
+cur_thresh = NaN;
 % Preallocate
 low_growth.mean = NaN(length(my_chans_name),length(amp_vec));
 low_growth.trials = NaN(length(my_chans_name),length(amp_vec));
@@ -21,7 +22,7 @@ stable_n = [];
     %% Generate vector simulating live experiment with uneven trial counts based on bootstrap decisions
     for iamp = 1:length(amp_vec)
         for ichan = 1:length(my_chans_name)
-            trials_needed = resp_stable(ichan,iamp,end,end); % Trials needed to find a response
+            trials_needed = resp_found_vec(ichan,iamp,end,end); % Trials needed to find a response
             cur_idx = trials_needed/trials_per_block;
             if isnan(cur_idx) % Get the mean and sem of the last measured batch
                 cur_idx = size(lower_ci_vec,1);  % no response found: all batches used
@@ -44,15 +45,8 @@ if yes_plot
     figure; tiledlayout(1,length(my_chans_name),'TileSpacing','tight','Padding','tight');
 end
 
-% Preallocate fit quality variables
-n_chan = length(my_chans_name);
-fit_quality.resnorm  = NaN(n_chan,1);
-fit_quality.exitflag = NaN(n_chan,1);
-fit_quality.pinned   = NaN(n_chan,4);
-
 % Loop through data
 for ichan = 1:length(my_chans_name)
-    cur_thresh = NaN;
     if yes_plot
         nexttile
     end
@@ -66,12 +60,7 @@ for ichan = 1:length(my_chans_name)
         
         % Fit softplus
         %% 9/3 No weights nor noise floor
-        [p, ~, ~, softplus, fq] = param_softplus(cur_y, cur_weights, reshape(amp_vec,1,[]), cur_noise_floor, 0);
-
-        %% Save fit quality information
-        fit_quality.resnorm(ichan)  = fq.resnorm;
-        fit_quality.exitflag(ichan) = fq.exitflag;
-        fit_quality.pinned(ichan,:) = fq.pinned;
+        [p, ~, ~, softplus,fit_ok, ~] = param_softplus(cur_y, cur_weights, reshape(amp_vec,1,[]), cur_noise_floor, 0);
 
         % Create fitted softplus y vector
         y_vec = softplus(p, x_vec);
