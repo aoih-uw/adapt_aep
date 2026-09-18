@@ -10,11 +10,12 @@ file_type = 'mixed_freqs';
 old_vis = get(0,'DefaultFigureVisible');
 
 %% Set this when doing bulk processing!
-% set(0,'DefaultFigureVisible','off');
+set(0,'DefaultFigureVisible','off');
 try
-    subjids = 46;
-    % subjids = [28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44];
+    % subjids = 50;
+    subjids = [28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50];
     failed = [];
+    failed_files_all = {};
     for isubj = 1:length(subjids)
         clear meta org_data hydro_results sim_results T_ON_2f
         cur_subj = subjids(isubj);
@@ -25,7 +26,8 @@ try
             cd(base_dir)
             %% Load
             fprintf('\nLoading data...\n')
-            grand_ex_save = posthoc_load_my_file(subjid,base_dir,file_type); % Load in data
+            [grand_ex_save, bad_files] = posthoc_load_my_file(subjid,base_dir,file_type);
+            failed_files_all = [failed_files_all, bad_files];
 
             %% Sort
             fprintf('\nSorting data...\n')
@@ -49,6 +51,7 @@ try
             posthoc_bootstrap_sim % Main analysis script
 
             %% Save preprocessed data
+            fprintf('\nSaving summary data...\n')
             cd(summary_loc)
             save(sprintf('subject_%d', cur_subj), ...
                 'meta', 'hydro_results', 'sim_results', 'T_ON_2f', '-v7.3');
@@ -57,6 +60,7 @@ try
             apply_tufte
 
             %% Save figs
+            fprintf('\nSaving to ppt...\n')
             save_figs_to_ppt(meta,figure_loc)
         catch ME
             fprintf(2, 'Subject %d failed: %s\n', cur_subj, ME.message);
@@ -65,6 +69,8 @@ try
         close all
     end
     fprintf('\nFailed subjects: %s\n', mat2str(failed));
+    fprintf('\nFiles that failed to load:\n');
+    fprintf('  %s\n', failed_files_all{:});
 catch ME
     set(0,'DefaultFigureVisible',old_vis);
     rethrow(ME)

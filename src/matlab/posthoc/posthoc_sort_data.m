@@ -3,7 +3,7 @@ function [meta, org_data] = posthoc_sort_data(grand_ex_save, base_dir, save_dir)
 %% What this code does:
 %
 %% Assign Variables
-info = grand_ex_save{1,1}.info;
+info = grand_ex_save{1,2}.info;
 meta.subjid            = info.animal.subject_ID;
 meta.exp_type          = info.experiment.exp_type;
 if strcmp(meta.exp_type,'Mixed freqs')
