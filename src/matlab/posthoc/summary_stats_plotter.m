@@ -313,9 +313,9 @@ legend({'Subcutaneous','Subcranial'}, 'Location','northwest', 'Box','off')
 %% LOCAL FUNCTIONS %%
 function make_heatmap(G,freqs,sub_T,chans,ampVals,mytitle)
 G.Properties.VariableNames(end-1:end) = {'med','madv'};
-mask = G.med == 260;
-G.med(mask) = NaN;
-G.madv(mask) = NaN;
+% mask = G.med == 260;
+% G.med(mask) = NaN;
+% G.madv(mask) = NaN;
 cmap = interp1([0 1],[1 1 1; tableau_10('blue')],linspace(0,1,256));
 
 figure;
@@ -338,16 +338,16 @@ for ifreq = 1:length(freqs)
         'YTick',1:numel(chans),'YTickLabel',chans);
     for i = find(~isnan(M))'
         [rr,cc] = ind2sub(size(M),i);
-        if M(i) ~= 10
-            text(cc,rr-0.15,sprintf('%.0f',M(i)),'HorizontalAlignment','center','FontSize',12);
-        end
+        
+        % N trials needed
+        text(cc,rr-0.15,sprintf('%.0f',M(i)),'HorizontalAlignment','center','FontSize',12);
         if ~isnan(D(i))
-            text(cc,rr+0.22,sprintf('%.0f',D(i)),'HorizontalAlignment','center','FontSize',8,'Color',[.4 .4 .4]);
+        % MAD
+        text(cc,rr+0.22,sprintf('%.0f',D(i)),'HorizontalAlignment','center','FontSize',8,'Color',[.4 .4 .4]);
         end
-        if ~isnan(N(i))
-            text(cc,rr+0.38,sprintf('%d',N(i)),'HorizontalAlignment','center','FontSize',6,'Color',[.4 .4 .4]);
-        end
-
+        % N subjects
+        text(cc,rr+0.38,sprintf('%d',N(i)),'HorizontalAlignment','center','FontSize',6,'Color',[.4 .4 .4]);
+        
     end
     title(sprintf('%d Hz',freqs(ifreq)),'FontSize',14)
 end
@@ -373,25 +373,40 @@ for ichan = 1:length(chan_inc)
     amp_vec = amp(idx);
     cur_median = my_median(idx);
     cur_mad = my_mad(idx);
+
+    % Fit softplus
+    [p, ~, ~, softplus, fq] ...
+    = param_softplus(cur_median, [], amp_vec, [],0);
+
+    x_vec = linspace(min(amp_vec), max(amp_vec),500);
+    y_vec = softplus(p,x_vec);
+
     cur_color = select_chan_color(ichan+1);
 
     % Plot
     fill([amp_vec(:); flipud(amp_vec(:))], ...
         [cur_median(:)+cur_mad(:); flipud(cur_median(:)-cur_mad(:))], ...
         cur_color,'FaceAlpha', 0.15, 'EdgeColor','none','HandleVisibility','off')
-    plot(amp_vec,cur_median,'o-','LineWidth',2, ...
+    hold on
+
+    % Model Fit line
+    plot(x_vec,y_vec,'Color',cur_color,'LineWidth',2);
+
+    % Raw data
+    plot(amp_vec,cur_median,'o','LineWidth',2, ...
         'Color',cur_color,'MarkerFaceColor',cur_color,'MarkerEdgeColor',cur_color)
+    hold on
 
     if plot_y_cross
-        idx = find(cur_median > 0, 1,'first');
-        xline(amp_vec(idx), '--', sprintf('%.2f', amp_vec(idx)), ...
+        idx = find(y_vec > 0, 1,'first');
+        xline(x_vec(idx), '--', sprintf('%.2f', x_vec(idx)), ...
             'Color', cur_color, 'LabelVerticalAlignment', 'middle', ...
             'LabelHorizontalAlignment', 'center','LabelOrientation','horizontal', 'FontSize', 13);
     end
 
     yline(0,'--','Color',tableau_10('grey'))
     title(chan_inc(ichan))
-    subtitle(sprintf('N = %d-%d', min(my_n(idx)), max(my_n(idx))))
+    subtitle(sprintf('N = %d-%d', min(my_n), max(my_n)))
     xlabel('Amplitude (dB SPL)')
     ylabel(my_ylabel)
 end

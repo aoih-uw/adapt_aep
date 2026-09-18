@@ -2,7 +2,7 @@
 
 % Create a cross subject summary table
 %% Load in presummary tables by subject and combine into one mega table
-subjids = [28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45];
+subjids = [28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50];
 sort_loc = 'D:\2026\Research\Aug Sept Midshipman\sorted_data';
 presum_loc = 'D:\2026\Research\Aug Sept Midshipman\pre_summary';
 cd(presum_loc)
