@@ -30,7 +30,7 @@ for itrial = 1:height(stimulus)
     if max_amplitude > amplitude_threshold
         keyboard
         % error('\nStimulus %d amplitude too high (%.3f): exceeds safety threshold (%.3f)\n', ...
-            itrial, max_amplitude, amplitude_threshold);
+            % itrial, max_amplitude, amplitude_threshold);
     end
 
     % Rip it

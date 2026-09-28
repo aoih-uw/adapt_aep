@@ -1,10 +1,10 @@
 %% posthoc analysis menu
 clearvars
 addpath(genpath('C:\Users\Aoi Hunsaker\Desktop\adapt_aep\src\matlab\'))
-subjid = 33;
-base_dir = 'D:\2026\Research\August Midshipman';
-save_dir = 'D:\2026\Research\August Midshipman\organized_data';
-figure_loc = 'D:\2026\Research\August Midshipman\organized_data\figure_slides';
+subjid = 40;
+base_dir = 'C:\Users\Aoi Hunsaker\Desktop\adapt_aep\data\aep';
+save_dir = 'C:\Users\Aoi Hunsaker\Downloads';
+figure_loc = 'C:\Users\Aoi Hunsaker\Downloads';
 file_type = 'mixed_freqs';
 
 %% Load
