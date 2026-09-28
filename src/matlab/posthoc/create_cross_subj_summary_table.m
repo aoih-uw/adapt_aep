@@ -2,9 +2,9 @@
 
 % Create a cross subject summary table
 %% Load in presummary tables by subject and combine into one mega table
-subjids = [28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50];
-sort_loc = 'D:\2026\Research\Aug Sept Midshipman\sorted_data';
-presum_loc = 'D:\2026\Research\Aug Sept Midshipman\pre_summary';
+subjids = [28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51];
+sort_loc = 'F:\2026\Research\Aug Sept Midshipman\sorted_data';
+presum_loc = 'F:\2026\Research\Aug Sept Midshipman\pre_summary';
 cd(presum_loc)
 all_sim = struct('resp_found',{},'lowCI_fit',{},'threshold',{});
 all_hydro = struct('ON',{},'noise',{});
@@ -32,6 +32,7 @@ for isubj = 1:length(subjids)
     all_sim(isubj).lowCI_fp = vertcat(lowCI.fit_q);
     all_sim(isubj).twof = vertcat(twof.summary);
     all_sim(isubj).threshold = vertcat(lowCI.thresholds);
+    % all_sim(isubj).slope = vertcat(S.T_slope);
 
 end
 
@@ -44,6 +45,8 @@ thresh_T = vertcat(all_sim.threshold);
 mp_T = vertcat(all_sim.model_p);
 hydro_noise = vertcat(all_hydro.noise);
 hydro_ON = vertcat(all_hydro.ON);
+% slope_T = vertcat(all_sim.slope);
+
 wl_T = readtable('weight_length_table.xlsx');
 
 save('all_subj','rf_T',"lowCI_T","thresh_T","mp_T")

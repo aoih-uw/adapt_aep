@@ -2,9 +2,9 @@
 clearvars
 addpath(genpath('C:\Users\Aoi Hunsaker\Desktop\adapt_aep\src\matlab\'))
 subjid = 40;
-base_dir = 'F:\2026\Research\Aug Sept Midshipman\raw_data';
-save_dir = 'F:\2026\Research\Aug Sept Midshipman\sorted_data';
-figure_loc = 'F:\2026\Research\Aug Sept Midshipman\sorted_data\figure_slides';
+base_dir = 'C:\Users\Aoi Hunsaker\Desktop\adapt_aep\data\aep';
+save_dir = 'C:\Users\Aoi Hunsaker\Downloads';
+figure_loc = 'C:\Users\Aoi Hunsaker\Downloads';
 file_type = 'mixed_freqs';
 
 %% Load
