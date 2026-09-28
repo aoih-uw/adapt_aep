@@ -10,10 +10,10 @@ file_type = 'mixed_freqs';
 old_vis = get(0,'DefaultFigureVisible');
 
 %% Set this when doing bulk processing!
-set(0,'DefaultFigureVisible','off');
+% set(0,'DefaultFigureVisible','off');
 try
-    % subjids = 50;
-    subjids = [28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50];
+    subjids = 51;
+    % subjids = [28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50];
     failed = [];
     failed_files_all = {};
     for isubj = 1:length(subjids)
