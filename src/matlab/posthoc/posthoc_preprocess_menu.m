@@ -1,9 +1,9 @@
 %% posthoc preprocess menu
 clearvars
-base_dir = 'D:\2026\Research\Aug Sept Midshipman\raw_data';
-sort_dir = 'D:\2026\Research\Aug Sept Midshipman\sorted_data';
-figure_loc = 'D:\2026\Research\Aug Sept Midshipman\sorted_data\figure_slides';
-summary_loc = 'D:\2026\Research\Aug Sept Midshipman\pre_summary\archive';
+base_dir = 'C:\Users\Aoi Hunsaker\Desktop\adapt_aep\data\aep';
+save_dir = 'C:\Users\Aoi Hunsaker\Downloads';
+figure_loc = 'C:\Users\Aoi Hunsaker\Downloads';
+summary_loc = 'C:\Users\Aoi Hunsaker\Downloads';
 addpath(genpath('C:\Users\Aoi Hunsaker\Desktop\adapt_aep\src\matlab\'))
 old_vis = get(0,'DefaultFigureVisible');
 
@@ -13,10 +13,10 @@ file_type = 'mixed_freqs';
 % file_type = 'benzo';
 
 %% Set this when doing bulk processing!
-set(0,'DefaultFigureVisible','off');
+% set(0,'DefaultFigureVisible','off');
 try
-    % subjids = 52;
-    subjids = [28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51];
+    subjids = 52;
+    % subjids = [28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50];
     failed = [];
     failed_files_all = {};
     for isubj = 1:length(subjids)

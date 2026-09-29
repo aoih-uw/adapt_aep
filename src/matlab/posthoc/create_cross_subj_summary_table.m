@@ -32,6 +32,7 @@ for isubj = 1:length(subjids)
     all_sim(isubj).lowCI_fp = vertcat(lowCI.fit_q);
     all_sim(isubj).twof = vertcat(twof.summary);
     all_sim(isubj).threshold = vertcat(lowCI.thresholds);
+    % all_sim(isubj).slope = vertcat(S.T_slope);
 
 end
 
@@ -44,6 +45,8 @@ thresh_T = vertcat(all_sim.threshold);
 mp_T = vertcat(all_sim.model_p);
 hydro_noise = vertcat(all_hydro.noise);
 hydro_ON = vertcat(all_hydro.ON);
+% slope_T = vertcat(all_sim.slope);
+
 wl_T = readtable('weight_length_table.xlsx');
 
 save('all_subj','rf_T',"lowCI_T","thresh_T","mp_T")

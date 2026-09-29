@@ -1,9 +1,11 @@
 % Categories are metadata they dont get removed when you filter the data
-outdir = 'D:\2026\Research\Aug Sept Midshipman\pre_summary';
+outdir = 'F:\2026\Research\Aug Sept Midshipman\pre_summary';
 rf_T.Chan = mergecats(rf_T.Chan, ["subcutaneous","Subcutaneous"], "Subcutaneous");
 thresh_T.Chan = mergecats(thresh_T.Chan, ["subcutaneous","Subcutaneous"], "Subcutaneous");
 chan_inc = ["Subcutaneous", "Subcranial"];
 freq_inc = [55, 100, 410];
+
+%% Plot box plot consistency of 2f response 
 
 %% Low CI Fit Quality summary
 % Filter dataset
