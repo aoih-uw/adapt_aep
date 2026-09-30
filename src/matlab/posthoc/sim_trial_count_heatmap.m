@@ -1,4 +1,4 @@
-function [resp_stable, resp_first, inconsistent_vec] = sim_trial_count_heatmap(amp_vec, simu,...
+function [resp_stable, resp_first, inconsistent_vec] = sim_trial_count_heatmap(amp_vec, boot,...
      max_trials, my_chans, my_chans_name, trials_per_block, itvec, CI_vec,my_params)
 % Assign Variables
 resp_first = NaN(length(my_chans),length(amp_vec),length(itvec),length(CI_vec));
@@ -11,7 +11,7 @@ for ii = 1:length(itvec)
     for iii = 1:length(CI_vec)
         for iamp = 1:length(amp_vec)
             for ichan = 1:length(my_chans)
-                cur_data = simu.diff.resp_found(:,iamp,ichan,ii,iii);
+                cur_data = boot.diff.resp_found(:,iamp,ichan,ii,iii);
                 n_filled = find(~isnan(cur_data),1,'last');   % [] if all NaN
                 cur_data = cur_data(1:n_filled);
 

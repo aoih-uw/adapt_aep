@@ -49,6 +49,7 @@ for ifreq = 1:length(stim_freqs)
     tic()
     field_name = sprintf('c%d',ifreq);
     cur_freq = stim_freqs(ifreq);
+    fprintf('Processing %d Hz...', cur_freq);
     
     % Assign current frequency amp_vec
     amp_vec = amp_vecs{ifreq};
@@ -57,9 +58,9 @@ for ifreq = 1:length(stim_freqs)
     % Cumulative trial averaging matrix
     sz = [max_batches, length(amp_vec), length(my_chans)];
     cumu.n                       = NaN(sz);
-    cumu.diff_mean_2f            = NaN(sz);
-    cumu.diff_sem_2f             =  NaN(sz);
-    cumu.noise_floor_mean_2f     = NaN(sz);
+    cumu.diff_mean_2f            = NaN(sz); % Mean 2f microvolt amplitude for each cumulative average by 10 trials for each batch and channel and stim amplitude
+    cumu.diff_sem_2f             =  NaN(sz); 
+    cumu.noise_floor_mean_2f     = NaN(sz); 
     cumu.noise_floor_sem_2f      =  NaN(sz);    
     cumu.logBF_ON                = NaN(sz);
     cumu.logBF_OFF               = NaN(sz);
@@ -68,15 +69,10 @@ for ifreq = 1:length(stim_freqs)
 
     % Simulation
     sz = [max_batches, length(amp_vec), length(my_chans), length(itvec), length(CI_vec)];
-    simu.diff.mean              = NaN(sz);
-    simu.diff.sem               = NaN(sz);
-    simu.diff.lower_ci          = NaN(sz);
-    simu.diff.resp_found        = NaN(sz);
-
-    simu.noise.mean             = NaN(sz);
-    simu.noise.sem              = NaN(sz);
-    simu.noise.lower_ci         = NaN(sz);
-    simu.noise.resp_found       = NaN(sz);
+    boot.diff.mean              = NaN(sz);
+    boot.diff.std               = NaN(sz);
+    boot.diff.lower_ci          = NaN(sz);
+    boot.diff.resp_found        = NaN(sz);
 
     % Set to empty
     all_data = []; ds_data = []; bottom_up = []; top_down = [];
@@ -98,9 +94,7 @@ for ifreq = 1:length(stim_freqs)
     my_params.g = g;
 
     %% Execute cumulative averaging/bootstrapping simulation
-    tic()
-    [cumu, simu] = execute_cumu_avg_bootstrap(my_params, cumu, simu);
-    toc()
+    [cumu, boot] = execute_cumu_avg_bootstrap(my_params, cumu, boot);
 
     % %% Plot 2f and noise floor amplitude across batches
     % [cumu_noise, cumu_diff] = plot_cumulative_sigs...
@@ -111,7 +105,7 @@ for ifreq = 1:length(stim_freqs)
 
     %% Simulate adaptive trial count
     % By n iteration
-    [resp_stable, resp_first, inconsistent_vec] = sim_trial_count_heatmap(amp_vec, simu,...
+    [resp_stable, resp_first, inconsistent_vec] = sim_trial_count_heatmap(amp_vec, boot,...
         max_trials, my_chans, my_chans_name, trials_per_block, itvec, CI_vec,my_params);
     
     %% Plot 2f growth functions
@@ -124,11 +118,10 @@ for ifreq = 1:length(stim_freqs)
     % Only look at highest bootstrap iteration data
 
     % By n iteration
-    lower_ci_vec = simu.diff.lower_ci(:,:,:,end,end); % use highest CI rate and n_bootstrap
-    noise_floor = simu.noise.mean(:,:,:,end,end);
+    lower_ci_vec = boot.diff.lower_ci(:,:,:,end,end); % use highest CI rate and n_bootstrap
 
     [low_growth, fit_quality_low(ifreq)] = ...
-    fit_low_CI_model(amp_vec, lower_ci_vec, resp_stable, noise_floor,...
+    fit_low_CI_model(amp_vec, lower_ci_vec, resp_stable,  my_params, ifreq, ...
     trials_per_block, max_trials, my_chans_name, my_params.cur_freq, 'Full dataset', 1);
 
     %% Simulate removal of data points
@@ -141,7 +134,7 @@ for ifreq = 1:length(stim_freqs)
     %         nexttile; hold on;
     % 
     %         batch_num  = cumu.n(:,iamp,ichan);
-    %         resp_found = simu.diff.resp_found(:,iamp,ichan,end,end); % Use highest iteration and CI numbers
+    %         resp_found = boot.diff.resp_found(:,iamp,ichan,end,end); % Use highest iteration and CI numbers
     %         batch_mean = cumu.diff_mean_2f(:,iamp,ichan);
     %         batch_sem  = cumu.diff_sem_2f(:,iamp,ichan);
     % 
@@ -171,11 +164,10 @@ for ifreq = 1:length(stim_freqs)
 
     % Convert simulation results to long form table
     sim_results(ifreq) = convert_sim_data_to_long(subjid, cur_freq, amp_vec, itvec, CI_vec, ...
-    resp_stable, resp_first, twof_growth, low_growth, fit_quality_2f(ifreq), fit_quality_low(ifreq), ...
+    resp_stable, resp_first, twof_growth, low_growth, fit_quality_low(ifreq), ...
     my_chans, my_chans_name);
     
     %% Report progress
-    fprintf('%d Hz',stim_freqs(ifreq))
     toc()
 end
 
