@@ -1,20 +1,24 @@
-function [kept_trials, kept_jitter, kept_phase, kept_hydro] = get_kept_trials(grand_ex_save, iname, ...
+function [kept_trials, kept_jitter, kept_phase, kept_hydro, kept_time] = get_kept_trials(grand_ex_save, iname, ...
     ibatch, cur_chan, single_batch_locs, mult_batch_locs,trials_per_block, do_hydro)
 kept_hydro = [];
-
+cur_exp_type = grand_ex_save{1}.info.experiment.exp_type;
 if ismember(ibatch,single_batch_locs)
     % None of the trials got rejected
     kept_trials = grand_ex_save{1,iname}.raw_signals(1,ibatch).electrodes_microV(:,:,cur_chan);
     kept_jitter = grand_ex_save{1,iname}.block_level_info(1,ibatch).jitter;
     kept_phase = grand_ex_save{1,iname}.block_level_info(1,ibatch).phase_vec;
+    kept_time = repmat(grand_ex_save{1,iname}.raw_signals(1,ibatch).time_stamp,size(kept_trials,1),1);
+    
     if do_hydro
         kept_hydro = grand_ex_save{1,iname}.raw_signals(1,ibatch).hydrophone_mV(:,:);
     end
 
     % Alert user if trials were rejected in this case
-    if length(grand_ex_save{1,iname}.block_level_info(ibatch).kept_trials_idx) ~= trials_per_block
+    if strcmp(cur_exp_type,'Mixed freqs') & ...
+            (length(grand_ex_save{1,iname}.block_level_info(ibatch).kept_trials_idx) ~= trials_per_block)
         keyboard
     end
+
 elseif ismember(ibatch, mult_batch_locs(:,1)) % Only look through first_batches
     % Get multiple attempt data
     [cur_row, ~] = find(mult_batch_locs == ibatch);
@@ -53,12 +57,14 @@ elseif ismember(ibatch, mult_batch_locs(:,1)) % Only look through first_batches
         end
         cur_jitter = grand_ex_save{1,iname}.block_level_info(1,iii).jitter;
         cur_phase = grand_ex_save{1,iname}.block_level_info(1,iii).phase_vec;
+        cur_time = repmat(grand_ex_save{1,iname}.raw_signals(1,iii).time_stamp,size(cur_batch,1),1);
         temp_sigs(my_idx:my_idx+(trials_per_block-1),1:size(cur_batch,2)) = cur_batch;
         if do_hydro
             temp_hydro_sigs(my_idx:my_idx+(trials_per_block-1),1:size(cur_hydro_batch,2)) = cur_hydro_batch;
         end
-        temp_jitter(my_idx:my_idx+(trials_per_block-1)) = cur_jitter;
-        temp_phase(my_idx:my_idx+(trials_per_block-1)) = cur_phase;
+        temp_jitter(my_idx:my_idx+(trials_per_block-1),1) = cur_jitter;
+        temp_phase(my_idx:my_idx+(trials_per_block-1),1) = cur_phase;
+        temp_time(my_idx:my_idx+(trials_per_block-1),1) = cur_time;
         my_idx = my_idx + trials_per_block;
     end
     % Keep non-rejected trials only
@@ -69,11 +75,13 @@ elseif ismember(ibatch, mult_batch_locs(:,1)) % Only look through first_batches
     end
     kept_jitter = temp_jitter(kept_trials_idx,:);
     kept_phase = temp_phase(kept_trials_idx,:);
+    kept_time = temp_time(kept_trials_idx,:);
 else
     kept_trials = [];
     kept_hydro = [];
     kept_jitter = [];
     kept_phase = [];
+    kept_time = [];
 end
 
 % Check for no kept trials

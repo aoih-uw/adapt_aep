@@ -1,4 +1,4 @@
-function grand_ex_save = posthoc_load_my_file(subjid,base_dir,file_type)
+function [grand_ex_save, failed_files] = posthoc_load_my_file(subjid,base_dir,file_type)
 % Assign vars
 cd(base_dir)
 stim_freq = [];
@@ -16,22 +16,21 @@ my_path = sprintf('%s/%s/%s', base_dir,current_folder.name, file_type);
 cd(my_path)
 if isempty(subjid),    subjid    = '*'; else subjid    = num2str(subjid);    end
 files = dir(sprintf('*%s_%s_*_%s_%s*', subjid, stim_freq, stim_amp, file_type));
-if isempty(files)
-    fprintf('No files found')
-else
-    my_names = {files.name};
-end
+my_names = {files.name};
+if isempty(my_names), fprintf('No files found\n'); end
 
+% Load files
 grand_ex_save = {};
-count = 0;
+failed_files = {};
 for iname = 1:numel(my_names)
     current_file = my_names{iname};
     fprintf('Loading %s, %d/%d\n', current_file, iname, numel(my_names))
     try
         S = load(current_file);
-        count = count + 1;
-        grand_ex_save{count} = S.ex_save;
+        grand_ex_save{end+1} = S.ex_save;
     catch ME
         fprintf('  Skipping %s: %s\n', current_file, ME.message);
+        failed_files{end+1} = fullfile(pwd, current_file);
     end
+end
 end

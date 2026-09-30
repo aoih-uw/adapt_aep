@@ -104,7 +104,7 @@ ex.info.signal_quality = struct( ...
     'filter_type',                       'butterworth', ...
     'pass_band_hz',                       35, ...
     'mad_to_std',                         1.4826, ...% to convert mad to a std like value
-    'rejection_threshold_sd',             3 ...
+    'rejection_threshold_sd',             100 ...
     );
 
 %% Experiment type specific info
@@ -114,12 +114,6 @@ if strcmp(app.DropDown_test_mode.Value,'Mixed freqs')
     ex.info.mixed.stim_freqs        = [55 100 410];
     ex.info.mixed.max_trials        = [260 260 260];
     ex.info.mixed.test_amplitudes   = {83:3:140, 95:3:140, 116:3:140};
-
-    % ex.info.mixed.stim_name         = {'ONOFF'};
-    % ex.info.mixed.stim_freqs        = [55];
-    % ex.info.mixed.max_trials        = [30];
-    % ex.info.mixed.test_amplitudes   = {[137 125 122 119]};
-
     ex.info.mixed.N_trials_per_file = 200;
 
     % Preallocate test schedule
