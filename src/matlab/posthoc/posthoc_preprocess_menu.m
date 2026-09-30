@@ -5,12 +5,9 @@ save_dir = 'C:\Users\Aoi Hunsaker\Downloads';
 figure_loc = 'C:\Users\Aoi Hunsaker\Downloads';
 summary_loc = 'C:\Users\Aoi Hunsaker\Downloads';
 addpath(genpath('C:\Users\Aoi Hunsaker\Desktop\adapt_aep\src\matlab\'))
-old_vis = get(0,'DefaultFigureVisible');
-
-% Decide wether to load in raw file
-load_raw_file = 0;
 file_type = 'mixed_freqs';
 % file_type = 'benzo';
+old_vis = get(0,'DefaultFigureVisible');
 
 %% Set this when doing bulk processing!
 % set(0,'DefaultFigureVisible','off');
@@ -35,44 +32,32 @@ try
             %% Sort
             fprintf('\nSorting data...\n')
             [meta, org_data] = posthoc_sort_data(grand_ex_save, base_dir, ...
-                sort_dir);
+                save_dir);
 
-            else % Load in pre-sorted data
-                [my_names] = find_files(cur_subj,sort_dir,[],[],'Mixed freqs',0);
-                if numel(my_names) == 1
-                    load(my_names{1})
-                else
-                    load(my_names{end})
-                end
-            end
-
-            % %% Hydrophone signal
-            % fprintf('Plotting hydrophone signal');
-            % posthoc_hydrophone_analysis
-            % % Output hydro_results
+            %% Hydrophone signal
+            fprintf('Plotting hydrophone signal');
+            posthoc_hydrophone_analysis
+            % Output hydro_results
 
             %% 2f Amplitude consistency across time
             posthoc_resp_consist
-            % 
-            % %% Waterfall
-            % fprintf('\nPlotting waterfall...\n')
-            % posthoc_waterfall % Plot grand average waterfalls
-            % 
-            % %% Simulate
-            % fprintf('\nSimulating adapt_aep...\n')
-            % posthoc_bootstrap_sim % Main analysis script
+
+            %% Waterfall
+            fprintf('\nPlotting waterfall...\n')
+            posthoc_waterfall % Plot grand average waterfalls
+
+            %% Simulate
+            fprintf('\nSimulating adapt_aep...\n')
+            posthoc_bootstrap_sim % Main analysis script
 
             %% Save preprocessed data
             fprintf('\nSaving summary data...\n')
             cd(summary_loc)
-            % save(sprintf('subject_%d', cur_subj), ...
-            %     'meta', 'hydro_results', 'sim_results', 'T_ON_2f', 'T_slope','-v7.3');
-
             save(sprintf('subject_%d', cur_subj), ...
                 'meta', 'hydro_results', 'sim_results', 'T_ON_2f', 'T_slope','-v7.3');
 
-            % % %% Apply Tufte styling
-            % apply_tufte
+            % %% Apply Tufte styling
+            apply_tufte
 
             %% Save figs
             fprintf('\nSaving to ppt...\n')

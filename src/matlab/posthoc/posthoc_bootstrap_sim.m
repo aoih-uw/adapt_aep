@@ -124,8 +124,6 @@ for ifreq = 1:length(stim_freqs)
     fit_low_CI_model(amp_vec, lower_ci_vec, resp_stable,  my_params, ifreq, ...
     trials_per_block, max_trials, my_chans_name, my_params.cur_freq, 'Full dataset', 1);
 
-    %% Simulate removal of data points
-
     % %% Plot mean 2f amplitude across batches and ID when resp_found
     % for ichan = 1:length(my_chans)
     %     figure;
