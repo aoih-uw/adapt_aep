@@ -1,6 +1,6 @@
 %% convert_sim_data_to_long
 function sim_results = convert_sim_data_to_long(subjid, cur_freq, amp_vec, it_vec, CI_vec, ...
-    resp_stable, resp_first, twof_growth, low_growth,  fit_quality_2f, fit_quality_low, ...
+    resp_stable, resp_first, twof_growth, low_growth, fit_quality_low, ...
     my_chans, my_chans_name)
 
 % Assign variables
@@ -24,15 +24,6 @@ twof_summary = table(subjid_col, categorical(Chan(:),1:n_chans,my_chans_name), f
     twof_growth.mean(:), twof_growth.sem(:), twof_growth.noise_floor(:), ...
     'VariableNames',  {'Subj_ID','Chan','Freq','Amp','Mean','SEM','Noise_Floor'});
 
-% Fit plots
-X = permute(twof_growth.x_vec,[2 3 1]);
-Y = permute(twof_growth.y_vec, [2 3 1]);
-[~, Chan] = ndgrid(1:size(X,1),1:n_chans);
-subjid_col = repmat(subjid,length(Chan(:)),1);
-freq_col = repmat(cur_freq,length(Chan(:)),1);
-twof_fit = table(subjid_col, categorical(Chan(:),1:n_chans, my_chans_name),freq_col, X(:), Y(:), ...
-    'VariableNames',{'Subj_ID','Chan','Freq','X','Y'});
-
 % Store variables
 sim_results.twof.summary = twof_summary;
 
@@ -43,7 +34,7 @@ sim_results.twof.summary = twof_summary;
 subjid_col = repmat(subjid,length(Chan(:)),1);
 freq_col = repmat(cur_freq,length(Chan(:)),1);
 lowCI_summary = table(subjid_col, categorical(Chan(:),1:n_chans,my_chans_name), freq_col, Amp(:), ...
-    low_growth.all.mean(:), low_growth.sim.mean(:), ...
+    low_growth.all.low_CI(:), low_growth.sim.low_CI(:), ...
     'VariableNames',  {'Subj_ID','Chan','Freq','Amp','All','Sim'});
 
 % Threshold

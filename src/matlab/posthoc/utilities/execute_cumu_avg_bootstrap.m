@@ -1,4 +1,4 @@
-function [cumu, simu] = execute_cumu_avg_bootstrap(my_params, cumu, simu)
+function [cumu, boot] = execute_cumu_avg_bootstrap(my_params, cumu, boot)
 %% Simulate cumulative averaging and bootstrap algorithm
 % Assign vars
 my_chans = my_params.my_chans;  my_chans_name = my_params.my_chans_name; amp_vec = my_params.amp_vec;
@@ -14,7 +14,7 @@ for ichan = 1:length(my_chans)
     % Setup GIF
     % do_gif = contains(my_chans_name{ichan}, 'subcranial', 'IgnoreCase', true);
     do_gif = 0;
-    
+
     if do_gif
         gif_file = sprintf('polar_%s_%dHz.gif', my_chans_name{ichan}, cur_freq);
         rmax = max(abs([ON_2f(:,:,stim_type_idx,ichan,ifreq); OFF_2f(:,:,1,ichan,ifreq)]),[],'all','omitnan');
@@ -91,7 +91,7 @@ for ichan = 1:length(my_chans)
             cur_OFF_batch = cur_OFF(inc_select); % Complex vector of OFF fft vals for current cumulative batch
             cur_diff_mean = abs(mean(cur_ON_batch)) - abs(mean(cur_OFF_batch)); % Mean diff for current cumulative batch of trial
             cur_diff_sem = (abs(std(cur_ON_batch - cur_OFF_batch)))/sqrt(length(cur_ON_batch));
-            
+
             % Stim off @ 2f
             cur_noise_floor_mean = abs(mean(cur_OFF_batch));
             cur_noise_floor_sem = (abs(std(cur_OFF_batch)))/sqrt(length(cur_OFF_batch));
@@ -115,40 +115,26 @@ for ichan = 1:length(my_chans)
                 [bootstat, lower_CI_all] = ...
                     calculate_bootstrap(n_bootstrap, cur_ON_batch, cur_OFF_batch, CI_vec);
 
-                simu.diff.mean(ibatch,iamp,ichan,iit,:) = mean(bootstat);
-                simu.diff.sem(ibatch,iamp,ichan,iit,:)  = std(bootstat);
-                simu.diff.lower_ci(ibatch,iamp,ichan,iit,:)  = lower_CI_all;
-                simu.diff.resp_found(ibatch,iamp,ichan,iit,:) = lower_CI_all > 0;
-            
-
-                % Noise - Noise for noise floor
-                % Randomise noise floor trial order
-                cur_noise_1 = cur_OFF_batch(randperm(length(cur_OFF_batch)));
-                cur_noise_2 = cur_OFF_batch(randperm(length(cur_OFF_batch)));
-
-                [bootstat, lower_CI_all] = ...
-                    calculate_bootstrap(n_bootstrap, cur_noise_1, cur_noise_2, CI_vec);
-
-                simu.noise.mean(ibatch,iamp,ichan,iit,:) = mean(bootstat);
-                simu.noise.sem(ibatch,iamp,ichan,iit,:)  = std(bootstat);
-                simu.noise.lower_ci(ibatch,iamp,ichan,iit,:)  = lower_CI_all;
-                simu.noise.resp_found(ibatch,iamp,ichan,iit,:) = lower_CI_all > 0;
+                boot.diff.mean(ibatch,iamp,ichan,iit,:) = mean(bootstat);
+                boot.diff.std(ibatch,iamp,ichan,iit,:)  = std(bootstat);
+                boot.diff.lower_ci(ibatch,iamp,ichan,iit,:)  = lower_CI_all;
+                boot.diff.resp_found(ibatch,iamp,ichan,iit,:) = lower_CI_all > 0;
             end
             % Progress cumulative counter
             idx = idx+trials_per_block;
         end
-        
+
         % Likelihood ratio
-    lb = cumu.logBF_ON(:,iamp,ichan);
+        lb = cumu.logBF_ON(:,iamp,ichan);
 
-    k = find(lb >  log(20), 1);
-    if isempty(k), k = NaN; end
-    cumu.stop_resp(iamp,ichan) = k;
+        k = find(lb >  log(20), 1);
+        if isempty(k), k = NaN; end
+        cumu.stop_resp(iamp,ichan) = k;
 
-    k = find(lb < -log(10), 1);
-    if isempty(k), k = NaN; end
-    cumu.stop_null(iamp,ichan) = k;
-        
+        k = find(lb < -log(10), 1);
+        if isempty(k), k = NaN; end
+        cumu.stop_null(iamp,ichan) = k;
+
     end
     if do_gif, close(fa); end
     sgtitle(tl, sprintf('Channel: %s; Frequency: %d Hz', my_chans_name{ichan}, cur_freq))
