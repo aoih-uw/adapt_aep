@@ -58,10 +58,10 @@ for ifreq = 1:length(stim_freqs)
     % Cumulative trial averaging matrix
     sz = [max_batches, length(amp_vec), length(my_chans)];
     cumu.n                       = NaN(sz);
-    cumu.diff_mean_2f            = NaN(sz); % Mean 2f microvolt amplitude for each cumulative average by 10 trials for each batch and channel and stim amplitude
-    cumu.diff_sem_2f             =  NaN(sz); 
-    cumu.noise_floor_mean_2f     = NaN(sz); 
-    cumu.noise_floor_sem_2f      =  NaN(sz);    
+    cumu.diff.mean.twof            = NaN(sz); % Mean 2f microvolt amplitude for each cumulative average by 10 trials for each batch and channel and stim amplitude
+    cumu.diff.sem.twof             =  NaN(sz); 
+    cumu.noise_floor.mean.twof     = NaN(sz); 
+    cumu.noise_floor.sem.twof     =  NaN(sz);    
     cumu.logBF_ON                = NaN(sz);
     cumu.logBF_OFF               = NaN(sz);
     cumu.stop_resp = NaN(length(amp_vec), length(my_chans));
@@ -96,7 +96,7 @@ for ifreq = 1:length(stim_freqs)
     %% Execute cumulative averaging/bootstrapping simulation
     [cumu, boot] = execute_cumu_avg_bootstrap(my_params, cumu, boot);
 
-    % %% Plot 2f and noise floor amplitude across batches
+    % %% Plot 2f and noise floor raw growth function across batches
     % [cumu_noise, cumu_diff] = plot_cumulative_sigs...
     % (max_trials,trials_per_block,my_chans,my_chans_name,amp_vec,cumu);
 
@@ -110,7 +110,7 @@ for ifreq = 1:length(stim_freqs)
     
     %% Plot 2f growth functions
     [twof_growth, fit_quality_2f(ifreq)] = plot_2f_growth_func...
-        (cumu, resp_stable, amp_vec, my_chans, my_chans_name, ...
+        (cumu, resp_first, amp_vec, my_chans, my_chans_name, ...
         trials_per_block, stim_freqs(ifreq), use_sigmoid,plot_linear);
 
     % Estimate threshold based on lower CI value and estimate bias
@@ -121,7 +121,7 @@ for ifreq = 1:length(stim_freqs)
     lower_ci_vec = boot.diff.lower_ci(:,:,:,end,end); % use highest CI rate and n_bootstrap
 
     [low_growth, fit_quality_low(ifreq)] = ...
-    fit_low_CI_model(amp_vec, lower_ci_vec, resp_stable,  my_params, ifreq, ...
+    fit_low_CI_model(amp_vec, lower_ci_vec, resp_first,  my_params, ifreq, ...
     trials_per_block, max_trials, my_chans_name, my_params.cur_freq, 'Full dataset', 1);
 
     %% Simulate removal of data points
@@ -135,8 +135,8 @@ for ifreq = 1:length(stim_freqs)
     % 
     %         batch_num  = cumu.n(:,iamp,ichan);
     %         resp_found = boot.diff.resp_found(:,iamp,ichan,end,end); % Use highest iteration and CI numbers
-    %         batch_mean = cumu.diff_mean_2f(:,iamp,ichan);
-    %         batch_sem  = cumu.diff_sem_2f(:,iamp,ichan);
+    %         batch_mean = cumu.diff.mean.twof(:,iamp,ichan);
+    %         batch_sem  = cumu.diff.sem.twof(:,iamp,ichan);
     % 
     %         % Sort batch data
     %         [batch_num, si] = sort(batch_num);

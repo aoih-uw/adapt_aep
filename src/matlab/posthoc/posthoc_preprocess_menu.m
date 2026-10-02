@@ -3,7 +3,7 @@ clearvars
 base_dir = 'D:\2026\Research\Aug Sept Midshipman\raw_data';
 sort_dir = 'D:\2026\Research\Aug Sept Midshipman\sorted_data';
 figure_loc = 'D:\2026\Research\Aug Sept Midshipman\sorted_data\figure_slides';
-summary_loc = 'D:\2026\Research\Aug Sept Midshipman\pre_summary\archive';
+summary_loc = 'D:\2026\Research\Aug Sept Midshipman\pre_summary';
 addpath(genpath('C:\Users\Aoi Hunsaker\Desktop\adapt_aep\src\matlab\'))
 old_vis = get(0,'DefaultFigureVisible');
 
@@ -16,7 +16,7 @@ file_type = 'mixed_freqs';
 set(0,'DefaultFigureVisible','off');
 try
     % subjids = 52;
-    subjids = [28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51];
+    subjids = [29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51];
     failed = [];
     failed_files_all = {};
     for isubj = 1:length(subjids)
@@ -47,37 +47,31 @@ try
 
             else % Load in pre-sorted data
                 [my_names] = find_files(cur_subj,sort_dir,[],[],'Mixed freqs',0);
-                if numel(my_names) == 1
-                    load(my_names{1})
-                else
-                    load(my_names{end})
-                end
+                my_names = sort(my_names);
+                load(my_names{end})
             end
 
-            % %% Hydrophone signal
-            % fprintf('Plotting hydrophone signal');
-            % posthoc_hydrophone_analysis
-            % % Output hydro_results
+            %% Hydrophone signal
+            fprintf('Plotting hydrophone signal...\n');
+            posthoc_hydrophone_analysis
+            % Output hydro_results
 
-            %% 2f Amplitude consistency across time
+            % 2f Amplitude consistency across time
             posthoc_resp_consist
-            % 
+
             % %% Waterfall
             % fprintf('\nPlotting waterfall...\n')
             % posthoc_waterfall % Plot grand average waterfalls
-            % 
-            % %% Simulate
-            % fprintf('\nSimulating adapt_aep...\n')
-            % posthoc_bootstrap_sim % Main analysis script
+
+            %% Simulate
+            fprintf('\nSimulating adapt_aep...\n')
+            posthoc_bootstrap_sim % Main analysis script
 
             %% Save preprocessed data
             fprintf('\nSaving summary data...\n')
             cd(summary_loc)
-            % save(sprintf('subject_%d', cur_subj), ...
-            %     'meta', 'hydro_results', 'sim_results', 'T_ON_2f', 'T_slope','-v7.3');
-
             save(sprintf('subject_%d', cur_subj), ...
-                'meta', 'T_slope','-v7.3');
+                'meta', 'hydro_results', 'sim_results', 'T_ON_2f', 'T_slope','-v7.3');
 
             % % %% Apply Tufte styling
             % apply_tufte

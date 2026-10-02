@@ -7,6 +7,8 @@ stim_type_idx = my_params.stim_type_idx;  ifreq = my_params.ifreq;
 cur_freq = my_params.cur_freq;
 max_batches = my_params.max_batches;  trials_per_block = my_params.trials_per_block;
 itvec = my_params.itvec;  CI_vec = my_params.CI_vec;
+
+% Start looping through channels
 for ichan = 1:length(my_chans)
     figure;
     tl = tiledlayout(4,5,'TileSpacing','tight','Padding','tight');
@@ -14,15 +16,16 @@ for ichan = 1:length(my_chans)
     % Setup GIF
     % do_gif = contains(my_chans_name{ichan}, 'subcranial', 'IgnoreCase', true);
     do_gif = 0;
-
     if do_gif
         gif_file = sprintf('polar_%s_%dHz.gif', my_chans_name{ichan}, cur_freq);
         rmax = max(abs([ON_2f(:,:,stim_type_idx,ichan,ifreq); OFF_2f(:,:,1,ichan,ifreq)]),[],'all','omitnan');
         fa = figure('Visible','off'); pax = polaraxes(fa);
     end
 
+    % Loop through amplitudes
     for iamp = 1:length(amp_vec)
         nexttile(tl)
+
         % Get all_data ON-OFF data
         cur_phase = squeeze(phase_vec(:,1,iamp,stim_type_idx,ichan,ifreq));
         cur_ON = ON_2f(:,iamp,stim_type_idx,ichan,ifreq);
@@ -31,16 +34,13 @@ for ichan = 1:length(my_chans)
         % Keep only real data
         keep = ~isnan(cur_phase) & ~isnan(cur_ON) & ~isnan(cur_OFF);
         cur_phase = cur_phase(keep);
-
-        % cur_ON / OFF for all batches but for current channel and
-        % amplitude
         cur_ON = cur_ON(keep);
         cur_OFF = cur_OFF(keep);
 
         % Plot phase component
-        polarscatter(angle(cur_ON), abs(cur_ON), 10);
+        polarscatter(angle(cur_ON), abs(cur_ON), 10, tableau_10('blue'),"filled","MarkerFaceAlpha", 0.3);
         hold on;
-        polarscatter(angle(cur_OFF), abs(cur_OFF), 10);
+        polarscatter(angle(cur_OFF), abs(cur_OFF), 10,tableau_10('orange'),"filled","MarkerFaceAlpha", 0.3);
         title(string(amp_vec(iamp)))
 
         % GIF
@@ -50,7 +50,6 @@ for ichan = 1:length(my_chans)
             polarscatter(pax, angle(cur_OFF), abs(cur_OFF), 10);
             rlim(pax,[0 rmax]); title(pax, sprintf('%d dB', amp_vec(iamp)));
             [A,map] = rgb2ind(frame2im(getframe(fa)), 256);
-
             dt = 0.2; if iamp == length(amp_vec), dt = 2; end
             if iamp == 1
                 imwrite(A, map, gif_file, 'gif', 'LoopCount', Inf, 'DelayTime', dt);
@@ -62,7 +61,7 @@ for ichan = 1:length(my_chans)
         % Identify unique phases
         phases = unique(cur_phase);
 
-        % See if we have enough trials
+        % Identify that we have enough trials
         if size(cur_ON,1) < max_batches*trials_per_block
             fprintf('Not enough trials at %d dB and Channel %d\n', amp_vec(iamp), my_chans(ichan));
         end
@@ -77,16 +76,17 @@ for ichan = 1:length(my_chans)
             inc_select = [];
             for ip = 1:length(phases)
                 phase_idx = find(cur_phase == phases(ip));
+                % inc_select contains idx of of equal phases
                 inc_select = [inc_select; phase_idx(1:n_per_phase)];
             end
 
+            % Ensure that even phases are selected for cumulative batches
             if sum(cur_phase(inc_select)) ~= 0
-                keyboard
+                fprintf('Uneven phases selected')
             end
 
             % Calculate the mean across current cumulative batch of data
             % Difference
-            n_batch = length(inc_select);
             cur_ON_batch = cur_ON(inc_select); % Complex vector of ON fft vals for current cumulative batch
             cur_OFF_batch = cur_OFF(inc_select); % Complex vector of OFF fft vals for current cumulative batch
             cur_diff_mean = abs(mean(cur_ON_batch)) - abs(mean(cur_OFF_batch)); % Mean diff for current cumulative batch of trial
@@ -97,11 +97,11 @@ for ichan = 1:length(my_chans)
             cur_noise_floor_sem = (abs(std(cur_OFF_batch)))/sqrt(length(cur_OFF_batch));
 
             % Save to cumu
-            cumu.n(ibatch,iamp,ichan)                    = length(inc_select);
-            cumu.diff_mean_2f(ibatch,iamp,ichan)            = cur_diff_mean; % current batch of stim off (vector)
-            cumu.diff_sem_2f(ibatch,iamp,ichan)             = cur_diff_sem;
-            cumu.noise_floor_mean_2f(ibatch,iamp,ichan)     = cur_noise_floor_mean; % stim OFF just at 2f
-            cumu.noise_floor_sem_2f(ibatch,iamp,ichan)         = cur_noise_floor_sem; % Will figure equation out later
+            cumu.n(ibatch,iamp,ichan)                       = length(inc_select);
+            cumu.diff.mean.twof(ibatch,iamp,ichan)          = cur_diff_mean; % current batch of stim off (vector)
+            cumu.diff.sem.twof(ibatch,iamp,ichan)             = cur_diff_sem;
+            cumu.noise_floor.mean.twof(ibatch,iamp,ichan)   = cur_noise_floor_mean; % stim OFF just at 2f
+            cumu.noise_floor.sem.twof(ibatch,iamp,ichan)    = cur_noise_floor_sem; % Will figure equation out later
 
             % Liklihood ratio
             cumu.logBF_ON(ibatch,iamp,ichan)  = complex_bf(cur_ON_batch,  my_params.g);
@@ -137,5 +137,5 @@ for ichan = 1:length(my_chans)
 
     end
     if do_gif, close(fa); end
-    sgtitle(tl, sprintf('Channel: %s; Frequency: %d Hz', my_chans_name{ichan}, cur_freq))
+    sgtitle(tl, sprintf('Channel: %s | Frequency: %d Hz', my_chans_name{ichan}, cur_freq))
 end
