@@ -1,19 +1,28 @@
-function plot_sigs_to_monitor(data_type, ex, app, N_samples, N_trials, N_channels)
+function plot_sigs_to_monitor(data_type, ex, app, N_samples, N_trials)
+% Assign vars
 fs = ex.info.recording.sampling_rate_hz;
 color_names = {'red','blue','orange','teal','green','yellow','purple','pink','brown','grey'};
 time_s = (0:N_samples-1) / fs;
 
+% Setup data variables
 if strcmp(data_type, 'raw')
     iblock = ex.counter.iblock;
     hydrophone_data = ex.raw(iblock).hydrophone_mV;
-    electrode_data = ex.raw(iblock).electrodes_microV;
+    if ex.test_accel % Setup for accelerometer
+        N_channels = 3;
+        sensor_data = ex.raw(iblock).accelerometer_mV;
+    else % Set up for electrode signals
+        N_channels = ex.info.channels.n_channels;
+        sensor_data = ex.raw(iblock).electrodes_microV;
+    end
 end
 
+% Downsampling variables
 max_plot_points = 2000;
 plot_idx = 1:max(1, ceil(N_samples/max_plot_points)):N_samples;
 time_s_ds = time_s(plot_idx);
 
-% --- Hydrophone ---
+%% Hydrophone
 ax = app.UIAxes_hydrophone;
 y = hydrophone_data(randperm(N_trials,1), plot_idx);
 h = ax.UserData;
@@ -41,12 +50,16 @@ if strcmp(data_type, 'raw')
     safe_ylim(app.UIAxes_signal_SNR,       min(snr_vec-snr_mad_vec,[],'omitnan')-pad, max(snr_vec+snr_mad_vec,[],'omitnan')+pad);
 end
 
-% --- Electrode channels ---
-electrode_axes = {app.UIAxes_ch1, app.UIAxes_ch2, app.UIAxes_ch3, app.UIAxes_ch4};
+%% Sensor channels
+if ex.test_accel
+    sensor_axes = {app.UIAxes_ch1, app.UIAxes_ch2, app.UIAxes_ch3};
+else
+    sensor_axes = {app.UIAxes_ch1, app.UIAxes_ch2, app.UIAxes_ch3, app.UIAxes_ch4};
+end
 data_mean_all = zeros(N_channels, numel(plot_idx));
 for ch = 1:N_channels
-    ax = electrode_axes{ch};
-    seg = electrode_data(:, plot_idx, ch);
+    ax = sensor_axes{ch};
+    seg = sensor_data(:, plot_idx, ch);
     data_mean = mean(seg, 1);
     data_std  = std(seg, 0, 1);
     data_mean_all(ch,:) = data_mean;
@@ -70,33 +83,17 @@ for ch = 1:N_channels
     end
 end
 
+% Set axes limits
 pad = max(range(data_mean_all(:)) * 0.2, eps);
 lo = min(data_mean_all(:),[],'omitnan');
 hi = max(data_mean_all(:),[],'omitnan');
-linkaxes([electrode_axes{:}], 'y');
-safe_ylim(electrode_axes{1}, lo - pad, hi + pad);
+linkaxes([sensor_axes{:}], 'y');
+safe_ylim(sensor_axes{1}, lo - pad, hi + pad);
 
 drawnow limitrate
 end
 
-function update_line(ax, x, y, color)
-h = ax.UserData;
-if isempty(h) || ~isfield(h,'line') || ~isvalid(h.line)
-    h.line = plot(ax, x, y, 'o-', 'Color', color, 'MarkerFaceColor', color);
-    ax.UserData = h;
-else
-    set(h.line, 'XData', x, 'YData', y);
-end
-end
-
-function val = get_field_or_nan(b, field)
-if isfield(b, 'hydrophone') && isfield(b.hydrophone, field)
-    val = b.hydrophone.(field);
-else
-    val = NaN;
-end
-end
-
+%% Local functions
 function update_errorbar(ax, x, y, err, color)
 h = ax.UserData;
 if isempty(h) || ~isfield(h,'line') || ~isvalid(h.line)

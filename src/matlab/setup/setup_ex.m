@@ -21,8 +21,9 @@ ex.exp_done = 0;
 ex.test = 0;
 ex.last_autosave_time = [];
 ex.no_valid_trials = 0;
-ex.last_temp_check = NaT;
-ex.last_signal_inspection = NaT;
+
+% Flag for accelerometer measurements
+ex.test_accel = double(strcmp(app.DropDown_test_tag.Value, 'accelerometer'));
 
 % Trial counter
 if ~strcmp(app.DropDown_test_mode.Value,'Mixed freqs')

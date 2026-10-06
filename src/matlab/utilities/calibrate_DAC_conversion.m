@@ -10,8 +10,7 @@ input_channels = [3:8];
 output_channels = [1 4];
 electrode_idx = 3:6;
 hydrophone_idx = 1;
-electrode_voltage_scaling_factor_V = 5.1045;
-hydrophone_voltage_scaling_factor_V = 5.1045;
+DAC_conversion_factor = 5.1045;
 
 %% Init DAC
 % Reset playrec if it is already initialized to start fresh
@@ -43,12 +42,10 @@ playrec('init', fs, 0, 0, 8, 8);
 %% Rip it
 [rec_data_mV] = present_sound(stimulus, ...
     input_channels, output_channels, ...
-    electrode_idx, hydrophone_idx, ...
-    electrode_voltage_scaling_factor_V, ...
-    hydrophone_voltage_scaling_factor_V);
+    hydrophone_idx, DAC_conversion_factor);
 
 %% Get hydrophone signals
 hydro_sigs = squeeze(rec_data_mV(:,:,1));
 my_rms = rms(hydro_sigs);
-correction = 110/my_rms
+correction = 110/my_rms;
 

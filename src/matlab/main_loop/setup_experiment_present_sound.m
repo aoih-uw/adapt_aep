@@ -8,6 +8,7 @@ iblock = ex.counter.iblock;
 trials_per_block = ex.info.trials.trials_per_block;
 stimulus_block = ex.block(iblock).stimulus_block;
 fs = ex.info.recording.sampling_rate_hz;
+test_accel = ex.test_accel;
 
 % Get current stimulus info
 freq_idx = get_current_freq_idx(ex);
@@ -18,12 +19,9 @@ else
     current_amplitude = ex.info.stimulus.amplitude_spl;
 end
 
-% Identify the first block # for the current stimulus
+% Identify number of trials presented up till now
 if strcmp(app.DropDown_test_mode.Value, 'Mixed freqs') || strcmp(app.DropDown_test_mode.Value, 'Timed')
     N_trials_presented = ex.counter.grand_iblock*trials_per_block;
-    if strcmp(app.DropDown_test_mode.Value, 'Mixed freqs')
-        first_block = iblock - ex.counter.N_not_enough_trials;
-    end
 else
     N_trials_presented = iblock*trials_per_block;
 end
@@ -32,30 +30,34 @@ if ~strcmp(app.DropDown_test_mode.Value, 'Mixed freqs')
 end
 
 %% Get necessary metadata for present_sound()
-[ex, N_channels, N_trials, N_samples, output_channels, ...
-    input_channels, hydrophone_idx, loopback_idx, electrode_idx, ...
-    electrode_voltage_scaling_factor_V, hydrophone_voltage_scaling_factor_V] ...
+[~, N_trials, N_samples, ...
+    output_channels, input_channels, ...
+    DAC_conversion_factor, bioamp_factor, accel_amp_factor, ...
+    hydrophone_idx, loopback_idx, electrode_idx, accel_idx] ...
     = init_present_sound_variables(ex, stimulus_block);
 
 fprintf('%d Hz %d dB ', stim_freq, current_amplitude);
 
 %% Rip it
-if ex.test
-    rec_data_mV = ex.mock_data;
-    N_samples = size(rec_data_mV,2);
-else
-    [rec_data_mV] = present_sound(stimulus_block, ...
-        input_channels, output_channels, ...
-        electrode_idx, hydrophone_idx, ...
-        electrode_voltage_scaling_factor_V, ...
-        hydrophone_voltage_scaling_factor_V);
-end
+rec_data_mV = present_sound(stimulus_block, ...
+    input_channels, output_channels, ...
+    hydrophone_idx, DAC_conversion_factor);
 
-%% Save values to ex
+%% Apply electrode correction values and store values to ex
 if size(rec_data_mV,1) > 1
+    % Structure: N_trials, N_samples, N_channels
+    if test_accel
+        % Apply amplifier correction
+        ex.raw(iblock).accelerometer_mV = rec_data_mV(:,:,accel_idx)./accel_amp_factor;
+    else
+        % Apply amplifier correction and convert mV -> microV
+        ex.raw(iblock).electrodes_microV  = rec_data_mV(:,:,electrode_idx).*(1e3/bioamp_factor);
+    end
+
+    % Store rest of values, already corrected for DAC conversion rate in
+    % present_sound so values are already in mV
     ex.raw(iblock).hydrophone_mV = squeeze(rec_data_mV(:,:,hydrophone_idx));
     ex.raw(iblock).loopback  = squeeze(rec_data_mV(:,:,loopback_idx));
-    ex.raw(iblock).electrodes_microV  = rec_data_mV(:,:,electrode_idx).*1e3; % N_trials, N_samples, N_channels
     ex.raw(iblock).time_stamp = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
 else
     keyboard
@@ -81,8 +83,14 @@ cellfun(@(v,t) check_for_nans(v,t), ...
     {ex.raw(iblock).hydrophone_mV, ex.raw(iblock).loopback}, ...
     {'signal','signal'}, ...
     'UniformOutput',false); % UniformOutput false = don't collect outputs
-for ich = 1:size(ex.raw(iblock).electrodes_microV, 3)
-    check_for_nans(ex.raw(iblock).electrodes_microV(:,:,ich), 'signal')
+if ex.test_accel
+    for ich = 1:size(ex.raw(iblock).accelerometer_mV, 3)
+        check_for_nans(ex.raw(iblock).accelerometer_mV(:,:,ich), 'signal')
+    end
+else
+    for ich = 1:size(ex.raw(iblock).electrodes_microV, 3)
+        check_for_nans(ex.raw(iblock).electrodes_microV(:,:,ich), 'signal')
+    end
 end
 
 %% Calculate hydrophone RMS dB SPL
@@ -92,7 +100,7 @@ if mod(iblock,10) == 0 || iblock == 1
 end
 
 %% Plot signals
-plot_sigs_to_monitor('raw',ex,app,N_samples,N_trials,N_channels)
+plot_sigs_to_monitor('raw',ex,app,N_samples,N_trials)
 if strcmp(app.DropDown_test_mode.Value, 'Timed') || strcmp(app.DropDown_test_mode.Value, 'Static trial count')
     plot_live_fft(ex, iblock, fs, app)
 end
@@ -104,7 +112,6 @@ app.Label_time_elapsed.Text = time_elapsed;
 ex.info.experiment.total_time_elapsed = time_since_exp_start;
 
 %% Update command window
-
 % Total trials presented
 if strcmp(app.DropDown_test_mode.Value, 'Mixed freqs') || strcmp(app.DropDown_test_mode.Value, 'Timed')
     grand_total = N_trials_presented;
