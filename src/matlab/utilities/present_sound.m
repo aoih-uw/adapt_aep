@@ -1,8 +1,6 @@
-function [rec_data_mV] = present_sound(stimulus, ...
+function rec_data_mV = present_sound(stimulus, ...
     input_channels, output_channels, ...
-    electrode_idx, hydrophone_idx, ...
-    electrode_voltage_scaling_factor_V, ...
-    hydrophone_voltage_scaling_factor_V)
+    hydrophone_idx, DAC_conversion_factor)
 %% This function calls playrec to simultaneously present and record signals. Presents signals trial by trial,
 % shows progress for number of trials presented per batch, enters debugging state when playrec gets stuck,
 % checks for clipped hydrophone signals and absurdly high amplitude values,
@@ -63,31 +61,24 @@ for itrial = 1:height(stimulus)
 
     % Check for clipped hydrophone signals
     cur_sig = rec_data(:,hydrophone_idx); % rec_data is in Volts
-    post_bioamp_sig = cur_sig.*hydrophone_voltage_scaling_factor_V; % Undo the scaling that the DAC did to understand what values it recieved
-    if any(abs(post_bioamp_sig) >= signal_clip_threshold)
+    cur_sig = cur_sig.*DAC_conversion_factor; % Undo the scaling that the DAC did to understand what values it recieved
+    if any(abs(cur_sig) >= signal_clip_threshold)
         fprintf('Possible clipping in hydrophone signal. Inspect signal.\n')
         keyboard % Inspect signal and progress when issue is solved
     end
 
-    % Apply specific scaling factors and convert to mV
-    rec_data_mV(:,:,itrial) = rec_data;
-    rec_data_mV(:,electrode_idx,itrial) = 1e3.*(rec_data(:,electrode_idx).*electrode_voltage_scaling_factor_V);
-    rec_data_mV(:,hydrophone_idx,itrial) = 1e3.*(rec_data(:,hydrophone_idx).*hydrophone_voltage_scaling_factor_V);
+    % Apply DAC conversion factor and convert to mV
+    rec_data_mV(:,:,itrial) = rec_data.*(1e3*DAC_conversion_factor);
 
-    % Check for absurdly large electrode signals
-    if any(abs(rec_data_mV(:,:,itrial)) > 1e3, 'all')
+    % Check for absurdly large signals
+    if any(abs(rec_data_mV(:,3:end,itrial)) > 1e3, 'all')
         fprintf('\nUnusually large voltage values detected in sensors (max: %.2f mV)\n', ...
-            max(abs(rec_data_mV(:,:,itrial)), [], 'all'));
+            max(abs(rec_data_mV(:,3:end,itrial)), [], 'all'));
         keyboard
     end
 
     fprintf('.');
 end
-
-% Measure presentation rate
-my_dur = toc(t_rate);
-trials_per_sec = height(stimulus)/my_dur;
-% fprintf('Presentation rate: %.2f trials/sec\n', trials_per_sec);
 
 % Rearrange data
 rec_data_mV = permute(rec_data_mV,[3,1,2]); % change to n_trial, n_sample, n_channel

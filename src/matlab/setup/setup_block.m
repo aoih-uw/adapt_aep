@@ -1,5 +1,6 @@
 function ex = setup_block(ex)
 %% Setup block-level fields in ex structure
+test_accel = ex.test_accel;
 % Per block metadata
 if ~strcmp(ex.info.experiment.exp_type, 'Mixed freqs')
     max_block = ceil(ex.info.trials.max_trials / ex.info.trials.trials_per_block);
@@ -43,8 +44,13 @@ for iblock = 1:max_block
     ex.block(iblock).hydrophone.stim_ON_snr_mad = NaN;
 
     %% Raw data
+    % Setup based on if we are testing with accelerometer or not
+    if test_accel
+        ex.raw(iblock).accelerometer_mV= NaN;
+    else
+        ex.raw(iblock).electrodes_microV = NaN; % order follows ex.info.channels.names
+    end
     ex.raw(iblock).hydrophone_mV= NaN;
-    ex.raw(iblock).electrodes_microV = NaN; % order follows ex.info.channels.names
     ex.raw(iblock).loopback = NaN;
     ex.raw(iblock).time_stamp = NaN;
 end

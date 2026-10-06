@@ -66,7 +66,7 @@ ex.info.recording.sampling_rate_hz = 44100; % (highest presented stimulus)*(nyqu
 ex.info.recording.ADC_bit_depth = NaN;
 ex.info.recording.latency_samples = NaN;
 ex.info.recording.DAC_model_serial = 'USB D/A Converter, Fireface UCX, RME, Frankfurt, Germany';
-ex.info.recording.DAC_conversion_factor = 5.1045; % Previously 1/0.2044;  Multiply by this factor to recover true Volt value
+ex.info.recording.DAC_conversion_factor = 5.1045; % Previously 1/0.2044;  Multiply by this factor to recover true voltage value
 ex.info.recording.DAC_output_channels = [1 4];
 ex.info.recording.DAC_output_channel_names = {'Underwater Speaker', 'Loopback'};
 ex.info.recording.DAC_input_channels = [3:8];
@@ -75,10 +75,21 @@ ex.info.recording.hydrophone_model = 'Type 8103, Bruel & Kjaer, Nærum, Denmark,
 ex.info.recording.hydrophone_gain_mV_per_Pa = 3.16; % 3.16 mV/Pa
 ex.info.recording.bioamplifier_model_serial = 'BMA-400, CWE Inc. Ardmore, PA, USA';
 ex.info.recording.bioamp_gain = 10000;
-ex.info.recording.hydrophone_voltage_scaling_factor_V = ex.info.recording.DAC_conversion_factor;
-ex.info.recording.electrode_voltage_scaling_factor_V = ex.info.recording.DAC_conversion_factor/ ex.info.recording.bioamp_gain;
 ex.info.recording.audio_amplifier = 'Power amplifier, Crown D75-A, Harman, Northridge, CA, USA';
 ex.info.recording.amplifier_gain = 'Need to measure';
+
+% Accelerometer parameters
+% Sensitivity @ 100 Hz, last calibrated 6/08/2007
+ex.info.accel.model_number = '356A32';
+ex.info.accel.serial_number = '72226';
+ex.info.accel.name = 'ICP Triaxial Accelerometer Manufacturer PCB Piezotronics';
+ex.info.accel.amp_gain = 100; % Divide signal by amplifier gain
+ex.info.accel.chan_order = 'X Y Z';
+ex.info.accel.mV_per_g = [101.7 98.4 108.1]; % Divide signal by sensitivity factor
+ex.info.accel.mV_per_m_per_s_sqrd = [10.37 10.03 11.02]; % Divide signal by sensitivity factor
+ex.info.accel.DAC_conversion_factor = ex.info.recording.DAC_conversion_factor; % Multiply to signal to recover V
+ex.info.accel.DAC_input_channels = [3:7];
+ex.info.accel.DAC_input_channel_names = {'Hydrophone', 'Loopback', 'X', 'Y', 'Z'};
 
 % Speaker parameters
 ex.info.speaker = struct( ...
@@ -104,7 +115,7 @@ ex.info.signal_quality = struct( ...
     'filter_type',                       'butterworth', ...
     'pass_band_hz',                       35, ...
     'mad_to_std',                         1.4826, ...% to convert mad to a std like value
-    'rejection_threshold_sd',             100 ...
+    'rejection_threshold_sd',             3 ...
     );
 
 %% Experiment type specific info

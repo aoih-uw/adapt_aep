@@ -1,5 +1,11 @@
 function ex = check_health(ex, app, init_check)
 %% Handles variables needed to call measure_EKG and saves EKG signals to ex.health structure
+% Don't need to run this if we are using the accelerometer
+if strcmp(ex.info.experiment.test_tag, 'accelerometer')
+    return
+end
+
+% Check if this is the first time we are measuring health
 if ~init_check
 time_diff = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss') - ex.health(ex.counter.ihealth).time_stamp;
 else % This will be the first check

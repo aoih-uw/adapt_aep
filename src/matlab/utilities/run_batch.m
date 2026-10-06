@@ -12,7 +12,18 @@ while ~batch_completed
     %% REJECT ARTEFACTS
     switch ex.info.experiment.exp_type
         case 'Mixed freqs'
-            ex = reject_artefacts_mixed(ex,app);
+            if ex.test_accel % Accelerometer
+                % We are not rejecting any electrode signals so we need to
+                % progress the counters here
+                ischedule = ex.counter.ischedule;
+                trials_per_block = ex.info.trials.trials_per_block;
+                ex.counter.N_not_enough_trials = 0;
+                cur_trial_type = ex.info.mixed.test_schedule(ischedule,5);
+                ex.info.mixed.trial_counter(cur_trial_type) = ...
+                    ex.info.mixed.trial_counter(cur_trial_type) + trials_per_block;
+            else % Electrodes
+                ex = reject_artefacts_mixed(ex,app);
+            end
     end
 
     %% CHECK TRIAL COUNT

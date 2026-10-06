@@ -33,7 +33,11 @@ while ex.counter.ischedule < size(test_schedule,1)
         case 'Mixed freqs'
             if ex.info.mixed.trial_counter(cur_stim_id) < N_trials_needed
                 ex = run_batch(ex, app);
-                ex = plot_mixed_trials(ex,app);
+                if ex.test_accel % Plot accelerometer signals
+                    ex = plot_accel_sigs(ex,app);
+                else % Plot electrode signals
+                    ex = plot_mixed_trials(ex,app);
+                end
             end
 
             % Note when 100% trials are measured
