@@ -36,7 +36,7 @@ try
                     grand_ex_save{end+1} = S.ex_save;
                 catch ME
                     fprintf('  Skipping %s: %s\n', current_file, ME.message);
-                    failed_files{end+1} = fullfile(pwd, current_file);
+                    failed_files{end+1} = fullfile(current_file);
                 end
             end
 

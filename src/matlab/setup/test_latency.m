@@ -4,11 +4,12 @@ function ex = test_latency(ex)
 % playrec(command, output signal, 4 output channels, -1 record same number of samples in output signal, 4 input channels)
 % playrec('playrec') returns pageNumber, which you need to get by using 'getRec'
 
+% Setup variables
 fs = ex.info.recording.sampling_rate_hz;
+expected = ex.info.recording.expected_latency_samples;
 
-% Generage a 1V pulse to get detlay
+% Generate a 1V pulse to get detlay
 test_signal = [zeros(1, fs) 1 1 1 -1 -1 -1 zeros(1, fs)]';
-
 test_page = playrec('playrec',test_signal, 4, -1, 4);
 
 % Timeout guard
@@ -41,9 +42,11 @@ end
 
 my_latency_sample = ceil(my_threshold_sample);
 
-if my_latency_sample ~= 2118
+if my_latency_sample ~= expected
     keyboard
-    error('Unexpected latency sample number measured')
+    error('test_latency:unexpected', ...
+        'Measured latency %d samples, expected %d. Check the Fireface buffer size and cables.', ...
+        my_latency_sample, expected)
 end
 
 % Display results to command window

@@ -34,7 +34,7 @@ while ex.counter.ischedule < size(test_schedule,1)
             if ex.info.mixed.trial_counter(cur_stim_id) < N_trials_needed
                 ex = run_batch(ex, app);
                 if ex.test_accel % Plot accelerometer signals
-                    ex = plot_accel_sigs(ex,app);
+                    plot_accel_sigs(ex,app);
                 else % Plot electrode signals
                     plot_mixed_trials(ex,app);
                 end

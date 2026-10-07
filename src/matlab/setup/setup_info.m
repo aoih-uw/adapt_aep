@@ -4,10 +4,14 @@ my_time = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyy-MM-
 rng('shuffle');
 rng_state = rng;
 
+% Setup file directories
+src_root  = fileparts(fileparts(mfilename('fullpath')));   % .../src/matlab
+repo_root = fileparts(fileparts(src_root));                % .../adapt_aep
+
 % Experiment information
 ex.info.experiment = struct( ...
-    'path_root',            'C:\Users\Aoi Hunsaker\Desktop\adapt_aep\src\matlab', ...
-    'save_root',            'C:\Users\Aoi Hunsaker\Desktop\adapt_aep\data\aep', ...
+    'path_root',            src_root, ...
+    'save_root',            fullfile(repo_root, 'data', 'aep'), ...
     'facility_name',         'Sisneros Laboratory', ...
     'experimenter_name',     'Aoi Hunsaker', ...
     'exp_date',              datestr(my_time, 'yyyymmdd'), ...
@@ -61,18 +65,27 @@ ex.info.channels = struct( ...
     'analysis_channel',       'Subcranial' ...
     );
 
-% Recording parameters
+%% Recording parameters
 ex.info.recording.sampling_rate_hz = 44100; % (highest presented stimulus)*(nyquist)*(signal quality)
-ex.info.recording.ADC_bit_depth = NaN;
 ex.info.recording.latency_samples = NaN;
+ex.info.recording.expected_latency_samples = 2118;
+
+% Thermometer
+ex.info.recording.thermometer_port = "COM5";
+
+% DAC
 ex.info.recording.DAC_model_serial = 'USB D/A Converter, Fireface UCX, RME, Frankfurt, Germany';
 ex.info.recording.DAC_conversion_factor = 5.1045; % Previously 1/0.2044;  Multiply by this factor to recover true voltage value
 ex.info.recording.DAC_output_channels = [1 4];
 ex.info.recording.DAC_output_channel_names = {'Underwater Speaker', 'Loopback'};
 ex.info.recording.DAC_input_channels = [3:8];
 ex.info.recording.DAC_input_channel_names = {'Hydrophone', 'Loopback', 'Ch1', 'Ch2','Ch3','Ch4'};
+
+% Hydrophone
 ex.info.recording.hydrophone_model = 'Type 8103, Bruel & Kjaer, Nærum, Denmark, Serial #: ';
 ex.info.recording.hydrophone_gain_mV_per_Pa = 3.16; % 3.16 mV/Pa
+
+% Amplifiers
 ex.info.recording.bioamplifier_model_serial = 'BMA-400, CWE Inc. Ardmore, PA, USA';
 ex.info.recording.bioamp_gain = 10000;
 ex.info.recording.audio_amplifier = 'Power amplifier, Crown D75-A, Harman, Northridge, CA, USA';
@@ -121,10 +134,10 @@ ex.info.signal_quality = struct( ...
 %% Experiment type specific info
 if strcmp(app.DropDown_test_mode.Value,'Mixed freqs')
     % Assign values
-    ex.info.mixed.stim_name         = {'ONOFF'};
     ex.info.mixed.stim_freqs        = [55 100 410];
     ex.info.mixed.max_trials        = [260 260 260];
     ex.info.mixed.test_amplitudes   = {83:3:140, 95:3:140, 116:3:140};
+    ex.info.mixed.stim_name         = {'ONOFF'};
     ex.info.mixed.N_trials_per_file = 200;
 
     % Preallocate test schedule

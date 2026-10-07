@@ -1,8 +1,7 @@
-function temp_C = read_thermometer()
+function temp_C = read_thermometer(port)
 persistent s
-% Open serialport if needed
 if isempty(s)
-    s = serialport("COM5", 9600);   % first call: open port, wait for Arduino to reboot
+    s = serialport(port, 9600);
     pause(2);
 end
 writeline(s, "T");
