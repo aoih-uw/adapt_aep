@@ -16,7 +16,7 @@ latency_samples = ex.info.recording.latency_samples;
 period_length_samples = length(ex.info.stimulus(freq_idx).waveform);
 ramp_duration_ms = ex.info.stimulus(freq_idx).ramp_duration_ms;
 ramp_duration_samples = round(ramp_duration_ms/1000*fs);
-jitter_vec = ex.block(iblock).phase_vec;
+jitter_vec = ex.block(iblock).jitter;
 
 % Calculate signal start/end based on per trial basis
 % jitter + latency + stim OFF + onramp
