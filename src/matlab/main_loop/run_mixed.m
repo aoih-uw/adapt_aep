@@ -45,7 +45,13 @@ while ex.counter.ischedule < size(test_schedule,1)
                 ex.info.mixed.trial_counter(cur_stim_id);
             
             % REPORT PROGRESS
-            fprintf(' %2.1f%%\n', mean(min(ex.info.mixed.trial_counter(:) ./ ex.info.mixed.uniq_stimuli(:,4), 1)) * 100);
+            complete_frac = mean(min(ex.info.mixed.trial_counter(:) ./ ex.info.mixed.uniq_stimuli(:,4), 1));
+            time_left = (datetime('now', 'TimeZone', 'America/Los_Angeles') - ex.info.experiment.exp_time_start) ...
+                * (1 - complete_frac) / max(complete_frac, eps);
+            time_left.Format = 'hh:mm:ss';
+            fprintf(' %2.1f%%\n', complete_frac * 100)
+            app.Label_time_left.Text = string(time_left);
+
             % SAVE RAW DATA
             if ex.counter.iblock > 0 % Only save if there is data in the block structure
                 if ex.counter.iblock >= (ex.info.mixed.N_trials_per_file/ex.info.trials.trials_per_block) || ...

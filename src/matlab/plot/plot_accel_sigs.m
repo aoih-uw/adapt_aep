@@ -70,11 +70,24 @@ err_data = mad(micro_m_per_s_sqrd_set,1,2);
 b = bar(ax,x_data,y_data,'FaceColor','flat');
 hold(ax,'on')
 errorbar(ax,x_data,y_data,err_data,'k','LineStyle','none')
+yline(ax,cur_amp);
+my_impedance = cur_amp/y_data(end);
 hold(ax,'off')
+grid(ax,'off')
 
 % Formatting
 b.CData = my_colors;
 xlabel(ax,'Dimension');
 ylabel(ax,'Acceleration (dB re: 1\mum/s^2)')
-title(ax,sprintf('Accelerometer %d Hz | %d dB SPL',cur_freq,cur_amp))
+title(ax,sprintf('%d Hz | %d dB SPL | Impedance %g ',cur_freq,cur_amp,my_impedance))
+ylim(ax,[0 cur_amp+3])
+
+%% Plot 3D acceleration trajectory (last trial)
+% Plot the 3 axes time series data in one plot using plot3
+[~, sig_ms2] = convert_mV_to_accel(sig_set, ex.info.accel.mV_per_g, ex.info.accel.mV_per_m_per_s_sqrd);
+ax = app.UIAxes_accel3d;
+plot3(ax, sig_ms2(1,:), sig_ms2(2,:), sig_ms2(3,:), 'LineWidth', 1,'Color',tableau_10('blue'))
+axis(ax,'equal'); grid(ax,'on'); view(ax,3);
+xlabel(ax,'X (m/s^2)'); ylabel(ax,'Y (m/s^2)'); zlabel(ax,'Z (m/s^2)');
+title(ax,'Acceleration trajectory')
 end

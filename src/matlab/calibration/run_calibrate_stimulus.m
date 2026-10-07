@@ -15,6 +15,7 @@ fs = recording_info.sampling_rate_hz;
 
 % Stimulus
 stimulus_freq = stimulus_info.frequency_hz;
+fprintf('----- %d Hz -----\n',stimulus_freq)
 waveform = stimulus_info.waveform; % When using optimize signal quality function
 waveform = waveform(:).'; % Ensure row
 target_freq_range = stimulus_info.range_2f_hz;
@@ -68,7 +69,7 @@ app.label_corr_factor.Text = sprintf('%1.1f',correction_factor_dB);
 [time_vector,app,cal] = plot_hydro(cal,mean_hydrophone_sig,fs,app,stimulus_freq,target_freq_range);
 % Plot accelerometer data if active
 if ex.test_accel
-    plot_accel(mean_accel_sigs_mV,time_vector,ex,accel_dB)
+    plot_accel(mean_accel_sigs_mV,time_vector,ex,accel_dB,stimulus_freq,hydro_rms_dB)
 end
 
 %% Check if stimulus amplitude is within range with correction factor
@@ -98,7 +99,7 @@ app.label_corr_level.Text = sprintf('%1.1f',hydro_rms_dB);
 [time_vector,app,cal] = plot_hydro(cal,mean_hydrophone_sig,fs,app,stimulus_freq,target_freq_range);
 % Plot accelerometer signal if active
 if ex.test_accel
-    plot_accel(mean_accel_sigs_mV,time_vector,ex,accel_dB);
+    plot_accel(mean_accel_sigs_mV,time_vector,ex,accel_dB,stimulus_freq,hydro_rms_dB);
 end
 
 %% Decide if calibration factor is sufficient
@@ -122,11 +123,11 @@ function [time_vector,app,cal] = plot_hydro(cal,mean_hydrophone_sig,fs,app,stimu
 % Time domain
 n_samples = length(mean_hydrophone_sig);
 time_vector = (0:n_samples-1)/fs;
-plot(app.ax_hydrophone, time_vector, mean_hydrophone_sig,'Color',tableau_10('blue'),'LineWidth',1.5)
+plot(app.ax_hydrophone, time_vector, mean_hydrophone_sig,'Color',tableau_10('blue'),'LineWidth',1)
 
 % Frequency domain
 [~, freq_vec, fft_vals] = calc_fft(mean_hydrophone_sig,fs);
-plot(app.ax_hydrophone_spectra, freq_vec,fft_vals,'Color',tableau_10('blue'),'LineWidth',1.5)
+plot(app.ax_hydrophone_spectra, freq_vec,fft_vals,'Color',tableau_10('blue'),'LineWidth',1)
 xlim(app.ax_hydrophone_spectra, [0, stimulus_freq*5])
 
 % Measure signal quality
@@ -145,19 +146,20 @@ cal.fft_vals = fft_vals;
 cal.snr = my_snr;
 end
 
-function plot_accel(mean_accel_sigs_mV,time_vector,ex,accel_dB)
-my_colors = [tableau_10('red'); tableau_10('blue'); tableau_10('orange');tableau_10('purple')];
+function plot_accel(mean_accel_sigs_mV,time_vector,ex,accel_dB,stimulus_freq,hydro_rms_dB)
+my_colors = [tableau_10('red'); tableau_10('blue'); tableau_10('orange');tableau_10('teal')];
 fig = figure;
 tiledlayout(fig,1,size(mean_accel_sigs_mV,1)+1,'TileSpacing','tight','Padding','tight')
 % Time domain signal
 for i = 1:size(mean_accel_sigs_mV,1)
     nexttile
-    plot(time_vector, mean_accel_sigs_mV(i,:),'Color',my_colors(i,:),'LineWidth',1.5);
+    plot(time_vector, mean_accel_sigs_mV(i,:),'Color',my_colors(i,:),'LineWidth',1);
     hold on;
     title(ex.info.accel.DAC_input_channel_names{2+i})
     xlabel('Time (s)')
     ylabel('Amplitude (mV)')
 end
+linkaxes
 
 % Compare individual dimensions acceleration (micro metres per second^2)
 nexttile
@@ -169,9 +171,10 @@ b = bar(x_data,y_data,'FaceColor','flat');
 b.CData = my_colors;
 xlabel('Dimension');
 ylabel('Acceleration (dB re: 1\mum/s^2)')
+title('Comparison')
 
 % Set main figure title
-sgtitle('Accelerometer')
+sgtitle(sprintf('Accelerometer %d Hz %g dB SPL',stimulus_freq,hydro_rms_dB))
 
 % Let the experimenter look at the data
 pause(3)

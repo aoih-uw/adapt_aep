@@ -103,3 +103,11 @@ else
     set(h.line, 'XData', x, 'YData', y, 'YNegativeDelta', err, 'YPositiveDelta', err);
 end
 end
+
+function val = get_field_or_nan(b, field)
+if isfield(b, 'hydrophone') && isfield(b.hydrophone, field)
+    val = b.hydrophone.(field);
+else
+    val = NaN;
+end
+end
