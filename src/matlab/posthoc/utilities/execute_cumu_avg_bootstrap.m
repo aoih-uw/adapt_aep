@@ -82,7 +82,7 @@ for ichan = 1:length(my_chans)
 
             % Ensure that even phases are selected for cumulative batches
             if sum(cur_phase(inc_select)) ~= 0
-                fprintf('Uneven phases selected')
+                fprintf('Uneven phases selected\n')
             end
 
             % Calculate the mean across current cumulative batch of data

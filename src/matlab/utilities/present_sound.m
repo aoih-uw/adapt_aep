@@ -12,7 +12,7 @@ signal_clip_threshold = 4.5; % V
 rec_data_mV = zeros(size(stimulus,2), ...
     length(input_channels), size(stimulus,1)); % # of samples x # of channels x # of trials
 
-t_rate = tic();
+% Loop through trials
 for itrial = 1:height(stimulus)
     % Get current trial
     if size(stimulus,3) > 1 % We have signals to present on more than one channel
@@ -34,29 +34,23 @@ for itrial = 1:height(stimulus)
     % Rip it
     try
         ipage = playrec('playrec', current_waveform, output_channels, -1, input_channels);
-
         % Timeout guard
         t0 = tic;
         while ~playrec('isFinished', ipage)
             if toc(t0) > 20
                 playrec('delPage', ipage);
                 keyboard % Debug timeout
-                % error('Playrec timed out. Check USB cord connection')
             end
         end
         pause(0.05);
-
         % Get recorded data
         rec_data = double(playrec('getRec', ipage));
-
         % Clean up the page
         playrec('delPage', ipage);
-
     catch ME
         % Clean up on error
         if exist('ipage','var'), playrec('delPage', ipage); end
         keyboard
-        % error('Audio recording failed for stimulus %d: %s', itrial, ME.message);
     end
 
     % Check for clipped hydrophone signals
@@ -64,7 +58,6 @@ for itrial = 1:height(stimulus)
     cur_sig = cur_sig.*DAC_conversion_factor; % Undo the scaling that the DAC did to understand what values it recieved
     if any(abs(cur_sig) >= signal_clip_threshold)
         fprintf('Possible clipping in hydrophone signal. Inspect signal.\n')
-        keyboard % Inspect signal and progress when issue is solved
     end
 
     % Apply DAC conversion factor and convert to mV
@@ -76,9 +69,8 @@ for itrial = 1:height(stimulus)
             max(abs(rec_data_mV(:,3:end,itrial)), [], 'all'));
         keyboard
     end
-
     fprintf('.');
 end
 
-% Rearrange data
-rec_data_mV = permute(rec_data_mV,[3,1,2]); % change to n_trial, n_sample, n_channel
+% Rearrange data (n_trial, n_sample, n_channel)
+rec_data_mV = permute(rec_data_mV,[3,1,2]);
