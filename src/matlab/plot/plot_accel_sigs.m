@@ -19,8 +19,9 @@ ramp_duration_samples = round(ramp_duration_ms/1000*fs);
 jitter_vec = ex.block(iblock).phase_vec;
 
 % Calculate signal start/end based on per trial basis
-start_vec = jitter_vec + ramp_duration_samples + latency_samples;
-end_vec = start_vec + period_length_samples - ramp_duration_samples*2;
+% jitter + latency + stim OFF + onramp
+start_vec = jitter_vec + latency_samples + period_length_samples + ramp_duration_samples + 1;
+end_vec = start_vec + period_length_samples - (ramp_duration_samples*2) - 1;
 
 % Get accelerometer raw data
 accel_mV = ex.raw(iblock).accelerometer_mV;

@@ -17,7 +17,7 @@ ds_rate = 10;
 redo = true;
 
 while redo
-    [ekg_sig_microV, N_samples] = run_ekg(stimulus_block);
+    [ekg_sig_microV, N_samples] = run_ekg(ex, stimulus_block);
 
     % Filter EKG signal
     d = designfilt('bandpassfir', 'FilterOrder', 4, ...
@@ -71,7 +71,7 @@ ekg_fs_ds = fs/ds_rate;
 end
 
 %% run_ekg helper function
-function [ekg_sig_microV, N_samples] = run_ekg(stimulus_block)
+function [ekg_sig_microV, N_samples] = run_ekg(ex, stimulus_block)
 % Get necessary variables
 [~, ~, N_samples, ...
     output_channels, input_channels, ...

@@ -36,7 +36,7 @@ while ex.counter.ischedule < size(test_schedule,1)
                 if ex.test_accel % Plot accelerometer signals
                     ex = plot_accel_sigs(ex,app);
                 else % Plot electrode signals
-                    ex = plot_mixed_trials(ex,app);
+                    plot_mixed_trials(ex,app);
                 end
             end
 

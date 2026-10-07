@@ -20,7 +20,8 @@ else
 end
 
 % Identify number of trials presented up till now
-if strcmp(app.DropDown_test_mode.Value, 'Mixed freqs') || strcmp(app.DropDown_test_mode.Value, 'Timed')
+if strcmp(app.DropDown_test_mode.Value, 'Mixed freqs') || ...
+        strcmp(app.DropDown_test_mode.Value, 'Timed')
     N_trials_presented = ex.counter.grand_iblock*trials_per_block;
 else
     N_trials_presented = iblock*trials_per_block;
@@ -61,7 +62,7 @@ if size(rec_data_mV,1) > 1
     ex.raw(iblock).time_stamp = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
 else
     keyboard
-    error('Only 1 or less trials included in present_sound() output')
+    error('Only 1 or less trials included in present_sound() output\n')
 end
 
 %% Check for dropped out loopback signal
@@ -72,9 +73,7 @@ for itrial = 1:size(stimulus_block,1)
 end
 
 %% Assign trial counts
-if strcmp(app.DropDown_test_mode.Value, 'Adaptive') || strcmp(app.DropDown_test_mode.Value, 'Static trial count')
-    ex.trial_count(iamp) = N_trials_presented;
-elseif strcmp(app.DropDown_test_mode.Value, 'Timed')
+if strcmp(app.DropDown_test_mode.Value, 'Timed')
     ex.trial_count(iamp) = iblock*trials_per_block;
 end
 
@@ -101,7 +100,7 @@ end
 
 %% Plot signals
 plot_sigs_to_monitor('raw',ex,app,N_samples,N_trials)
-if strcmp(app.DropDown_test_mode.Value, 'Timed') || strcmp(app.DropDown_test_mode.Value, 'Static trial count')
+if strcmp(app.DropDown_test_mode.Value, 'Timed')
     plot_live_fft(ex, iblock, fs, app)
 end
 

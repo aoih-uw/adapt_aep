@@ -27,13 +27,7 @@ switch ex.info.experiment.exp_type
         ex.block(iblock).stim_amp = current_amplitude;
         ex.block(iblock).unique_id = cur_parameters(5);
 
-    case 'Adaptive'
-        stim_name = 'ONOFF';
-        freq_idx = 1;
-        current_amplitude = ex.info.stimulus(freq_idx).amplitude_spl;
-        stim_freq = ex.info.stimulus(freq_idx).frequency_hz;
-
-    case {'Static trial count', 'Timed'}
+    case 'Timed'
         stim_name = 'Trim';
         freq_idx = 1;
         current_amplitude = ex.info.stimulus(freq_idx).amplitude_spl;

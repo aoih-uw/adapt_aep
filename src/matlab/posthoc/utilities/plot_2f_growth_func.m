@@ -20,10 +20,10 @@ for iamp = 1:length(amp_vec)
             fprintf('cur_idx for 2f growth function plotting is NaN')
             twof_growth_func.mean(ichan,iamp) = cumu.diff.mean.twof(end,iamp,ichan);
             twof_growth_func.sem(ichan,iamp) = cumu.diff.sem.twof(end,iamp,ichan);
-            twof_growth_func.noise_floor(ichan,iamp) = cumu.noise_floor.mean.tqof(end,iamp,ichan); % cur_OFF_batch value
+            twof_growth_func.noise_floor(ichan,iamp) = cumu.noise_floor.mean.twof(end,iamp,ichan); % cur_OFF_batch value
         else % Get the valid resp_found idx and extract its mean/sem
             twof_growth_func.mean(ichan,iamp) = cumu.diff.mean.twof(cur_idx,iamp,ichan);
-            twof_growth_func.sem(ichan,iamp) = cumu.diff.sem.twof(end,iamp,ichan);
+            twof_growth_func.sem(ichan,iamp) = cumu.diff.sem.twof(cur_idx,iamp,ichan);
             twof_growth_func.noise_floor(ichan,iamp) = cumu.noise_floor.mean.twof(cur_idx,iamp,ichan);
         end
     end

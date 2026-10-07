@@ -7,6 +7,10 @@ function posthoc_30_Hz
 % hydro_OFF_fft
 % Do the peaks appear for all stimulus frequencies at similar amplitudes?
 
-% Do the peak amplitudes decrease across averaging?
+%% 30 Hz peak amplitude in hydrophone signal
+% Stim ON
+% Stim OFF
 
-% What is the peak in the hydrophone signal?
+%% 30 Hz, 60 Hz, +/- 30 Hz peak around stim freq in electrode signal
+% Stim ON
+% Stim OFF
