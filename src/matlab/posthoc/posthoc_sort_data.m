@@ -21,7 +21,8 @@ end
 % 10/8/2026: datasets after this date use info.electrodes instead of info.channels
 if isfield(info, 'electrodes') % New datasets
     meta.my_chans      = 1:info.electrodes.n_channels;
-    meta.my_chans_name = info.electrodes.names{1}; % names is stored as a nested cell
+    meta.my_chans_name = info.electrodes.names;
+    if iscell(meta.my_chans_name{1}), meta.my_chans_name = meta.my_chans_name{1}; end
 else % Old datasets
     meta.my_chans      = 1:info.channels.n_channels;
     meta.my_chans_name = info.channels.names;
