@@ -1,7 +1,6 @@
 function plot_live_fft(ex, iblock, fs, app)
 %% Plot the current block's 2f response magnitude persistently throughout experiment
 % Plots live fft AND funfetti (if non mixed mode nor testing with accelerometer)
-% Currently only used for timed experiments
 
 %% Assign Variables
 persistent my_2f my_2f_std
@@ -27,18 +26,17 @@ stim_freq = ex.info.stimulus(freq_idx).frequency_hz;
 target_freq = ex.info.stimulus(freq_idx).frequency_hz * 2;
 target_freq_range = ex.info.stimulus(freq_idx).range_2f_hz;
 colors = ex.info.colors;
-
 n_points = size(my_2f,2);
+
+% Set channel name
 if ex.test_accel
     my_chans = ~ismember(ex.info.DAC.input_channel_names, {'Hydrophone', 'Loopback'});
     channels = 1:sum(my_chans);
-    channel_name = {ex.info.DAC.input_channel_names(find(my_chans))};
+    channel_name = ex.info.DAC.input_channel_names(find(my_chans));
 else
     channels    = 1:ex.info.electrodes.n_channels;
     channel_name = ex.info.electrodes.names;
 end
-% Unpack
-channel_name = channel_name{1};
 
 % Set axes
 fft_ax = app.UIAxes_live_fft;
@@ -93,7 +91,7 @@ for ic = 1:numel(channels)
 
     fill(fft_ax, [ff, fliplr(ff)], [vv+ss, fliplr(vv-ss)], ...
         c, 'FaceAlpha', 0.3, 'EdgeColor', 'none', 'HandleVisibility', 'off');
-    plot(fft_ax, ff, vv, 'Color', c, 'LineWidth', 1.5, 'DisplayName', channel_name{ic});
+    plot(fft_ax, ff, vv, 'Color', c, 'LineStyle', '-', 'LineWidth', 1.5, 'DisplayName', channel_name{ic});
     ylim(fft_ax, 'auto')
 end
 

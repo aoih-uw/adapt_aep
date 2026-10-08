@@ -18,10 +18,14 @@ elseif strcmp(meta.exp_type,'Timed')
     meta.trim_stim_pre_dur_ms = info.stimulus.trim_stim_pre_dur_ms;
     meta.ON_OFF_max_trials = 5000;
 end
-% 10/8/2026 Be aware that channels/recording are no longer valid fields
-% from datasets measured after 10/8/26
-meta.my_chans          = 1:info.channels.n_channels;
-meta.my_chans_name     = info.channels.names;
+% 10/8/2026: datasets after this date use info.electrodes instead of info.channels
+if isfield(info, 'electrodes') % New datasets
+    meta.my_chans      = 1:info.electrodes.n_channels;
+    meta.my_chans_name = info.electrodes.names{1}; % names is stored as a nested cell
+else % Old datasets
+    meta.my_chans      = 1:info.channels.n_channels;
+    meta.my_chans_name = info.channels.names;
+end
 meta.target_freq_range = 3;
 meta.trials_per_block  = info.trials.trials_per_block;
 meta.experiment_date = info.experiment.exp_date;
@@ -73,9 +77,15 @@ hydro_OFF_fft = [];
 for iname = 1:length(grand_ex_save)
     tic()
     fprintf('%d\n', iname)
-    % Load in vars necessary for processing data
-    latency_samples = grand_ex_save{1,iname}.info.recording.latency_samples;
-    fs = grand_ex_save{1,iname}.info.recording.sampling_rate_hz;
+    % 10/8/2026: datasets after this date use info.DAC instead of info.recording
+    cur_info = grand_ex_save{1,iname}.info;
+    if isfield(cur_info, 'DAC') % New datasets
+        latency_samples = cur_info.DAC.latency_samples;
+        fs = cur_info.DAC.sampling_rate_hz;
+    else % Old datasets
+        latency_samples = cur_info.recording.latency_samples;
+        fs = cur_info.recording.sampling_rate_hz;
+    end
 
     % Get number of batches
     n_batches = size(grand_ex_save{1,iname}.raw_signals,2);

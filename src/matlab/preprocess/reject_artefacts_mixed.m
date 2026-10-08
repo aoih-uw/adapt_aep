@@ -4,7 +4,7 @@ function ex = reject_artefacts_mixed(ex,app)
 % processed)
 % Define variables
 iblock = ex.counter.iblock;
-channel_names = ex.info.electrodes.names{:}; 
+channel_names = ex.info.electrodes.names; 
 valid_electrodes = find(~ismember(channel_names, {'EKG','X','Y','Z','Hydrophone','Loopback'}));
 valid_channels = 1:numel(valid_electrodes); % To index into ex.raw(iblock).electrodes_microV(:,:,valid_channels(ivalid))
 trials_per_block = ex.info.trials.trials_per_block;
@@ -36,7 +36,7 @@ all_jitter = zeros(trials_per_block * n_blocks,1);
     reject_artefacts_and_balance_trials(ex, app, all_trials, all_phases, valid_channels);
 
 % Save values to ex.block field
-ex.kept.trials = all_trials(kept_trials_idx,:,:); % Used in count_trials plotting
+ex.kept.trials = all_trials(kept_trials_idx,:,:); % Used in plot_mixed_trials plotting
 ex.kept.phases = all_phases(kept_trials_idx);
 ex.kept.jitter = all_jitter(kept_trials_idx);
 
