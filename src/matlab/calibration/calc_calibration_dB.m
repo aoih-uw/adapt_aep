@@ -10,11 +10,10 @@ ramp_duration_ms = stimulus_info.ramp_duration_ms;
 stimulus_freq = stimulus_info.frequency_hz;
 accel_dB = struct();
 mean_accel_sigs_mV = [];
-input_channel_names = ex.info.DAC_input_channel_names;
+input_channel_names = ex.info.DAC.input_channel_names;
 hydrophone_idx = find(strcmp(input_channel_names, 'Hydrophone'));
 loopback_idx = find(strcmp(input_channel_names, 'Loopback'));
-accel_idx = find(ismember(ex.info.DAC_input_channels, ...
-    ex.info.accel.DAC_input_channels(3:end)));
+accel_idx = find(ismember(input_channel_names, ex.info.accel.chan_order));
 
 %% Hydrophone
 % Calculate mean

@@ -18,6 +18,8 @@ elseif strcmp(meta.exp_type,'Timed')
     meta.trim_stim_pre_dur_ms = info.stimulus.trim_stim_pre_dur_ms;
     meta.ON_OFF_max_trials = 5000;
 end
+% 10/8/2026 Be aware that channels/recording are no longer valid fields
+% from datasets measured after 10/8/26
 meta.my_chans          = 1:info.channels.n_channels;
 meta.my_chans_name     = info.channels.names;
 meta.target_freq_range = 3;

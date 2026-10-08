@@ -153,9 +153,9 @@ tiledlayout(fig,1,size(mean_accel_sigs_mV,1)+1,'TileSpacing','tight','Padding','
 % Time domain signal
 for i = 1:size(mean_accel_sigs_mV,1)
     nexttile
-    plot(time_vector, mean_accel_sigs_mV(i,:),'Color',my_colors(i,:),'LineWidth',1);
+    plot(time_vector, mean_accel_sigs_mV(i,:),'Color',my_colors{i},'LineWidth',1);
     hold on;
-    title(ex.info.accel.DAC_input_channel_names{2+i})
+    title(ex.info.accel.chan_order{i})
     xlabel('Time (s)')
     ylabel('Amplitude (mV)')
 end
@@ -168,7 +168,7 @@ x_data = categorical(x_data, x_data);
 % Get per dimension and all dimension data into one variable
 y_data = [accel_dB.per_dim.micro_m_per_s_sqrd(:); accel_dB.all_dim.micro_m_per_s_sqrd];
 b = bar(x_data,y_data,'FaceColor','flat');
-b.CData = my_colors;
+b.CData = vertcat(my_colors{1:4});
 xlabel('Dimension');
 ylabel('Acceleration (dB re: 1\mum/s^2)')
 title('Comparison')

@@ -67,7 +67,7 @@ for ch = 1:N_channels
     data_mean = mean(seg, 1);
     data_std  = std(seg, 0, 1);
     data_mean_all(ch,:) = data_mean;
-    color = colors{mod(ch-1,10)+1};
+    color = colors{numel(colors)};
 
     h = ax.UserData;
     if isempty(h) || ~isfield(h,'line') || ~isvalid(h.line)
