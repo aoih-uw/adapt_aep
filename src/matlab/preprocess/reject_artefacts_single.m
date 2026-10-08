@@ -10,10 +10,11 @@ function ex = reject_artefacts_single(ex,app)
 iblock = ex.counter.iblock;
 first_block = 1;
 iamp = ex.counter.iamp;
-channel_names = ex.info.channels.names; 
-valid_channels = find(~strcmp(channel_names, 'EKG'));
-analysis_channel = ex.info.channels.analysis_channel;
-analysis_channel_idx = find(strcmp(channel_names(valid_channels),analysis_channel));
+channel_names = ex.info.electrodes.names{:}; 
+valid_electrodes = find(~ismember(channel_names, {'EKG','X','Y','Z','Hydrophone','Loopback'}));
+valid_channels = 1:numel(valid_electrodes); % To index into ex.raw(iblock).electrodes_microV(:,:,valid_channels(ivalid))
+analysis_channel = ex.info.electrodes.analysis_channel;
+analysis_channel_idx = find(ismember(channel_names(valid_electrodes),analysis_channel));
 trials_per_block = ex.info.trials.trials_per_block;
 N_trials_presented = ex.trial_count(iamp);
 
@@ -27,7 +28,7 @@ all_jitter = zeros(trials_per_block*iblock,1);
 % Collapse raw data across all available batches
 [all_trials, all_phases,all_jitter] = ...
     collapse_raw_data(all_trials, all_phases, all_jitter, iblock, first_block, ...
-    trials_per_block, valid_channels, ex);
+    trials_per_block, valid_electrodes, ex);
 
 %% Reject artefacts
 [kept_trials_idx, n_valid_trials, ...
@@ -39,16 +40,3 @@ ex.valid_trials(iamp) = n_valid_trials;
 ex.block(iblock).kept_trials_idx = kept_trials_idx;
 ex.block(iblock).across_trial_thresh = across_trial_thresh;
 
-%% ADAPTIVE: Select only the analysis channel keep those trials
-if strcmp(ex.info.experiment.exp_type,'Adaptive')
-    kept_trials = all_trials(kept_trials_idx,:,analysis_channel_idx); % Only keep the analysis channel
-    kept_phases = all_phases(kept_trials_idx);
-    kept_jitter = all_jitter(kept_trials_idx);
-    reject_rate = ((N_trials_presented)-size(kept_trials,1))/(N_trials_presented);
-    fprintf('\nArtifact rejection rate: %.1f%%\n', reject_rate * 100);
-
-    %% Save to ex structure
-    ex.kept.trials = kept_trials; % Don't need to save every iteration's data, so just save to first
-    ex.kept.phases = kept_phases;
-    ex.kept.jitter = kept_jitter;
-end

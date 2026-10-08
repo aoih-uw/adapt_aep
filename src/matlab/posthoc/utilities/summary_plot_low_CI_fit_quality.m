@@ -36,7 +36,7 @@ nexttile
 boxchart(categorical(sub_T.Freq), sub_T.Pin_b_All,'GroupByColor', sub_T.Chan)
 xlabel('Frequency (Hz)'); ylabel('N Pins')
 title('b')
-legend({'Subcutaneous','Subcranial'}, 'Location','northwest', 'Box','off')
+legend({'Subcranial','Subcutaneous'}, 'Location','northwest', 'Box','off')
 sgtitle('Low CI Model Fit Quality (All Data)')
 
 % Sim Lower Asymptote
@@ -71,5 +71,5 @@ nexttile
 boxchart(categorical(sub_T.Freq), sub_T.Pin_b_Sim,'GroupByColor', sub_T.Chan)
 xlabel('Frequency (Hz)'); ylabel('N Pins')
 title('b')
-legend({'Subcutaneous','Subcranial'}, 'Location','northwest', 'Box','off')
+legend({'Subcranial','Subcutaneous'}, 'Location','northwest', 'Box','off')
 sgtitle('Low CI Model Fit Quality (Simulated Lower Asymptote)')

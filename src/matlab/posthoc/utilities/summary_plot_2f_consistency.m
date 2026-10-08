@@ -12,5 +12,5 @@ for ifreq = 1:numel(freq_inc)
     ylabel('Slope (\muV / Min)')
     yline(0,'--')
 end
-legend({'Subcutaneous','Subcranial'}, 'Location','northwest', 'Box','off')
+legend({'Subcranial','Subcutaneous'}, 'Location','northwest', 'Box','off')
 sgtitle('Does 2f response stay stable across test?')

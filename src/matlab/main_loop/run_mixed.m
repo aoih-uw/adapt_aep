@@ -14,6 +14,7 @@ fprintf('\n')
 ex = app.ex;
 ex.info.experiment.exp_time_start = datetime('now', 'TimeZone', 'America/Los_Angeles', 'Format', 'yyyyMMdd_HHmmss');
 test_schedule = ex.info.mixed.test_schedule;
+fs = ex.info.DAC.sampling_rate_hz;
 
 while ex.counter.ischedule < size(test_schedule,1)
 
@@ -36,8 +37,10 @@ while ex.counter.ischedule < size(test_schedule,1)
                 if ex.test_accel % Plot accelerometer signals
                     plot_accel_sigs(ex,app);
                 else % Plot electrode signals
-                    plot_mixed_trials(ex,app);
+                    plot_live_fft(ex,ex.counter.iblock,fs,app);
                 end
+                % Plot experiment trial count heatmap
+                plot_mixed_trials(ex,app);
             end
 
             % Note when 100% trials are measured

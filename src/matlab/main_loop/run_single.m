@@ -1,5 +1,8 @@
 function ex = run_single(app)
 %% Main experiment function for presenting stimuli of a single type (Stimulus ON/OFF or Trimmed)
+%% Notes:
+% 10/8/26: Currently timed mode does not support accelerometer
+% measurements, you must do it in mixed mode
 
 % DO YOUR BEST!
 fprintf('  \n')

@@ -7,7 +7,7 @@ sub_T = T_rf(T_rf.CI == 99 ...
 sub_T.Chan = removecats(sub_T.Chan);
 [~, chan, freq, amp] = findgroups(sub_T.Chan, sub_T.Freq, sub_T.Amp);
 freqs = unique(sub_T.Freq);
-% sub_T.Val(sub_T.Val==260,:) = NaN;
+% sub_T.Val(sub_T.Val==max_trials,:) = NaN;
 all_the_amps = unique(sub_T.Amp);
 allAmps = string(all_the_amps);
 
@@ -24,7 +24,7 @@ make_heatmap(G,freqs,sub_T,chans,ampVals, 'First Stable Hit')
 
 function make_heatmap(G,freqs,sub_T,chans,ampVals,mytitle)
 G.Properties.VariableNames(end-1:end) = {'med','madv'};
-% mask = G.med == 260;
+% mask = G.med == max_trials;
 % G.med(mask) = NaN;
 % G.madv(mask) = NaN;
 cmap = interp1([0 1],[1 1 1; tableau_10('blue')],linspace(0,1,256));

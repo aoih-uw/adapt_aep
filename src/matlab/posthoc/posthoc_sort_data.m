@@ -10,7 +10,7 @@ if strcmp(meta.exp_type,'Mixed freqs')
     meta.amp_vecs           = info.mixed.test_amplitudes;
     meta.stim_type_vec     = info.mixed.stim_name;
     meta.stim_freqs         = info.mixed.stim_freqs;
-    meta.ON_OFF_max_trials = 260;
+    meta.ON_OFF_max_trials = info.mixed.max_trials(1);
 elseif strcmp(meta.exp_type,'Timed')
     meta.amp_vecs = {info.stimulus.amplitude_spl};
     meta.stim_type_vec = 'trim';

@@ -1,6 +1,8 @@
-function ex = plot_mixed_trial_count(ex,app)
+function ex = plot_mixed_trials(ex,app)
 %% Count which trials in the testing schedule have been presented and plot these counts to a heatmap
-% test_schedule: rows = n total trials to test, columns stimuli_type, stimulus_amplitude, n_trials_needed, unique_idx
+% test_schedule: rows = blocks to test, columns = freq, stim_type, stim_amp, n_trials_needed, unique_idx, completed
+% Only plots electrode data
+% Plots on funfetti axes
 
 % Assign variables
 persistent mag_2f
@@ -12,14 +14,17 @@ if ischedule == 1
     mag_2f = nan(1, size(test_schedule,1));
 end
 iblock = ex.counter.iblock;
+ax = app.UIAxes_funfetti;
 
 % Extract recording info
-fs = ex.info.recording.sampling_rate_hz;
-channel_names = ex.info.channels.names;
-valid_channels = find(~strcmp(channel_names, 'EKG'));
-analysis_channel = ex.info.channels.analysis_channel;
-analysis_channel_idx = find(strcmp(channel_names(valid_channels),analysis_channel));
-latency_samples = ex.info.recording.latency_samples;
+fs = ex.info.DAC.sampling_rate_hz;
+
+% Channels
+channel_names = ex.info.electrodes.names{:}; 
+valid_electrodes = find(~ismember(channel_names, {'EKG','X','Y','Z','Hydrophone','Loopback'}));
+analysis_channel = ex.info.electrodes.analysis_channel;
+analysis_channel_idx = find(ismember(channel_names(valid_electrodes),analysis_channel));
+latency_samples = ex.info.DAC.latency_samples;
 
 % Get uniq info
 uniq_stimuli = ex.info.mixed.uniq_stimuli;
@@ -37,15 +42,12 @@ ramp_duration_ms = ex.info.stimulus(freq_idx).ramp_duration_ms;
 ramp_duration_samples = round(ramp_duration_ms/1000*fs);
 
 % Clear axes
-delete(findobj(app.UIAxes_funfetti, 'Type', 'text'));
+delete(findobj(ax, 'Type', 'text'));
 
 % Setup variables
 N_trials_needed = ex.info.mixed.uniq_stimuli(:,4);
 N_trials_collected = ex.info.mixed.trial_counter;
 completion_mat = N_trials_collected ./ N_trials_needed;
-
-%% Plot live fft
-plot_live_fft(ex,iblock,fs,app);
 
 %% Plot heatmap
 % Reshape completion_mat into 2D: rows = stim_type, cols = amplitude
@@ -61,10 +63,10 @@ for i = 1:N_unique_stimuli
 end
 
 % Draw the 2d heatmap
-h_img = imagesc(app.UIAxes_funfetti, heat_2d);
+h_img = imagesc(ax, heat_2d);
 set(h_img, 'AlphaData', ~isnan(heat_2d));
-xlim(app.UIAxes_funfetti,[0.5, length(amplitudes)+0.5]);
-ylim(app.UIAxes_funfetti,[0.5, length(freq_types)+0.5]);
+xlim(ax,[0.5, length(amplitudes)+0.5]);
+ylim(ax,[0.5, length(freq_types)+0.5]);
 
 %% Overlay 2f magnitude trace per cell
 if isnan(mag_2f(ischedule))
@@ -96,7 +98,7 @@ if isnan(mag_2f(ischedule))
     mag_2f(ischedule) = mean(bin_2f,1,'omitnan');
 end
 
-hold(app.UIAxes_funfetti,'on')
+hold(ax,'on')
 ymax = max(mag_2f);
 
 for i = 1:N_unique_stimuli
@@ -105,27 +107,28 @@ for i = 1:N_unique_stimuli
     my_r = find(freq_types == uniq_stimuli(i,1));
     my_c = find(amplitudes == uniq_stimuli(i,3));
     x = linspace(my_c-0.4, my_c+0.4, numel(trace));
-    plot(app.UIAxes_funfetti, x, (my_r+0.4) - (trace/ymax)*0.6, '-o', ...
+    plot(ax, x, (my_r+0.4) - (trace/ymax)*0.6, '-o', ...
         'Color',tableau_10('grey'), 'MarkerSize',2, 'LineWidth',1);
 end
-hold(app.UIAxes_funfetti,'off')
+hold(ax,'off')
 
 % Add text in each cell
 for my_r = 1:length(freq_types)
     for my_c = 1:length(amplitudes)
         if ~isnan(heat_2d(my_r, my_c))
-            text(app.UIAxes_funfetti, my_c, my_r, sprintf('%1.1f%%', heat_2d(my_r,my_c)*100), ...
+            text(ax, my_c, my_r, sprintf('%1.1f%%', heat_2d(my_r,my_c)*100), ...
                 'HorizontalAlignment','center', 'VerticalAlignment','middle', 'FontSize', 11);
         end
     end
 end
 
+% Formatting
 n = 256; blue = tableau_10('blue');
-colormap(app.UIAxes_funfetti,[linspace(1,blue(1),n)', linspace(1,blue(2),n)', linspace(1,blue(3),n)']);
-clim(app.UIAxes_funfetti, [0 1]);
-xticks(app.UIAxes_funfetti,1:length(amplitudes)); xticklabels(app.UIAxes_funfetti,amplitudes);
-yticks(app.UIAxes_funfetti,(1:length(freq_types))); yticklabels(app.UIAxes_funfetti, freq_types);
-grid(app.UIAxes_funfetti,'off')
-title(app.UIAxes_funfetti,'Mixed freqs Experiment Progress')
-ylabel(app.UIAxes_funfetti,'Stimulus Frequency (Hz)')
-xlabel(app.UIAxes_funfetti,'Amplitude (dB SPL)')
+colormap(ax,[linspace(1,blue(1),n)', linspace(1,blue(2),n)', linspace(1,blue(3),n)']);
+clim(ax, [0 1]);
+xticks(ax,1:length(amplitudes)); xticklabels(ax,amplitudes);
+yticks(ax,(1:length(freq_types))); yticklabels(ax, freq_types);
+grid(ax,'off')
+title(ax,'Mixed freqs Experiment Progress')
+ylabel(ax,'Stimulus Frequency (Hz)')
+xlabel(ax,'Amplitude (dB SPL)')

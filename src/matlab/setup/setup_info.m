@@ -55,41 +55,54 @@ ex.info.animal = struct( ...
     );
 
 % Channel parameters
-ex.info.channels = struct( ...
-    'n_channels',             4, ...
-    'names',                 {{'Forebrain','Subcranial','Subcutaneous','EKG'}}, ...
+ex.info.electrodes = struct( ...
     'reference_location',    'tail', ...
     'ground_location',       'in water', ...
     'electrode_type',        'Subdermal, differential measurment, stainless steel, 27 gauge, 13 mm, Rochester Electromedical Inc.; Coral Springs, FL, USA', ...
-    'electrode_depth',       '3mm, 5mm, 5mm, 3mm', ...
-    'analysis_channel',       'Subcranial' ...
+    'electrode_depth',       '3mm, 5mm, 5mm, 3mm' ...
     );
+if ex.test_accel
+    ex.info.electrodes.names = {{'Subcranial'}};
+    ex.info.electrodes.n_channels = 1;
+    ex.info.electrodes.analysis_channel = 'Subcranial';
+else
+    ex.info.electrodes.names = {{'Forebrain','Subcranial','Subcutaneous','EKG'}};
+    ex.info.electrodes.n_channels = numel(ex.info.electrodes.names{:});
+    ex.info.electrodes.analysis_channel = 'Subcranial';
+end
 
 %% Recording parameters
-ex.info.recording.sampling_rate_hz = 44100; % (highest presented stimulus)*(nyquist)*(signal quality)
-ex.info.recording.latency_samples = NaN;
-ex.info.recording.expected_latency_samples = 2118;
+ex.info.DAC.sampling_rate_hz = 44100; % (highest presented stimulus)*(nyquist)*(signal quality)
+ex.info.DAC.latency_samples = NaN;
+ex.info.DAC.expected_latency_samples = 2118;
 
 % Thermometer
-ex.info.recording.thermometer_port = "COM5";
+ex.info.thermometer.port = "COM5";
 
-% DAC
-ex.info.recording.DAC_model_serial = 'USB D/A Converter, Fireface UCX, RME, Frankfurt, Germany';
-ex.info.recording.DAC_conversion_factor = 5.1045; % Previously 1/0.2044;  Multiply by this factor to recover true voltage value
-ex.info.recording.DAC_output_channels = [1 4];
-ex.info.recording.DAC_output_channel_names = {'Underwater Speaker', 'Loopback'};
-ex.info.recording.DAC_input_channels = [3:8];
-ex.info.recording.DAC_input_channel_names = {'Hydrophone', 'Loopback', 'Ch1', 'Ch2','Ch3','Ch4'};
+% Fireface Digital to Analog Converter (DAC)
+ex.info.DAC.model_serial = 'USB D/A Converter, Fireface UCX, RME, Frankfurt, Germany';
+ex.info.DAC.conversion_factor = 5.1045; % Previously 1/0.2044;  Multiply by this factor to recover true voltage value
+ex.info.DAC.output_channels = [1 4];
+ex.info.DAC.output_channel_names = {'Underwater Speaker', 'Loopback'};
+ex.info.DAC.input_channels = [3:8];
+
+% Assign DAC inputs
+% Currently in accelerometer test mode, it only supports measurement from 1 electrode, 
+% and it is assigned as the last channel the DAC can take
+if ex.test_accel
+    ex.info.DAC.input_channel_names = {'Hydrophone', 'Loopback', 'X', 'Y', 'Z', 'Ch1'};
+else
+    ex.info.DAC.input_channel_names = {'Hydrophone', 'Loopback', 'Ch1', 'Ch2','Ch3','Ch4'};
+end
 
 % Hydrophone
-ex.info.recording.hydrophone_model = 'Type 8103, Bruel & Kjaer, Nærum, Denmark, Serial #: ';
-ex.info.recording.hydrophone_gain_mV_per_Pa = 3.16; % 3.16 mV/Pa
+ex.info.hydrophone.model = 'Type 8103, Bruel & Kjaer, Nærum, Denmark, Serial #: ';
+ex.info.hydrophone.gain_mV_per_Pa = 3.16; % 3.16 mV/Pa
 
 % Amplifiers
-ex.info.recording.bioamplifier_model_serial = 'BMA-400, CWE Inc. Ardmore, PA, USA';
-ex.info.recording.bioamp_gain = 10000;
-ex.info.recording.audio_amplifier = 'Power amplifier, Crown D75-A, Harman, Northridge, CA, USA';
-ex.info.recording.amplifier_gain = 'Need to measure';
+ex.info.bio_amp.model_serial = 'BMA-400, CWE Inc. Ardmore, PA, USA';
+ex.info.bio_amp.gain = 10000;
+ex.info.speaker_amp.model = 'Power amplifier, Crown D75-A, Harman, Northridge, CA, USA';
 
 % Accelerometer parameters
 % Sensitivity @ 100 Hz, last calibrated 6/08/2007
@@ -97,18 +110,13 @@ ex.info.accel.model_number = '356A32';
 ex.info.accel.serial_number = '72226';
 ex.info.accel.name = 'ICP Triaxial Accelerometer Manufacturer PCB Piezotronics';
 ex.info.accel.amp_gain = 100; % Divide signal by amplifier gain
-ex.info.accel.chan_order = 'X Y Z';
+ex.info.accel.chan_order = {'X', 'Y', 'Z'};
 ex.info.accel.mV_per_g = [101.7 98.4 108.1]; % Divide signal by sensitivity factor
 ex.info.accel.mV_per_m_per_s_sqrd = [10.37 10.03 11.02]; % Divide signal by sensitivity factor
-ex.info.accel.DAC_conversion_factor = ex.info.recording.DAC_conversion_factor; % Multiply to signal to recover V
-ex.info.accel.DAC_input_channels = [3:7];
-ex.info.accel.DAC_input_channel_names = {'Hydrophone', 'Loopback', 'X', 'Y', 'Z'};
 
 % Speaker parameters
 ex.info.speaker = struct( ...
     'model',                        'Clark Synthesis Aquasonic Diluvio AQ339 ', ...
-    'max_amplitude_limit',                  160, ...
-    'min_amplitude_limit',                  95, ...
     'max_frequency_limit',                  2000, ...
     'min_frequency_limit',                  30, ...
     'speaker_distance_from_head',            '12 cm', ...
@@ -135,7 +143,7 @@ ex.info.signal_quality = struct( ...
 if strcmp(app.DropDown_test_mode.Value,'Mixed freqs')
     % Assign values
     ex.info.mixed.stim_freqs        = [55 100 410];
-    ex.info.mixed.max_trials        = [260 260 260];
+    ex.info.mixed.max_trials        = [260 260 260]; % These all must be the same value
     ex.info.mixed.test_amplitudes   = {83:3:140, 95:3:140, 116:3:140};
     ex.info.mixed.stim_name         = {'ONOFF'};
     ex.info.mixed.N_trials_per_file = 200;
@@ -194,3 +202,5 @@ elseif strcmp(app.DropDown_test_mode.Value,'Adaptive')
         'peak_mult',           5 ... % immediately confirm response if 2f diff peak is 5x the height of the largest peaks
         );
 end
+
+ex.info.colors = {tableau_10('red'), tableau_10('blue'), tableau_10('orange'), tableau_10('teal'), tableau_10('purple'),tableau_10('yellow')};

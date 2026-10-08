@@ -1,6 +1,4 @@
 %% summary_create_threshold_table
-max_trials = 260;
-
 sub_T = T_rf(T_rf.CI == 99 ...
     & T_rf.Boot_It_N == 5000 ...
     & ismember(T_rf.Chan,chan_inc) ...
@@ -9,7 +7,7 @@ sub_T.Chan = removecats(sub_T.Chan);
 
 %% Fix so it finds that for each subject there was at least one amplitude where there was no response found in order to select a threshold value
 % Find heatmap based threshold
-% You need to filter by rows that are below 260 first since split apply needs a value per group, it cannot be empty
+% You need to filter by rows that are below max_trials first since split apply needs a value per group, it cannot be empty
 % Find groups finds the locations of unique combinations of the variables
 % you input (Find every unique combo of subject and Frequency and Chan) so
 % then you can analyze the result value of interest based on each unique

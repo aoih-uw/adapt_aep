@@ -147,7 +147,7 @@ cal.snr = my_snr;
 end
 
 function plot_accel(mean_accel_sigs_mV,time_vector,ex,accel_dB,stimulus_freq,hydro_rms_dB)
-my_colors = [tableau_10('red'); tableau_10('blue'); tableau_10('orange');tableau_10('teal')];
+my_colors = ex.info.colors;
 fig = figure;
 tiledlayout(fig,1,size(mean_accel_sigs_mV,1)+1,'TileSpacing','tight','Padding','tight')
 % Time domain signal

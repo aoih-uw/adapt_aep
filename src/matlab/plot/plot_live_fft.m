@@ -1,6 +1,8 @@
 function plot_live_fft(ex, iblock, fs, app)
 %% Plot the current block's 2f response magnitude persistently throughout experiment
-% Assign Variables
+% Currently only used for timed experiments
+
+%% Assign Variables
 persistent my_2f my_2f_std
 % Reset persistent variables
 if strcmp(app.DropDown_test_mode.Value, 'Mixed freqs')
@@ -23,20 +25,44 @@ freq_idx = get_current_freq_idx(ex);
 stim_freq = ex.info.stimulus(freq_idx).frequency_hz;
 target_freq = ex.info.stimulus(freq_idx).frequency_hz * 2;
 target_freq_range = ex.info.stimulus(freq_idx).range_2f_hz;
+colors = ex.info.colors;
 
 n_points = size(my_2f,2);
-channels    = 1:ex.info.channels.n_channels;
-channel_name = ex.info.channels.names;
+if ex.test_accel
+    my_chans = ~ismember(ex.info.DAC.input_channel_names, {'Hydrophone', 'Loopback'});
+    channels = 1:sum(my_chans);
+    channel_name = {ex.info.DAC.input_channel_names(find(my_chans))};
+else
+    channels    = 1:ex.info.electrodes.n_channels;
+    channel_name = ex.info.electrodes.names;
+end
+% Unpack
+channel_name = channel_name{1};
+
+% Set axes
 fft_ax = app.UIAxes_live_fft;
 bin_ax = app.UIAxes_funfetti;
-colors = {tableau_10('red'), tableau_10('blue'), tableau_10('orange'), tableau_10('teal')};
-n_ch   = numel(channels);
 
 % fft_ax
+% Clear axes
+if ex.test_accel
+    yyaxis(fft_ax, 'right'); delete(allchild(fft_ax)); hold(fft_ax, 'on')
+    yyaxis(fft_ax, 'left');
+end
 delete(allchild(fft_ax)); hold(fft_ax, 'on')
-for ic = 1:n_ch
-    sig = ex.raw(iblock).electrodes_microV(:,:,channels(ic));
+accel_names = ex.info.accel.chan_order;
+
+% Loop through channels
+for ic = 1:numel(channels)
     c = colors{ic};
+    % Get signal
+    if ismember(channel_name{ic}, accel_names)
+        yyaxis(fft_ax, 'right');
+        sig = ex.raw(iblock).accelerometer_mV(:,:,strcmp(accel_names, channel_name{ic}));
+    else
+        if ex.test_accel, yyaxis(fft_ax, 'left'); end
+        sig = ex.raw(iblock).electrodes_microV(:,:,sum(~ismember(channel_name(1:ic), accel_names)));
+    end
 
     % Compute per-trial FFTs, then derive mean spectrum and per-bin std
     n_trials = size(sig, 1);
@@ -66,23 +92,29 @@ for ic = 1:n_ch
 
     fill(fft_ax, [ff, fliplr(ff)], [vv+ss, fliplr(vv-ss)], ...
         c, 'FaceAlpha', 0.3, 'EdgeColor', 'none', 'HandleVisibility', 'off');
-    plot(fft_ax, ff, vv, 'Color', c, 'LineWidth', 1.5);
+    plot(fft_ax, ff, vv, 'Color', c, 'LineWidth', 1.5, 'DisplayName', channel_name{ic});
     ylim(fft_ax, 'auto')
 end
 
+% Formatting
 xlabel(fft_ax, 'Frequency (Hz)');
-ylabel(fft_ax, 'Magnitude (\muV)');
+if ex.test_accel
+    yyaxis(fft_ax, 'left');  ylabel(fft_ax, 'Electrode magnitude (\muV)');
+    yyaxis(fft_ax, 'right'); ylabel(fft_ax, 'Accel magnitude (mV)');
+else
+    ylabel(fft_ax, 'Electrode magnitude (\muV)');
+end
 title(fft_ax, 'Live FFT Monitor');
 xlim(fft_ax, [(stim_freq-(stim_freq/2)), target_freq*2]);
 xline(fft_ax, target_freq,'HandleVisibility', 'off');
-legend(fft_ax, channel_name)
+legend(fft_ax)
 hold(fft_ax, 'off')
 
-% Plot funfetti if it is NOT Mixed freqs mode
-if ~strcmp(app.DropDown_test_mode.Value, 'Mixed freqs')
-    % bin_ax
+% Plot funfetti if it is NOT Mixed freqs mode and NOT testing with an
+% accelerometer
+if ~strcmp(app.DropDown_test_mode.Value, 'Mixed freqs') && ~ex.test_accel    % bin_ax
     cla(bin_ax); hold(bin_ax,'on')
-    for ic = 1:n_ch
+    for ic = 1:numel(channels)
         errorbar(bin_ax, my_2f(ic,:), my_2f_std(ic,:), '-o', ...
             'Color', colors{ic}, 'MarkerFaceColor', colors{ic});
     end
