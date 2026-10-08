@@ -3,7 +3,6 @@ sub_p = T_mp(ismember(T_mp.Chan,chan_inc)  ...
     & ismember(T_mp.Freq, freq_inc),:);
 
 figure; tiledlayout(1,4,'TileSpacing','tight','Padding','tight');
-colororder([tableau_10('blue'); tableau_10('orange')])
 
 % a
 nexttile;

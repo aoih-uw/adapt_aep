@@ -87,6 +87,7 @@ cellfun(@(v,t) check_for_nans(v,t), ...
 if ex.test_accel
     for ich = 1:size(ex.raw(iblock).accelerometer_mV, 3)
         check_for_nans(ex.raw(iblock).accelerometer_mV(:,:,ich), 'signal')
+        check_for_nans(ex.raw(iblock).electrodes_microV, 'signal')
     end
 else
     for ich = 1:size(ex.raw(iblock).electrodes_microV, 3)

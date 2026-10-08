@@ -1,6 +1,5 @@
 %% summary_threshold_boxplot
 figure;
-colororder([tableau_10('blue'); tableau_10('orange')])
 freqs = unique(sub_T.Freq);
 [~,fx] = ismember(sub_T.Freq, freqs); % Turn frequencies into x positions
 chans = categories(sub_T.Chan);

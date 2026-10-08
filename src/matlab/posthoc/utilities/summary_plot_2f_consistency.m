@@ -1,7 +1,6 @@
 %% summary_plot_2f_consistency
 figure;
 tiledlayout(1,3,'TileSpacing','tight','Padding','tight')
-colororder([tableau_10('blue'); tableau_10('orange')])
 
 for ifreq = 1:numel(freq_inc)
     nexttile

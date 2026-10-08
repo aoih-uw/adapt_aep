@@ -1,5 +1,6 @@
 function plot_live_fft(ex, iblock, fs, app)
 %% Plot the current block's 2f response magnitude persistently throughout experiment
+% Plots live fft AND funfetti (if non mixed mode nor testing with accelerometer)
 % Currently only used for timed experiments
 
 %% Assign Variables

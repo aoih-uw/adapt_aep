@@ -8,7 +8,6 @@ sub_T = T_lowCI_fitq(ismember(T_lowCI_fitq.Freq, freq_inc) & ...
 % Set up figure
 figure;
 tiledlayout(2,3,'TileSpacing','tight','Padding','tight')
-colororder([tableau_10('blue'); tableau_10('orange')])
 
 % Resnorm
 nexttile
@@ -43,7 +42,6 @@ sgtitle('Low CI Model Fit Quality (All Data)')
 % Set up figure
 figure;
 tiledlayout(2,3,'TileSpacing','tight','Padding','tight')
-colororder([tableau_10('blue'); tableau_10('orange')])
 
 % Resnorm
 nexttile
