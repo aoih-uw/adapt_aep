@@ -67,7 +67,7 @@ if ex.test_accel
     ex.info.electrodes.analysis_channel = 'Subcranial';
 else
     ex.info.electrodes.names = {'Forebrain','Subcranial','Subcutaneous','EKG'};
-    ex.info.electrodes.n_channels = numel(ex.info.electrodes.names{:});
+    ex.info.electrodes.n_channels = numel(ex.info.electrodes.names);
     ex.info.electrodes.analysis_channel = 'Subcranial';
 end
 
