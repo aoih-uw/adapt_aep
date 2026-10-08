@@ -1,9 +1,12 @@
 function ex = reject_artefacts_mixed(ex,app)
 %% Reject artefacts in mixed stimulus mode
+% Only electrode signals will get rejected (no accelerometer data should be
+% processed)
 % Define variables
 iblock = ex.counter.iblock;
-channel_names = ex.info.channels.names;
-valid_channels = find(~strcmp(channel_names, 'EKG'));
+channel_names = ex.info.electrodes.names{:}; 
+valid_electrodes = find(~ismember(channel_names, {'EKG','X','Y','Z','Hydrophone','Loopback'}));
+valid_channels = 1:numel(valid_electrodes); % To index into ex.raw(iblock).electrodes_microV(:,:,valid_channels(ivalid))
 trials_per_block = ex.info.trials.trials_per_block;
 ischedule = ex.counter.ischedule;
 
@@ -25,7 +28,7 @@ all_jitter = zeros(trials_per_block * n_blocks,1);
 % Collapse raw data across all available batches
 [all_trials, all_phases, all_jitter] = ...
     collapse_raw_data(all_trials, all_phases, all_jitter, iblock, first_block, ...
-    trials_per_block, valid_channels, ex);
+    trials_per_block, valid_electrodes, ex);
 
 % Reject trials here
 [kept_trials_idx, n_valid_trials, ...

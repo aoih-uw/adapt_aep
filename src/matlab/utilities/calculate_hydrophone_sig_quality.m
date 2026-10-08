@@ -1,10 +1,10 @@
 function ex = calculate_hydrophone_sig_quality(ex)
 %% Calculates hydrophone signal SNR
 %% Assign varables
-fs = ex.info.recording.sampling_rate_hz;
+fs = ex.info.DAC.sampling_rate_hz;
 iblock = ex.counter.iblock;
 hydrophone_mV = ex.raw(iblock).hydrophone_mV;
-hydrophone_gain_mV_per_Pa = ex.info.recording.hydrophone_gain_mV_per_Pa;
+hydrophone_gain_mV_per_Pa = ex.info.hydrophone.gain_mV_per_Pa;
 freq_idx = get_current_freq_idx(ex);
 ramp_duration_ms = ex.info.stimulus(freq_idx).ramp_duration_ms;
 ramp_duration_samples = round(ramp_duration_ms/1000*fs);
@@ -14,7 +14,7 @@ target_freq_range = ex.info.stimulus(freq_idx).range_2f_hz;
 trim_stim_pre_dur_ms = ex.info.stimulus(freq_idx).trim_stim_pre_dur_ms;
 jitter_vec = ex.block(iblock).jitter;
 phase_vec = ex.block(iblock).phase_vec;
-latency_samples = ex.info.recording.latency_samples;
+latency_samples = ex.info.DAC.latency_samples;
 mad_to_std = ex.info.signal_quality.mad_to_std;
 if isfield(ex.info, 'mixed')
     ischedule = ex.counter.ischedule;

@@ -5,15 +5,15 @@ function [hydro_rms_dB, accel_dB, mean_hydrophone_sig, mean_accel_sigs_mV] = cal
 
 % Unpack_variables
 fs = recording_info.sampling_rate_hz;
-hydrophone_gain_mV_per_Pa = recording_info.hydrophone_gain_mV_per_Pa;
+hydrophone_gain_mV_per_Pa = ex.info.hydrophone.gain_mV_per_Pa;
 ramp_duration_ms = stimulus_info.ramp_duration_ms;
 stimulus_freq = stimulus_info.frequency_hz;
 accel_dB = struct();
 mean_accel_sigs_mV = [];
-input_channel_names = ex.info.recording.DAC_input_channel_names;
+input_channel_names = ex.info.DAC_input_channel_names;
 hydrophone_idx = find(strcmp(input_channel_names, 'Hydrophone'));
 loopback_idx = find(strcmp(input_channel_names, 'Loopback'));
-accel_idx = find(ismember(ex.info.recording.DAC_input_channels, ...
+accel_idx = find(ismember(ex.info.DAC_input_channels, ...
     ex.info.accel.DAC_input_channels(3:end)));
 
 %% Hydrophone

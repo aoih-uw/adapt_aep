@@ -7,7 +7,7 @@ function ex = setup_experiment_present_sound(ex,app)
 iblock = ex.counter.iblock;
 trials_per_block = ex.info.trials.trials_per_block;
 stimulus_block = ex.block(iblock).stimulus_block;
-fs = ex.info.recording.sampling_rate_hz;
+fs = ex.info.DAC.sampling_rate_hz;
 test_accel = ex.test_accel;
 
 % Get current stimulus info
@@ -31,7 +31,7 @@ if ~strcmp(app.DropDown_test_mode.Value, 'Mixed freqs')
 end
 
 %% Get necessary metadata for present_sound()
-[~, N_trials, N_samples, ...
+[N_trials, N_samples, ...
     output_channels, input_channels, ...
     DAC_conversion_factor, bioamp_factor, accel_amp_factor, ...
     hydrophone_idx, loopback_idx, electrode_idx, accel_idx] ...
@@ -50,6 +50,8 @@ if size(rec_data_mV,1) > 1
     if test_accel
         % Apply amplifier correction
         ex.raw(iblock).accelerometer_mV = rec_data_mV(:,:,accel_idx)./accel_amp_factor;
+        % Apply amplifier correction and convert mV -> microV
+        ex.raw(iblock).electrodes_microV  = rec_data_mV(:,:,electrode_idx).*(1e3/bioamp_factor);
     else
         % Apply amplifier correction and convert mV -> microV
         ex.raw(iblock).electrodes_microV  = rec_data_mV(:,:,electrode_idx).*(1e3/bioamp_factor);

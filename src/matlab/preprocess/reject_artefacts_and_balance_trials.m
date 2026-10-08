@@ -17,7 +17,7 @@ for ichan = 1:length(valid_channels)
     rejected_trials = [rejected_trials find(any(abs(cur_chan_data_raw) >= clipping_threshold,2))'];
 
     % Reject by comparing max sample amplitude across trials
-    max_vals = max(cur_chan_data_raw,[],2);
+    max_vals = max(abs(cur_chan_data_raw),[],2); % Added abs() to also include negative deflections 10/7/2026...
     cur_median = median(max_vals,'omitnan');
     cur_mad = median(abs(cur_median-max_vals),'omitnan')*mad_to_std;
     rel_rej_thresh_across(ichan,1) = cur_median + cur_mad*reject_threshold_sd;

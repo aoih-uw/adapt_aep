@@ -5,8 +5,8 @@ function ex = test_latency(ex)
 % playrec('playrec') returns pageNumber, which you need to get by using 'getRec'
 
 % Setup variables
-fs = ex.info.recording.sampling_rate_hz;
-expected = ex.info.recording.expected_latency_samples;
+fs = ex.info.DAC.sampling_rate_hz;
+expected = ex.info.DAC.expected_latency_samples;
 
 % Generate a 1V pulse to get detlay
 test_signal = [zeros(1, fs) 1 1 1 -1 -1 -1 zeros(1, fs)]';
@@ -52,4 +52,4 @@ end
 % Display results to command window
 fprintf('\nLatency in samples: %d\nLatency in seconds: %.4f\n', my_latency_sample, my_latency_sample/fs);
 
-ex.info.recording.latency_samples = my_latency_sample;
+ex.info.DAC.latency_samples = my_latency_sample;

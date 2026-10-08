@@ -1,7 +1,7 @@
 function ex = plan_stimulus_template(ex)
 %% Assign stimulus parameter values to ex.info.stimulus on a per frequency basis
 % Get stimulus parameters
-fs = ex.info.recording.sampling_rate_hz;
+fs = ex.info.DAC.sampling_rate_hz;
 for ifreq = 1:length(ex.info.stimulus)
     stim_freq = ex.info.stimulus(ifreq).frequency_hz;
     period_s = 1/stim_freq;

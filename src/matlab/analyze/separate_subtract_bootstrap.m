@@ -1,7 +1,7 @@
 function ex = separate_subtract_bootstrap(ex,app)
 %% Separate STIM ON (stim_ON) and STIM OFF (stim_OFF) periods and calculate differences
 % Assign variables
-fs = ex.info.recording.sampling_rate_hz;
+fs = ex.info.DAC.sampling_rate_hz;
 current_amplitude = ex.info.stimulus.amplitude_spl;
 kept_trials_filtered = ex.kept.trials_filtered;
 N_valid_trials = size(ex.kept.trials_filtered,1);
@@ -10,7 +10,7 @@ max_trials = ex.info.trials.max_trials;
 n_bootstrap = ex.info.analysis.n_bootstrap;
 
 % Sample variables
-latency_samples = ex.info.recording.latency_samples;
+latency_samples = ex.info.DAC.latency_samples;
 period_length_samples = length(ex.info.stimulus.waveform);
 ramp_duration_ms = ex.info.stimulus.ramp_duration_ms;
 ramp_duration_samples = round(ramp_duration_ms/1000*fs);

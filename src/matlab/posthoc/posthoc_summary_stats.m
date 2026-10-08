@@ -7,6 +7,7 @@ presum_loc = 'D:\2026\Research\Aug Sept Midshipman\pre_summary';
 cd(presum_loc)
 all_sim = struct('resp_found',{},'lowCI_fit',{},'threshold',{});
 all_hydro = struct('ON',{},'noise',{});
+max_trials = 260;
 
 for isubj = 1:length(subjids)
     cur_subj = subjids(isubj);

@@ -6,8 +6,10 @@ if iblock == 1
     my_2f = []; my_2f_std = [];
 end
 n_points = size(my_2f,2);
-channels    = 1:ex.info.channels.n_channels;
-channel_name = ex.info.channels.names;
+
+% Plot funfetti for only electrode data NOT accelerometer data
+channels    = 1:ex.info.electrodes.n_channels;
+channel_name = ex.info.electrodes.names;
 
 % Get current frequency idx
 freq_idx = get_current_freq_idx(ex);

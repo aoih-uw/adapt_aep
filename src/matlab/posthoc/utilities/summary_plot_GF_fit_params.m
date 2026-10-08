@@ -34,4 +34,4 @@ title('Noise floor (b)')
 xlabel('Frequency')
 ylabel('b')
 
-legend({'Subcutaneous','Subcranial'}, 'Location','northwest', 'Box','off')
+legend({'Subcranial','Subcutaneous'}, 'Location','northwest', 'Box','off')

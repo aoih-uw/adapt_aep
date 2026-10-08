@@ -47,8 +47,9 @@ for iblock = 1:max_block
     % Setup based on if we are testing with accelerometer or not
     if test_accel
         ex.raw(iblock).accelerometer_mV= NaN;
+        ex.raw(iblock).electrodes_microV = NaN; % Will use one channel for electrode data
     else
-        ex.raw(iblock).electrodes_microV = NaN; % order follows ex.info.channels.names
+        ex.raw(iblock).electrodes_microV = NaN; % order follows ex.info.electrodes.names
     end
     ex.raw(iblock).hydrophone_mV= NaN;
     ex.raw(iblock).loopback = NaN;

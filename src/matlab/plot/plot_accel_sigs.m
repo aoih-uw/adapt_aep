@@ -1,10 +1,11 @@
 function plot_accel_sigs(ex,app)
 %% Get vars
+% Plots on live fft and accel 3d axes
 iblock = ex.counter.iblock;
 n_chans = 3;
 accel_dB = [];
-fs = ex.info.recording.sampling_rate_hz;
-my_colors = [tableau_10('red'); tableau_10('blue'); tableau_10('orange');tableau_10('teal')];
+fs = ex.info.DAC.sampling_rate_hz;
+my_colors = ex.info.colors;
 
 % Get current stimulus_info
 freq_idx = get_current_freq_idx(ex);
@@ -12,7 +13,7 @@ cur_freq = ex.info.stimulus(freq_idx).frequency_hz;
 cur_amp = ex.block(iblock).stim_amp;
 
 % Sample lengths
-latency_samples = ex.info.recording.latency_samples;
+latency_samples = ex.info.DAC.latency_samples;
 period_length_samples = length(ex.info.stimulus(freq_idx).waveform);
 ramp_duration_ms = ex.info.stimulus(freq_idx).ramp_duration_ms;
 ramp_duration_samples = round(ramp_duration_ms/1000*fs);
@@ -38,43 +39,19 @@ for itrial = 1:size(accel_mV,1)
     micro_m_per_s_sqrd_set(4,itrial) = accel_dB.all_dim.micro_m_per_s_sqrd;
 end
 
-%% Plot FFT (Just from the last set of sig_set)
-ax = app.UIAxes_live_fft;
-% Clear axes
-delete(findobj(ax, 'Type', 'text'));
-% PLot
-for i = 1:size(sig_set,1)
-[~,freq_vec,fft_vals] = calc_fft(sig_set(i,:),fs);
-plot(ax,freq_vec,fft_vals,'Color',my_colors(i,:),'LineWidth',1.5)
-hold(ax,'on');
-end
-xlim(ax,[1 500])
-title(ax,'Accelerometer FFT')
-xlabel(ax,'Frequency (Hz)')
-ylabel(ax,'Amplitude (mV)')
-hold(ax,'off');
-
-%% Plot dB values across 10 trials
-ax = app.UIAxes_funfetti;
-% Clear axes
-delete(findobj(ax, 'Type', 'text'));
-
-% Setup data
-x_data = {'X', 'Y', 'Z', 'All'};
-x_data = categorical(x_data, x_data);
-% Get per dimension and all dimension data into one variable
+%% Plot 3D acceleration trajectory (last trial) with dB summary
+ax = app.UIAxes_accel3d;
 y_data = median(micro_m_per_s_sqrd_set,2);
-err_data = mad(micro_m_per_s_sqrd_set,1,2);
+my_impedance = cur_amp/y_data(end);
 
-% Plot
-b = bar(ax,x_data,y_data,'FaceColor','flat');
-hold(ax,'on')
-errorbar(ax,x_data,y_data,err_data,'k','LineStyle','none')
-hold(ax,'off')
+[~, sig_ms2] = convert_mV_to_accel(sig_set, ex.info.accel.mV_per_g, ex.info.accel.mV_per_m_per_s_sqrd);
+plot3(ax, sig_ms2(1,:), sig_ms2(2,:), sig_ms2(3,:), 'LineWidth', 1,'Color',tableau_10('blue'))
+axis(ax,'equal'); grid(ax,'on'); view(ax,3);
+xlabel(ax,'X (m/s^2)'); ylabel(ax,'Y (m/s^2)'); zlabel(ax,'Z (m/s^2)');
+title(ax, sprintf('%d Hz | %d dB SPL | Impedance %.2f', cur_freq, cur_amp, my_impedance));
+subtitle(ax, sprintf(['dB re 1 µm/s²: ' ...
+    'X %.1f | Y %.1f | Z %.1f | All %.1f'], y_data));
 
-% Formatting
-b.CData = my_colors;
-xlabel(ax,'Dimension');
-ylabel(ax,'Acceleration (dB re: 1\mum/s^2)')
-title(ax,sprintf('Accelerometer %d Hz | %d dB SPL',cur_freq,cur_amp))
+%% Plot FFT on Live FFT Axes
+plot_live_fft(ex, iblock, fs, app);
 end

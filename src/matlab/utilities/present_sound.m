@@ -41,6 +41,7 @@ for itrial = 1:height(stimulus)
                 playrec('delPage', ipage);
                 keyboard % Debug timeout
             end
+            pause(0.001);
         end
         pause(0.05);
         % Get recorded data
