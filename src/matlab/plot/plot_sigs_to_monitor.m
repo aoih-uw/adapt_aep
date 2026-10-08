@@ -15,7 +15,7 @@ if strcmp(data_type, 'raw')
         N_acc = size(ex.raw(iblock).accelerometer_mV,3);
         sensor_data = cat(3, ex.raw(iblock).accelerometer_mV, ex.raw(iblock).electrodes_microV);
     else % Set up for electrode signals
-        ch_names = ex.info.electrodes.names{1};
+        ch_names = ex.info.electrodes.names;
         N_channels = ex.info.electrodes.n_channels;
         N_acc = 0;
         sensor_data = ex.raw(iblock).electrodes_microV;
@@ -60,7 +60,7 @@ end
 sensor_axes = {app.UIAxes_ch1, app.UIAxes_ch2, app.UIAxes_ch3, app.UIAxes_ch4};
 data_mean_all = zeros(N_channels, numel(plot_idx));
 for ch = 1:N_channels
-    ax = sensor_axes{ch}; 
+    ax = sensor_axes{ch};
     title(ax, ch_names{ch});
     if ch <= N_acc, ylabel(ax, 'mV'); else, ylabel(ax, '\muV'); end
     seg = sensor_data(:, plot_idx, ch);
@@ -95,7 +95,7 @@ for g = 1:numel(groups)
     if isempty(idx), continue; end
     vals = data_mean_all(idx,:);
     pad = max(range(vals(:)) * 0.2, eps);
-    linkaxes([sensor_axes{idx}], 'y');
+    if numel(idx) > 1, linkaxes([sensor_axes{idx}], 'y'); end
     safe_ylim(sensor_axes{idx(1)}, min(vals(:),[],'omitnan') - pad, max(vals(:),[],'omitnan') + pad);
 end
 drawnow limitrate

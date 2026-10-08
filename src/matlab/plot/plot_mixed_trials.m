@@ -20,7 +20,7 @@ ax = app.UIAxes_funfetti;
 fs = ex.info.DAC.sampling_rate_hz;
 
 % Channels
-channel_names = ex.info.electrodes.names{:}; 
+channel_names = ex.info.electrodes.names; 
 valid_electrodes = find(~ismember(channel_names, {'EKG','X','Y','Z','Hydrophone','Loopback'}));
 analysis_channel = ex.info.electrodes.analysis_channel;
 analysis_channel_idx = find(ismember(channel_names(valid_electrodes),analysis_channel));
