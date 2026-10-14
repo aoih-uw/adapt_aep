@@ -77,7 +77,7 @@ else
     [~, idx_sens_chan] = min(thresh_col);
     most_sens_row = valid_rows(valid_col(idx_sens_chan));
     most_sens_chan = valid_chans(most_sens_row);
-    
+
     % Display to check
     fprintf("Most sensitive channel : %d\n",most_sens_chan)
     avail_trials = resp_first(most_sens_chan,:,end,end);
@@ -203,7 +203,12 @@ for ichan = 1:length(my_chans_name)
     if any(isnan(cur_y)), continue; end
 
     %% Fit all data softplus
-    [p, ~, ~, softplus, fq] = param_softplus(cur_y, [], reshape(amp_vec,1,[]), [], 0);
+    try
+        [p, ~, ~, softplus, fq] = param_softplus(cur_y, [], reshape(amp_vec,1,[]), [], 0);
+    catch ME % Catch cases where fit is unsuccessful
+        fprintf('fit_low_CI_model: %s softplus fit failed, skipping channel (%s)\n', my_chans_name{ichan}, ME.message);
+        continue
+    end
 
     %% Store fit quality information
     fit_quality.all.resnorm(ichan)  = fq.resnorm;
@@ -226,30 +231,36 @@ for ichan = 1:length(my_chans_name)
     if thresh_found
         %% Fit sim data softplus
         if ~any(isnan(cur_y_sim))
-           
+
             % Fit softplus
-            [p, ~, ~, softplus, fq] = param_softplus(cur_y_sim, [], reshape(amp_vec,1,[]), [], 0);
+            try
+                [p, ~, ~, softplus, fq] = param_softplus(cur_y_sim, [], reshape(amp_vec,1,[]), [], 0);
+            catch ME
+                fprintf('fit_low_CI_model: %s sim softplus fit failed (%s)\n', my_chans_name{ichan}, ME.message);
+                fq = [];
+            end
 
             %% Save fit quality information
-            fit_quality.sim.resnorm(ichan)  = fq.resnorm;
-            fit_quality.sim.exitflag(ichan) = fq.exitflag;
-            fit_quality.sim.pinned(ichan,:) = fq.pinned;
-            low_growth.sim.p(ichan,:) = p;
+            if ~isempty(fq)
+                fit_quality.sim.resnorm(ichan)  = fq.resnorm;
+                fit_quality.sim.exitflag(ichan) = fq.exitflag;
+                fit_quality.sim.pinned(ichan,:) = fq.pinned;
+                low_growth.sim.p(ichan,:) = p;
 
-            % Create fitted softplus y vector
-            y_vec_sim = softplus(p, x_vec);
+                % Create fitted softplus y vector
+                y_vec_sim = softplus(p, x_vec);
 
-            % Find and assign 0 crossing threshold value
-            if y_vec_sim(1) < 0
-                cross_idx = find(y_vec_sim >= 0, 1, 'first');
-                if ~isempty(cross_idx)
-                    cur_thresh_sim = x_vec(cross_idx);
-                    low_growth.sim.thresh_ci(ichan) = cur_thresh_sim;
+                % Find and assign 0 crossing threshold value
+                if y_vec_sim(1) < 0
+                    cross_idx = find(y_vec_sim >= 0, 1, 'first');
+                    if ~isempty(cross_idx)
+                        cur_thresh_sim = x_vec(cross_idx);
+                        low_growth.sim.thresh_ci(ichan) = cur_thresh_sim;
+                    end
                 end
             end
         end
     end
-
     %% Plot model fit
     if yes_plot
         plot(x_vec,y_vec,'Color',cur_color,'LineWidth',1.5)

@@ -116,8 +116,8 @@ hold(ax,'off')
 for my_r = 1:length(freq_types)
     for my_c = 1:length(amplitudes)
         if ~isnan(heat_2d(my_r, my_c))
-            text(ax, my_c, my_r, sprintf('%1.1f%%', heat_2d(my_r,my_c)*100), ...
-                'HorizontalAlignment','center', 'VerticalAlignment','middle', 'FontSize', 11);
+            text(ax, my_c, my_r, sprintf('%1.0f%%', heat_2d(my_r,my_c)*100), ...
+                'HorizontalAlignment','center', 'VerticalAlignment','middle', 'FontSize', 8);
         end
     end
 end
@@ -129,6 +129,8 @@ clim(ax, [0 1]);
 xticks(ax,1:length(amplitudes)); xticklabels(ax,amplitudes);
 yticks(ax,(1:length(freq_types))); yticklabels(ax, freq_types);
 grid(ax,'off')
+box(ax, 'on');
+ax.Layer = 'top';
 title(ax,'Mixed freqs Experiment Progress')
 ylabel(ax,'Stimulus Frequency (Hz)')
 xlabel(ax,'Amplitude (dB SPL)')

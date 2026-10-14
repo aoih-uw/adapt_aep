@@ -46,9 +46,9 @@ my_impedance = cur_amp/y_data(end);
 [~, sig_ms2] = convert_mV_to_accel(sig_set, ex.info.accel.mV_per_g, ex.info.accel.mV_per_m_per_s_sqrd);
 % Dimensions are not plotted on the same axes order, in order to match with
 % the accelerometer
-plot3(ax, sig_ms2(3,:), sig_ms2(1,:), sig_ms2(2,:), 'LineWidth', 1,'Color',tableau_10('blue'))
+plot3(ax, sig_ms2(1,:), sig_ms2(2,:), sig_ms2(3,:), 'LineWidth', 1,'Color',tableau_10('blue'))
 axis(ax,'equal'); grid(ax,'on'); view(ax,3);
-xlabel(ax,'Z (m/s^2)'); ylabel(ax,'X (m/s^2)'); zlabel(ax,'Y (m/s^2)');
+xlabel(ax,'X (m/s^2)'); ylabel(ax,'Y (m/s^2)'); zlabel(ax,'Z (m/s^2)');
 title(ax, sprintf('%d Hz | %d dB SPL | Impedance %.2f', cur_freq, cur_amp, my_impedance));
 subtitle(ax, sprintf(['dB re 1 µm/s²: ' ...
     'X %.1f | Y %.1f | Z %.1f | All %.1f'], y_data));

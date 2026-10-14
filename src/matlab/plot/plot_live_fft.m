@@ -91,23 +91,21 @@ for ic = 1:numel(channels)
 
     fill(fft_ax, [ff, fliplr(ff)], [vv+ss, fliplr(vv-ss)], ...
         c, 'FaceAlpha', 0.3, 'EdgeColor', 'none', 'HandleVisibility', 'off');
-    plot(fft_ax, ff, vv, 'Color', c, 'LineStyle', '-', 'LineWidth', 1.5, 'DisplayName', channel_name{ic});
-    ylim(fft_ax, 'auto')
+    plot(fft_ax, ff, vv, 'Color', c, 'LineStyle', '-', 'Marker', 'none', 'LineWidth', 1.5, 'DisplayName', channel_name{ic});    ylim(fft_ax, 'auto')
 end
 
 % Formatting
 xlabel(fft_ax, 'Frequency (Hz)');
 if ex.test_accel
-    yyaxis(fft_ax, 'left');  ylabel(fft_ax, 'Electrode magnitude (\muV)');
     yyaxis(fft_ax, 'right'); ylabel(fft_ax, 'Accel magnitude (mV)');
+    yyaxis(fft_ax, 'left');  ylabel(fft_ax, 'Electrode magnitude (\muV)');
 else
     ylabel(fft_ax, 'Electrode magnitude (\muV)');
 end
+[fft_ax.YAxis.Color] = deal('k');
+grid(fft_ax, 'on');
+fft_ax.Position(3) = fft_ax.Parent.InnerPosition(3) - fft_ax.Position(1) - 10;
 title(fft_ax, 'Live FFT Monitor');
-xlim(fft_ax, [(stim_freq-(stim_freq/2)), target_freq*2]);
-xline(fft_ax, target_freq,'HandleVisibility', 'off');
-legend(fft_ax)
-hold(fft_ax, 'off')
 
 % Plot funfetti if it is NOT Mixed freqs mode and NOT testing with an
 % accelerometer

@@ -1,9 +1,19 @@
 %% summary_heatmap
+%% Bootstrap
 % Filter dataset
-sub_T = T_rf(T_rf.CI == 99 ...
-    & T_rf.Boot_It_N == 5000 ...
-    & ismember(T_rf.Chan,chan_inc) ...
-    & ismember(T_rf.Freq,freq_inc),:);
+sub_T = T_brf(T_brf.CI == 99 ...
+    & T_brf.Boot_It_N == 5000 ...
+    & ismember(T_brf.Chan,chan_inc) ...
+    & ismember(T_brf.Freq,freq_inc),:);
+prepare_heatmap_data(sub_T,'Bootstrap');
+
+%% F_statistic
+sub_T = T_Frf(ismember(T_Frf.Chan,chan_inc) ...
+    & ismember(T_Frf.Freq,freq_inc),:);
+prepare_heatmap_data(sub_T,'F_statistic');
+
+%% Local Functions
+function prepare_heatmap_data(sub_T,cur_title)
 sub_T.Chan = removecats(sub_T.Chan);
 [~, chan, freq, amp] = findgroups(sub_T.Chan, sub_T.Freq, sub_T.Amp);
 freqs = unique(sub_T.Freq);
@@ -16,11 +26,12 @@ chans   = categories(sub_T.Chan);
 
 % First hit
 G = groupsummary(sub_T,{'Freq','Chan','Amp'},{'median',@(x) mad(x,1)},'First');
-make_heatmap(G,freqs,sub_T,chans,ampVals, 'First Hit')
+make_heatmap(G,freqs,sub_T,chans,ampVals, sprintf('%s: First Hit',cur_title))
 
 % Last stable hit
 G = groupsummary(sub_T,{'Freq','Chan','Amp'},{'median',@(x) mad(x,1)},'Stable');
-make_heatmap(G,freqs,sub_T,chans,ampVals, 'First Stable Hit')
+make_heatmap(G,freqs,sub_T,chans,ampVals, sprintf('%s: First Stable Hit',cur_title))
+end
 
 function make_heatmap(G,freqs,sub_T,chans,ampVals,mytitle)
 G.Properties.VariableNames(end-1:end) = {'med','madv'};
@@ -29,7 +40,7 @@ G.Properties.VariableNames(end-1:end) = {'med','madv'};
 % G.madv(mask) = NaN;
 cmap = interp1([0 1],[1 1 1; tableau_10('blue')],linspace(0,1,256));
 figure;
-tiledlayout(3,1,'TileSpacing','tight','Padding','tight')
+tiledlayout(numel(freqs),1,'TileSpacing','tight','Padding','tight')
 for ifreq = 1:length(freqs)
     sub_2 = sub_T(sub_T.Freq == freqs(ifreq),:);
     g = G(G.Freq == freqs(ifreq),:);

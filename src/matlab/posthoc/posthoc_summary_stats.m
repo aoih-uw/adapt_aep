@@ -30,7 +30,8 @@ for isubj = 1:length(subjids)
     all_hydro(isubj).noise = vertcat(S.hydro_results.noise);
     
     % How many trials needed to detect response
-    all_sim(isubj).resp_found = vertcat(S.sim_results.resp_found);
+    all_sim(isubj).boot_resp_found = vertcat(S.sim_results.boot_resp_found);
+    all_sim(isubj).F_resp_found = vertcat(S.sim_results.F_resp_found);
 
     % Low CI Model 
     all_sim(isubj).model_p = vertcat(lowCI.p); % Vertcat across all frequencies
@@ -43,11 +44,16 @@ for isubj = 1:length(subjids)
 
     % Response consistency slope
     all_sim(isubj).slope = vertcat(S.T_slope);
+    all_sim(isubj).twof_over_time = vertcat(S.T_ON_2f);
+
+    % Polar plots
+    all_sim(isubj).polar = vertcat(S.sim_results.polar);
 
 end
 
 % Sort Tables
-T_rf = vertcat(all_sim.resp_found);
+T_brf = vertcat(all_sim.boot_resp_found);
+T_Frf = vertcat(all_sim.F_resp_found);
 T_lowCI = vertcat(all_sim.lowCI_vals);
 T_lowCI_fitq = vertcat(all_sim.lowCI_fitq);
 T_twof = vertcat(all_sim.twof);
@@ -56,10 +62,13 @@ T_mp = vertcat(all_sim.model_p);
 T_hydro_noise = vertcat(all_hydro.noise);
 T_hydro_ON = vertcat(all_hydro.ON);
 T_slope = vertcat(all_sim.slope);
+T_twof_over_time = vertcat(all_sim.twof_over_time);
 T_wl = readtable('weight_length_table.xlsx');
+T_polar = vertcat(all_sim.polar);
 
 % Merge "subcutaneous"/"Subcutaneous" in all tables
-T_rf = fixChan(T_rf);
+T_brf = fixChan(T_brf);
+T_Frf = fixChan(T_Frf);
 T_lowCI = fixChan(T_lowCI);
 T_lowCI_fitq = fixChan(T_lowCI_fitq);
 T_twof = fixChan(T_twof);
@@ -68,6 +77,8 @@ T_mp = fixChan(T_mp);
 T_hydro_noise = fixChan(T_hydro_noise);
 T_hydro_ON = fixChan(T_hydro_ON);
 T_slope = fixChan(T_slope);
+T_twof_over_time = fixChan(T_twof_over_time);
+T_polar = fixChan(T_polar);
 T_wl = fixChan(T_wl);
 
 %% Plot!

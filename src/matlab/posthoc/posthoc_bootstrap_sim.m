@@ -53,19 +53,20 @@ for ifreq = 1:length(stim_freqs)
     
     % Assign current frequency amp_vec
     amp_vec = amp_vecs{ifreq};
-    
-    %% Preallocate matrices
+
     % Cumulative trial averaging matrix
     sz = [max_batches, length(amp_vec), length(my_chans)];
     cumu.n                       = NaN(sz);
     cumu.diff.mean.twof            = NaN(sz); % Mean 2f microvolt amplitude for each cumulative average by 10 trials for each batch and channel and stim amplitude
     cumu.diff.sem.twof             =  NaN(sz); 
     cumu.noise_floor.mean.twof     = NaN(sz); 
-    cumu.noise_floor.sem.twof     =  NaN(sz);    
-    cumu.logBF_ON                = NaN(sz);
-    cumu.logBF_OFF               = NaN(sz);
+    cumu.noise_floor.sem.twof     =  NaN(sz);
     cumu.stop_resp = NaN(length(amp_vec), length(my_chans));
     cumu.stop_null = NaN(length(amp_vec), length(my_chans));
+
+    % F Stats [myPLV, R, F, p]
+    sz = [max_batches, 4, length(amp_vec), length(my_chans)];
+    cumu.F_stats_ON                = NaN(sz);
 
     % Simulation
     sz = [max_batches, length(amp_vec), length(my_chans), length(itvec), length(CI_vec)];
@@ -94,23 +95,20 @@ for ifreq = 1:length(stim_freqs)
     my_params.g = g;
 
     %% Execute cumulative averaging/bootstrapping simulation
-    [cumu, boot] = execute_cumu_avg_bootstrap(my_params, cumu, boot);
+    [cumu, boot, polar] = execute_cumu_avg_bootstrap(my_params, cumu, boot);
 
     % %% Plot 2f and noise floor raw growth function across batches
     % [cumu_noise, cumu_diff] = plot_cumulative_sigs...
     % (max_trials,trials_per_block,my_chans,my_chans_name,amp_vec,cumu);
 
-    % % Plot Liklihood Ratio test results
-    % plot_logBF(cumu, amp_vec, my_chans, my_chans_name, cur_freq)
-
     %% Simulate adaptive trial count
     % By n iteration
-    [resp_stable, resp_first, inconsistent_vec] = sim_trial_count_heatmap(amp_vec, boot,...
+   [boot_count, F_count] = sim_trial_count_heatmap(amp_vec, boot, cumu,...
         max_trials, my_chans, my_chans_name, trials_per_block, itvec, CI_vec,my_params);
     
     %% Plot 2f growth functions
     [twof_growth, fit_quality_2f(ifreq)] = plot_2f_growth_func...
-        (cumu, resp_first, amp_vec, my_chans, my_chans_name, ...
+        (cumu, boot_count.first, amp_vec, my_chans, my_chans_name, ...
         trials_per_block, stim_freqs(ifreq), use_sigmoid,plot_linear);
 
     % Estimate threshold based on lower CI value and estimate bias
@@ -121,7 +119,7 @@ for ifreq = 1:length(stim_freqs)
     lower_ci_vec = boot.diff.lower_ci(:,:,:,end,end); % use highest CI rate and n_bootstrap
 
     [low_growth, fit_quality_low(ifreq)] = ...
-    fit_low_CI_model(amp_vec, lower_ci_vec, resp_first,  my_params, ifreq, ...
+    fit_low_CI_model(amp_vec, lower_ci_vec, boot_count.first,  my_params, ifreq, ...
     trials_per_block, max_trials, my_chans_name, my_params.cur_freq, 'Full dataset', 1);
 
     %% Simulate removal of data points
@@ -164,8 +162,8 @@ for ifreq = 1:length(stim_freqs)
 
     % Convert simulation results to long form table
     sim_results(ifreq) = convert_sim_data_to_long(subjid, cur_freq, amp_vec, itvec, CI_vec, ...
-    resp_stable, resp_first, twof_growth, low_growth, fit_quality_low(ifreq), ...
-    my_chans, my_chans_name);
+    boot_count, F_count, twof_growth, low_growth, fit_quality_low(ifreq), ...
+    my_chans, my_chans_name, cumu, polar);
     
     %% Report progress
     toc()

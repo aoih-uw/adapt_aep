@@ -8,15 +8,15 @@ addpath(genpath('C:\Users\Aoi Hunsaker\Desktop\adapt_aep\src\matlab\'))
 old_vis = get(0,'DefaultFigureVisible');
 
 % Decide wether to load in raw file
-load_raw_file = 0;
+load_raw_file = 1;
 file_type = 'mixed_freqs';
 % file_type = 'benzo';
 
 %% Set this when doing bulk processing!
-set(0,'DefaultFigureVisible','off');
+% set(0,'DefaultFigureVisible','off');
 try
-    % subjids = 52;
-    subjids = [29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51];
+    subjids = 44;
+    % subjids = 29:51;
     failed = [];
     failed_files_all = {};
     for isubj = 1:length(subjids)
@@ -80,13 +80,13 @@ try
             % fprintf('\nSaving to ppt...\n')
             % save_figs_to_ppt(meta,figure_loc)
         catch ME
-            fprintf(2, 'Subject %d failed: %s\n', cur_subj, ME.message);
+            fprintf(2, 'Subject %d faileF: %s\n', cur_subj, ME.message);
             failed(end+1) = cur_subj;
         end
         close all
     end
     fprintf('\nFailed subjects: %s\n', mat2str(failed));
-    fprintf('\nFiles that failed to load:\n');
+    fprintf('\nFiles that failed to loaF:\n');
     fprintf('  %s\n', failed_files_all{:});
 catch ME
     set(0,'DefaultFigureVisible',old_vis);

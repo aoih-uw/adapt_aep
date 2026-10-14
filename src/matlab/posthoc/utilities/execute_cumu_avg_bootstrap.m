@@ -1,4 +1,4 @@
-function [cumu, boot] = execute_cumu_avg_bootstrap(my_params, cumu, boot)
+function [cumu, boot, polar] = execute_cumu_avg_bootstrap(my_params, cumu, boot)
 %% Simulate cumulative averaging and bootstrap algorithm
 % Assign vars
 my_chans = my_params.my_chans;  my_chans_name = my_params.my_chans_name; amp_vec = my_params.amp_vec;
@@ -7,6 +7,16 @@ stim_type_idx = my_params.stim_type_idx;  ifreq = my_params.ifreq;
 cur_freq = my_params.cur_freq;
 max_batches = my_params.max_batches;  trials_per_block = my_params.trials_per_block;
 itvec = my_params.itvec;  CI_vec = my_params.CI_vec;
+
+% Preallocate
+sz = [length(amp_vec), length(my_chans)];
+for myfields = {'ON', 'OFF'}
+    polar.(myfields{1}).n = NaN(sz);
+    polar.(myfields{1}).mag.mean   = NaN(sz);
+    polar.(myfields{1}).mag.std    = NaN(sz);
+    polar.(myfields{1}).angle.mean = NaN(sz);
+    polar.(myfields{1}).PLV        = NaN(sz);
+end
 
 % Start looping through channels
 for ichan = 1:length(my_chans)
@@ -42,6 +52,10 @@ for ichan = 1:length(my_chans)
         hold on;
         polarscatter(angle(cur_OFF), abs(cur_OFF), 10,tableau_10('orange'),"filled","MarkerFaceAlpha", 0.3);
         title(string(amp_vec(iamp)))
+
+        % Get polar information
+        polar.ON = calc_mean_polar(cur_ON,iamp,ichan,polar.ON);
+        polar.OFF = calc_mean_polar(cur_OFF,iamp,ichan,polar.OFF);
 
         % GIF
         if do_gif
@@ -103,10 +117,10 @@ for ichan = 1:length(my_chans)
             cumu.noise_floor.mean.twof(ibatch,iamp,ichan)   = cur_noise_floor_mean; % stim OFF just at 2f
             cumu.noise_floor.sem.twof(ibatch,iamp,ichan)    = cur_noise_floor_sem; % Will figure equation out later
 
-            % Liklihood ratio
-            cumu.logBF_ON(ibatch,iamp,ichan)  = complex_bf(cur_ON_batch,  my_params.g);
-            cumu.logBF_OFF(ibatch,iamp,ichan) = complex_bf(cur_OFF_batch, my_params.g);
-
+            % F Stats
+            % output = [myPLV R F p];
+            cumu.F_stats_ON(ibatch,:,iamp,ichan) = calc_F_stat(cur_ON_batch);
+            
             % Loop through N bootstrap iterations (all CI levels share one run)
             for iit = 1:length(itvec)
                 n_bootstrap = itvec(iit);
@@ -124,18 +138,18 @@ for ichan = 1:length(my_chans)
             idx = idx+trials_per_block;
         end
 
-        % Likelihood ratio
-        lb = cumu.logBF_ON(:,iamp,ichan);
-
-        k = find(lb >  log(20), 1);
-        if isempty(k), k = NaN; end
-        cumu.stop_resp(iamp,ichan) = k;
-
-        k = find(lb < -log(10), 1);
-        if isempty(k), k = NaN; end
-        cumu.stop_null(iamp,ichan) = k;
-
     end
     if do_gif, close(fa); end
     sgtitle(tl, sprintf('Channel: %s | Frequency: %d Hz', my_chans_name{ichan}, cur_freq))
+end
+end
+
+function mystruct = calc_mean_polar(vals, iamp,ichan,mystruct)
+mystruct.n(iamp,ichan) = numel(vals);
+cur_mean = mean(vals);
+mystruct.mag.mean(iamp,ichan) = abs(cur_mean);
+mystruct.mag.std(iamp,ichan) = std(vals); % Spread of dots
+mystruct.angle.mean(iamp,ichan) = angle(cur_mean);
+mystruct.PLV(iamp,ichan) = abs(mean(vals./abs(vals))); % I am not familiar with this equation
+
 end
