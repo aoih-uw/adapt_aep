@@ -13,8 +13,8 @@ ex = setup_info(ex,app);
 fs = ex.info.DAC.sampling_rate_hz;
 ex.info.experiment.exp_type = 'Mixed freqs';
 ex.info.DAC.latency_samples = 2118;
-ex.info.mixed.stim_freqs = ex.info.mixed.stim_freqs; % Simulate double frequency response
 app.DropDown_tone_burst.Value = 'Tone Burst';
+%% Set Stimulus Frequency and amplitude from this point
 ex = setup_stimulus_info(ex,app);
 
 % Preallocate
@@ -60,7 +60,7 @@ for ifreq = 1:size(ex.info.stimulus,2)
             
             % Make faux signal, ON/OFF periods, just like
             % in the live experiment
-            % 170 dB set as target level to get a tone burst with pk-pk = 1
+            % 170 dB set as target level to get a tone burst with pk-pk = 2
             % digital to make scaling easy
             [ex, selected_cycle_samples, sig_block, phase_vec] = ...
                 make_scaled_jittered_stim_block(ex, waveform, 170, trials_per_block, ...
@@ -113,7 +113,7 @@ for ifreq = 1:size(ex.info.stimulus,2)
 
             % Calculate current SNR
             noise_rms = rms(stitch_noise_block,2);
-            % Base signal snr on the full amplitude pk-pk 1 waveform being scaled down
+            % Base signal snr on the full amplitude pk-pk 2 waveform being scaled down
             snr_mat(ifreq,iamp,ibatch) =  rms(waveform.*cur_scale_fac)/mean(noise_rms);
             simulated_aep(:, 1:size(scaled_sig_block,2), ifreq, iamp, ibatch) = scaled_sig_block + stitch_noise_block;
             phase_mat(:,1,ifreq,iamp,ibatch) = phase_vec;
