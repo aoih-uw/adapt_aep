@@ -95,6 +95,7 @@ for ic = 1:numel(channels)
 end
 
 % Formatting
+xline(fft_ax, target_freq, 'HandleVisibility', 'off');
 xlabel(fft_ax, 'Frequency (Hz)');
 if ex.test_accel
     yyaxis(fft_ax, 'right'); ylabel(fft_ax, 'Accel magnitude (mV)');
@@ -105,6 +106,7 @@ end
 [fft_ax.YAxis.Color] = deal('k');
 grid(fft_ax, 'on');
 fft_ax.Position(3) = fft_ax.Parent.InnerPosition(3) - fft_ax.Position(1) - 10;
+legend(fft_ax)
 title(fft_ax, 'Live FFT Monitor');
 
 % Plot funfetti if it is NOT Mixed freqs mode and NOT testing with an

@@ -80,13 +80,13 @@ try
             % fprintf('\nSaving to ppt...\n')
             % save_figs_to_ppt(meta,figure_loc)
         catch ME
-            fprintf(2, 'Subject %d faileF: %s\n', cur_subj, ME.message);
+            fprintf(2, 'Subject %d failed: %s\n', cur_subj, ME.message);
             failed(end+1) = cur_subj;
         end
         close all
     end
     fprintf('\nFailed subjects: %s\n', mat2str(failed));
-    fprintf('\nFiles that failed to loaF:\n');
+    fprintf('\nFiles that failed to load:\n');
     fprintf('  %s\n', failed_files_all{:});
 catch ME
     set(0,'DefaultFigureVisible',old_vis);

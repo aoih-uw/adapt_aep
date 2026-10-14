@@ -64,9 +64,6 @@ OFF_2f = NaN(max_rows, length(amp_vecs{largest_amp_vec}), 1, length(my_chans), l
 % FFTs- allocated on first trial, once the true bin count is known
 freq_vec = []; ON_fft = []; OFF_fft = [];
 
-% Hydrophone
-hydro_ds_rate = 4;
-
 % Time domain 
 % (77632 # of samples of longest stimuli /4 to downsample)
 % Hydrophone
@@ -76,7 +73,7 @@ hydro_OFF_time = NaN(max_rows, 8820, length(amp_vecs{largest_amp_vec}), length(s
 % Stim OFF
 stim_OFF_time = [];
 if strcmp(meta.exp_type,'Mixed freqs')
-stim_OFF_time = NaN(max_rows, 8820, length(amp_vecs{largest_amp_vec}), length(my_chans), length(stim_freqs),'single');
+stim_OFF_time = NaN(max_rows, 8820, length(amp_vecs{largest_amp_vec}), 1, length(stim_freqs),'single');
 end
 
 % FFTs
@@ -244,8 +241,8 @@ for iname = 1:length(grand_ex_save)
                 end
 
                 % Stim OFF (for simulating AEP data)
-                if strcmp(cur_stim_type, 'ONOFF')
-                    stim_OFF_time(row_range,1:size(stim_OFF,2),amp_idx,ichan,freq_idx)   = stim_OFF;
+                if strcmp(cur_stim_type, 'ONOFF') && strcmp(my_chans_name{ichan}, 'Subcranial')
+                    stim_OFF_time(row_range,1:size(stim_OFF,2),amp_idx,1,freq_idx)   = stim_OFF;
                 end
 
                 %% Save phase_vector

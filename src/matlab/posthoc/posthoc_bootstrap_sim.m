@@ -38,14 +38,13 @@ phase_vec    = org_data.phase_vec;
 stim_type_idx = find(strcmp('ONOFF',stim_type_vec));
 itvec = [5000];
 CI_vec = [99];
-% itvec = [5000];
-g = 0.25; 
 max_batches = max_trials/trials_per_block; % e.g. 130 trials in batches of 10
 twof_growth = [];
 
 clear sim_results fit_quality_2f fit_quality_low
 % Loop through first by frequency
 for ifreq = 1:length(stim_freqs)
+    %% Assign frequency specific variables
     tic()
     field_name = sprintf('c%d',ifreq);
     cur_freq = stim_freqs(ifreq);
@@ -61,11 +60,9 @@ for ifreq = 1:length(stim_freqs)
     cumu.diff.sem.twof             =  NaN(sz); 
     cumu.noise_floor.mean.twof     = NaN(sz); 
     cumu.noise_floor.sem.twof     =  NaN(sz);
-    cumu.stop_resp = NaN(length(amp_vec), length(my_chans));
-    cumu.stop_null = NaN(length(amp_vec), length(my_chans));
 
-    % F Stats [myPLV, R, F, p]
-    sz = [max_batches, 4, length(amp_vec), length(my_chans)];
+    % F Stats [F, p]
+    sz = [max_batches, 2, length(amp_vec), length(my_chans)];
     cumu.F_stats_ON                = NaN(sz);
 
     % Simulation
@@ -92,12 +89,11 @@ for ifreq = 1:length(stim_freqs)
     my_params.trials_per_block = trials_per_block;
     my_params.itvec            = itvec;
     my_params.CI_vec           = CI_vec;
-    my_params.g = g;
 
     %% Execute cumulative averaging/bootstrapping simulation
     [cumu, boot, polar] = execute_cumu_avg_bootstrap(my_params, cumu, boot);
 
-    % %% Plot 2f and noise floor raw growth function across batches
+    %% Plot 2f and noise floor raw growth function across batches
     % [cumu_noise, cumu_diff] = plot_cumulative_sigs...
     % (max_trials,trials_per_block,my_chans,my_chans_name,amp_vec,cumu);
 
