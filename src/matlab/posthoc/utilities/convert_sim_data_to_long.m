@@ -1,19 +1,62 @@
 %% convert_sim_data_to_long
 function sim_results = convert_sim_data_to_long(subjid, cur_freq, amp_vec, it_vec, CI_vec, ...
-    resp_stable, resp_first, twof_growth, low_growth, fit_quality_low, ...
-    my_chans, my_chans_name)
+    boot_count, F_count, twof_growth, low_growth, fit_quality_low, ...
+    my_chans, my_chans_name, cumu, polar)
 
 % Assign variables
 sim_results = struct();
 n_chans = numel(my_chans);
 
+%% Polar plot summary stats
+[Amp, Chan] = ndgrid(amp_vec,1:n_chans); % Variable order needs to match polar
+subjid_col = repmat(subjid,length(Chan(:)),1);
+freq_col = repmat(cur_freq,length(Chan(:)),1);
+polar_table = table(subjid_col, categorical(Chan(:),1:n_chans,my_chans_name),freq_col, Amp(:), ...
+   polar.ON.n(:), polar.ON.mag.mean(:), polar.OFF.mag.mean(:),...
+   polar.ON.angle.mean(:), polar.OFF.angle.mean(:), ...
+   polar.ON.mag.std(:), polar.OFF.mag.std(:), ...
+   polar.ON.PLV(:), polar.OFF.PLV(:), ...
+   'VariableNames',{'Subj_ID','Chan','Freq', 'Amp', 'N_trials' ...
+   'Mag_ON', 'Mag_OFF', 'Angle_ON','Angle_OFF', 'Std_ON', 'Std_OFF', 'PLV_ON', 'PLV_OFF'});
+
+%% Cumulative F Stats table
+n_batches = size(cumu.n,1);
+[Batches,Amp, Chan] = ndgrid(1:n_batches,amp_vec,1:n_chans); % Variable order needs to match polar
+subjid_col = repmat(subjid,length(Chan(:)),1);
+freq_col = repmat(cur_freq,length(Chan(:)),1);
+col = @(X,k) reshape(X(:,k,:,:), [], 1); % Pull stat k out as one column
+F_stats_table = table(subjid_col, categorical(Chan(:),1:n_chans,my_chans_name),freq_col, Amp(:), ...
+   Batches(:),cumu.n(:), col(cumu.F_stats_ON,1), col(cumu.F_stats_ON,2), ...
+    col(cumu.F_stats_ON,3), col(cumu.F_stats_ON,4), ...
+   'VariableNames',{'Subj_ID','Chan','Freq', 'Amp', 'Batch','N_trials' ...
+   'PLV', 'R','F','p'});
+
+% Store varialbes
+sim_results.polar = polar_table;
+sim_results.F_stats = F_stats_table;
+
 %% Resp_found heatmap
+% Boot
 [Chan, Amp, IT, CI] = ndgrid(1:n_chans,amp_vec, it_vec,CI_vec);
 subjid_col = repmat(subjid,length(Chan(:)),1);
 freq_col = repmat(cur_freq,length(Chan(:)),1);
-resp_found = table(subjid_col, categorical(Chan(:),1:n_chans,my_chans_name),freq_col, Amp(:), ...
-    IT(:), CI(:), resp_stable(:), resp_first(:), 'VariableNames',{'Subj_ID','Chan','Freq', 'Amp','Boot_It_N','CI','Stable','First'});
-sim_results.resp_found = resp_found;
+boot_resp_found = table(subjid_col, categorical(Chan(:),1:n_chans,my_chans_name),freq_col, Amp(:), ...
+    IT(:), CI(:), boot_count.stable(:), boot_count.first(:), boot_count.inconsist(:), ...
+    'VariableNames',{'Subj_ID','Chan','Freq', 'Amp',...
+    'Boot_It_N','CI','Stable','First','N_Inconsist'});
+
+% F stat
+[Chan, Amp] = ndgrid(1:n_chans,amp_vec);
+subjid_col = repmat(subjid,length(Chan(:)),1);
+freq_col = repmat(cur_freq,length(Chan(:)),1);
+F_resp_found = table(subjid_col, categorical(Chan(:),1:n_chans,my_chans_name),freq_col, Amp(:), ...
+    F_count.stable(:), F_count.first(:), F_count.inconsist(:), ...
+    'VariableNames',{'Subj_ID','Chan','Freq', 'Amp',...
+    'Stable','First','N_Inconsist'});
+
+% Store
+sim_results.boot_resp_found = boot_resp_found;
+sim_results.F_resp_found = F_resp_found;
 
 %% 2f growth functions
 % Summary vals

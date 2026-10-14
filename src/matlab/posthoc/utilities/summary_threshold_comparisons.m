@@ -46,16 +46,16 @@ plot_size_comp(cur_T,myColors);
 figure;tiledlayout(1,2,'TileSpacing','tight','Padding','tight')
 my_min = 90;
 my_max = 140;
-for i = 1:numel(chans)
+for i = 1:numel(chan_inc)
     nexttile
-    cur_chan = sub_T(sub_T.Chan == chans{i},:);
+    cur_chan = sub_T(sub_T.Chan == chan_inc{i},:);
     lims = [my_min my_max];
     fill([lims fliplr(lims)], [lims+3 fliplr(lims)-3], tableau_10('grey'), ...
         'FaceAlpha', 0.1, 'EdgeColor', 'none', 'HandleVisibility', 'off')
     hold on;
     plot(lims,lims,'--','Color',tableau_10('grey'))
     gscatter(cur_chan.Model_Thresh, cur_chan.Sim, cur_chan.Freq,myColors)
-    title(chans{i}); xlabel('All'); ylabel('Sim'); axis equal
+    title(chan_inc{i}); xlabel('All'); ylabel('Sim'); axis equal
     xlabel('Threshold with All Data (dB)')
     ylabel('Threshold with Simulated Asymptote (dB)')
 
@@ -68,6 +68,7 @@ nexttile
 c = tableau_10('blue');
 scatter(cur_T,"Weight","Length",'filled','SizeData',60, ...
     'MarkerFaceColor',c,'MarkerEdgeColor',c,'LineWidth',1.5)
+hold on;
 p = polyfit(cur_T.Weight, cur_T.Length, 1);
 xl = xlim;
 % Significance
@@ -82,6 +83,7 @@ title('Subject Weight vs. Length')
 % Weight
 ax = nexttile;
 scatter(cur_T,"Weight",'Model_Thresh','filled','SizeData',60,'ColorVariable', 'Freq','LineWidth', 1.5)
+hold on;
 colormap(gca, myColors)
 add_freq_fits(ax, cur_T, 'Weight', myColors)
 xlabel('Weight (g)')
@@ -91,6 +93,7 @@ title('Weight vs. Threshold')
 % Length
 ax = nexttile;
 scatter(cur_T,"Length",'Model_Thresh','filled','SizeData',60,'ColorVariable', 'Freq','LineWidth', 1.5)
+hold on;
 colormap(gca, myColors)
 add_freq_fits(ax, cur_T, 'Length', myColors)
 xlabel('Length (cm)')

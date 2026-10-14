@@ -41,6 +41,8 @@ ex.kept.phases = all_phases(kept_trials_idx);
 ex.kept.jitter = all_jitter(kept_trials_idx);
 
 ex.block(iblock).kept_trials_idx = kept_trials_idx;
+% Collection attempts will be used in posthoc_sort_data
+% It uses 0 indexing
 ex.block(iblock).collection_attempts = ex.counter.N_not_enough_trials;
 ex.block(iblock).across_trial_thresh = across_trial_thresh;
 

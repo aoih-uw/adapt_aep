@@ -67,7 +67,7 @@ for ch = 1:N_channels
     data_mean = mean(seg, 1);
     data_std  = std(seg, 0, 1);
     data_mean_all(ch,:) = data_mean;
-    color = colors{numel(colors)};
+    color = colors{ch};
 
     h = ax.UserData;
     if isempty(h) || ~isfield(h,'line') || ~isvalid(h.line)
@@ -98,7 +98,12 @@ for g = 1:numel(groups)
     if numel(idx) > 1, linkaxes([sensor_axes{idx}], 'y'); end
     safe_ylim(sensor_axes{idx(1)}, min(vals(:),[],'omitnan') - pad, max(vals(:),[],'omitnan') + pad);
 end
-drawnow limitrate
+% Match sensor plot areas to hydrophone plot
+drawnow
+ref = app.UIAxes_hydrophone.InnerPosition;
+for ch = 1:numel(sensor_axes)
+    sensor_axes{ch}.InnerPosition([1 3]) = ref([1 3]);
+end
 end
 
 %% Local functions

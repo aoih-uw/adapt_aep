@@ -2,7 +2,11 @@
 outdir = 'F:\2026\Research\Aug Sept Midshipman\pre_summary';
 chan_inc = ["Subcutaneous", "Subcranial"];
 freq_inc = [55, 100, 410];
-my_color_order = colororder([tableau_10('blue'),tableau_10('orange')]);
+my_colors = {tableau_10('red'), tableau_10('blue'), tableau_10('orange'), tableau_10('teal'), tableau_10('purple'),tableau_10('yellow')};
+my_color_order = colororder([tableau_10('blue'); tableau_10('orange')]);
+%% Summary polar plot
+summary_polar_plot
+
 %% Plot consistency of 2f response
 summary_plot_2f_consistency
 

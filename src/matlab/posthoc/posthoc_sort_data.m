@@ -13,7 +13,7 @@ if strcmp(meta.exp_type,'Mixed freqs')
     meta.ON_OFF_max_trials = info.mixed.max_trials(1);
 elseif strcmp(meta.exp_type,'Timed')
     meta.amp_vecs = {info.stimulus.amplitude_spl};
-    meta.stim_type_vec = 'trim';
+    meta.stim_type_vec = {'trim'};
     meta.stim_freqs = info.stimulus.frequency_hz;
     meta.trim_stim_pre_dur_ms = info.stimulus.trim_stim_pre_dur_ms;
     meta.ON_OFF_max_trials = 5000;
@@ -66,9 +66,18 @@ freq_vec = []; ON_fft = []; OFF_fft = [];
 
 % Hydrophone
 hydro_ds_rate = 4;
-% Time domain (77632 # of samples of longest stimuli /4 to downsample)
-hydro_ON_time = NaN(max_rows, 77632/hydro_ds_rate, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(stim_freqs),'single');
-hydro_OFF_time = NaN(max_rows, 77632/hydro_ds_rate, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(stim_freqs),'single');
+
+% Time domain 
+% (77632 # of samples of longest stimuli /4 to downsample)
+% Hydrophone
+hydro_ON_time = NaN(max_rows, 8820, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(stim_freqs),'single');
+hydro_OFF_time = NaN(max_rows, 8820, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(stim_freqs),'single');
+
+% Stim OFF
+stim_OFF_time = [];
+if strcmp(meta.exp_type,'Mixed freqs')
+stim_OFF_time = NaN(max_rows, 8820, length(amp_vecs{largest_amp_vec}), length(my_chans), length(stim_freqs),'single');
+end
 
 % FFTs
 hydro_ON_fft = [];
@@ -93,6 +102,9 @@ for iname = 1:length(grand_ex_save)
 
     %% IDENTIFY FIRST/LAST BATCH FOR EACH STIM TYPE
     if strcmp(meta.exp_type,'Mixed freqs')
+        % Collection attempts use 0 indexing, 0 = 1 attempt, 1 = 2 attempts
+        % 0 1 = there were two attempts for the same stimulus, 0 0 = two
+        % different stimuli were tested
         collect_attempt_vec = cat(1,grand_ex_save{1,iname}.block_level_info(1:n_batches).collection_attempts);
         collect_attempt_vec = [collect_attempt_vec ; 0]; % To account for times where the very last batch was a retry and had enough trials by then, but there are no batches after so there won't be a negative value
         att_diff = diff(collect_attempt_vec);
@@ -152,7 +164,7 @@ for iname = 1:length(grand_ex_save)
                 elseif strcmp(meta.exp_type,'Timed')
                     amp_idx = 1;
                     stim_type_idx = 1;
-                    cur_stim_type = stim_type_vec;
+                    cur_stim_type = stim_type_vec{1};
                 end
 
                 % Check if nothing matches
@@ -220,14 +232,20 @@ for iname = 1:length(grand_ex_save)
 
                 end
 
-                %% Save Hydrophone time domain signals
+                %% Save time domain signals
+                % Hydrophone
                 if ichan == 1
                     for itrial = 1:size(hydro_ON_time_tmp,1)
-                        tmp_ON  = decimate(double(hydro_ON_time_tmp(itrial,:)), hydro_ds_rate);
-                        tmp_OFF = decimate(double(hydro_OFF_time_tmp(itrial,:)), hydro_ds_rate);
+                        tmp_ON = hydro_ON_time_tmp(itrial,:);
+                        tmp_OFF = hydro_OFF_time_tmp(itrial,:);
                         hydro_ON_time(row_range(itrial),1:numel(tmp_ON),amp_idx,stim_type_idx,freq_idx)   = tmp_ON;
                         hydro_OFF_time(row_range(itrial),1:numel(tmp_OFF),amp_idx,stim_type_idx,freq_idx) = tmp_OFF;
                     end
+                end
+
+                % Stim OFF (for simulating AEP data)
+                if strcmp(cur_stim_type, 'ONOFF')
+                    stim_OFF_time(row_range,1:size(stim_OFF,2),amp_idx,ichan,freq_idx)   = stim_OFF;
                 end
 
                 %% Save phase_vector
@@ -418,6 +436,7 @@ end
 
 %% Organize data into org_data
 % AEP
+org_data.stim_OFF_time = stim_OFF_time;
 org_data.ON_2f        = ON_2f;
 org_data.OFF_2f       = OFF_2f;
 org_data.freq_vec     = select_freq_vec;

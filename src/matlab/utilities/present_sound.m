@@ -65,7 +65,7 @@ for itrial = 1:height(stimulus)
     rec_data_mV(:,:,itrial) = rec_data.*(1e3*DAC_conversion_factor);
 
     % Check for absurdly large signals
-    if any(abs(rec_data_mV(:,3:end,itrial)) > 1e3, 'all')
+    if any(abs(rec_data_mV(:,3:end,itrial)) > 1e4, 'all')
         fprintf('\nUnusually large voltage values detected in sensors (max: %.2f mV)\n', ...
             max(abs(rec_data_mV(:,3:end,itrial)), [], 'all'));
         keyboard
