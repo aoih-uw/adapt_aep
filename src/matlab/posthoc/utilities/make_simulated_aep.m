@@ -1,6 +1,7 @@
 %% make_simulated_aep
 % Setup variables
-signal_scale = linspace(0,0.04,16);
+% signal_scale = linspace(0,0.05,16);
+signal_scale = linspace(0,1,16);
 n_trials = 1030;
 trials_per_block = 10;
 noise_idx = 1; % Counter for which stim_OFF/noise trial we have used
@@ -121,5 +122,7 @@ for ifreq = 1:size(ex.info.stimulus,2)
         end
     end
 end
+% For future plotting
+snr_vec = snr_mat(1,:,1);
 % Save
 % save("simulated_aep.mat","simulated_aep","snr_mat","phase_mat","jitter_mat","signal_scale","n_trials","trials_per_block",'-v7.3')

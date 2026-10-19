@@ -23,9 +23,9 @@ low_growth.all.low_CI = NaN(length(my_chans_name),length(amp_vec));
 low_growth.sim.low_CI = NaN(length(my_chans_name),length(amp_vec)); % Simulated lower asymptote
 
 % Model output
-low_growth.all.thresh_ci = NaN(length(my_chans_name),1);
+low_growth.all.thresh = NaN(length(my_chans_name),1);
 low_growth.all.p = NaN(length(my_chans_name),4);
-low_growth.sim.thresh_ci = NaN(length(my_chans_name),1);
+low_growth.sim.thresh = NaN(length(my_chans_name),1);
 low_growth.sim.p = NaN(length(my_chans_name),4);
 
 %% Lower CI based growth function (SOFTPLUS)
@@ -224,7 +224,7 @@ for ichan = 1:length(my_chans_name)
         cross_idx = find(y_vec >= 0, 1, 'first');
         if ~isempty(cross_idx)
             cur_thresh = x_vec(cross_idx);
-            low_growth.all.thresh_ci(ichan) = cur_thresh;
+            low_growth.all.thresh(ichan) = cur_thresh;
         end
     end
 
@@ -255,7 +255,7 @@ for ichan = 1:length(my_chans_name)
                     cross_idx = find(y_vec_sim >= 0, 1, 'first');
                     if ~isempty(cross_idx)
                         cur_thresh_sim = x_vec(cross_idx);
-                        low_growth.sim.thresh_ci(ichan) = cur_thresh_sim;
+                        low_growth.sim.thresh(ichan) = cur_thresh_sim;
                     end
                 end
             end

@@ -1,0 +1,300 @@
+function [F_growth, fit_quality] = fit_F_stat_model(amp_vec, cumu, resp_first, my_params, ifreq, ...
+    trials_per_block, max_trials, my_chans_name, cur_freq, my_tag, yes_plot)
+
+%% Fits a sigmoid growth function to F test p values as a function of stimulus amplitude
+% This is how the aep threshold is determined
+% Compares the full dataset fit to a simulated lower asymptote to mimic
+% a live adaptive aep experiment
+% Base N trial count needed off of first decision not stable!
+
+%% Assign variables
+% Get p Values
+F_vals = squeeze(cumu.F_stats(:,1,:,:)); % (n_batches, [F;p], n_amps, n_chans)
+% stim_OFF data to simulate with
+OFF_2f = my_params.OFF_2f;
+my_reso = 2000;
+phase_vec = my_params.phase_vec;
+x_vec = linspace(min(amp_vec), max(amp_vec), my_reso);
+valid_chans = find(ismember(my_chans_name,{'Subcutaneous','Subcranial'})); % Only analyze subcutaneous and subcranial channels
+my_alpha = my_params.my_alpha;
+
+%# Figure out how this works
+log_trans_alpha = log10(finv(1 - my_alpha, 2, 2*(2*max_trials - 2)));
+
+%% Preallocate Variables
+% Low CI growth function matricies
+F_growth.all.F_vals = NaN(length(my_chans_name),length(amp_vec));
+F_growth.sim.F_vals = NaN(length(my_chans_name),length(amp_vec)); % Simulated lower asymptote
+
+% Model output
+F_growth.all.thresh = NaN(length(my_chans_name),1);
+F_growth.all.p = NaN(length(my_chans_name),4);
+F_growth.sim.thresh = NaN(length(my_chans_name),1);
+F_growth.sim.p = NaN(length(my_chans_name),4);
+
+%% F Statistic based growth function (sigmoid)
+% Generate a growth function vector simulating live experiment with uneven trial counts based on bootstrap decisions
+for iamp = 1:length(amp_vec)
+    for ichan = 1:length(my_chans_name)
+        trials_needed = resp_first(ichan,iamp); % Trials needed to find a response
+        % Build the growth function vectors
+        cur_idx = trials_needed/trials_per_block;
+        if isnan(cur_idx) % Get the mean and sem of the last measured batch
+            fprintf('cur_idx is nan')
+        else % Get the valid resp_found idx and extract its mean/sem
+            F_growth.all.F_vals(ichan,iamp) = F_vals(cur_idx,iamp,ichan);
+        end
+        % Trial count for scaling point size
+        growth_func_trials(ichan,iamp) = cur_idx;
+    end
+end
+
+%% Find the bootstrap threshold and identify how many trials we have to work with to build the lower asymptote
+% Identify amps and channels a response was found for current frequency
+%#%# Check this indexing logic!! %#%#%#
+
+% Display matrix to check
+fprintf('Trials needed: \n')
+resp_first(:,:)
+
+% Identify which columns had a response found
+found_resp_mask = resp_first(:,:) < max_trials;
+found_resp_mask = found_resp_mask(valid_chans,:);
+contains_one = any(found_resp_mask, 2);
+
+% Require that there is at least one amp that found a response
+valid_rows = find(contains_one);
+
+% Which was the lowest amplitude where a response was found? (Check across all valid channels)
+[~,thresh_col] = max(found_resp_mask(valid_rows,:), [],2);
+
+% Require that at least at one amplitude no response was found
+valid_col = find(thresh_col > 1);
+if isempty(valid_col)
+    % no threshold was found at the most sensitive channel so skip
+    thresh_found = 0;
+    fprintf("No threshold found for %d Hz\n", cur_freq)
+else
+    % Identify the most sensitive channel
+    thresh_col = thresh_col(valid_col);
+    thresh_found = 1;
+    [~, idx_sens_chan] = min(thresh_col);
+    most_sens_row = valid_rows(valid_col(idx_sens_chan));
+    most_sens_chan = valid_chans(most_sens_row);
+
+    % Display to check
+    fprintf("Most sensitive channel : %d\n",most_sens_chan)
+    avail_trials = resp_first(most_sens_chan,:,end,end);
+
+    % Identify the highest amplitude where no response was found, this
+    % amplitude will count towards our available trials to choose from
+    % Since in the live adaptive protocol, you would test at lower and
+    % lower amplitudes until you have one amplitude that took up to the max
+    % trial limit and you did not see a response. We want to simulate this
+    first_no_resp = find(avail_trials == max_trials,1,'last');
+    select_amp_vec = amp_vec(first_no_resp:end);
+    if any(avail_trials(1:first_no_resp-1) ~= max_trials) % There should be only max_trials listed
+        fprintf("Response found at lower amplitude than expected\n")
+        avail_trials
+    end
+    
+    % Identify the number of trials we are able to simulate the lower
+    % asymptote with
+    avail_trials = avail_trials(first_no_resp:end);
+    amps_to_sim = amp_vec(1:first_no_resp-1); % There were no responses at these frequencies
+
+    % Select stim OFF trials based on amplitudes where we found a response AND the first amplitude where no response was found
+    % and ensure equal phases (it shouldn't really matter because it is noise though...)
+    for ichan = 1:length(my_chans_name)
+        avail_pos = [];
+        avail_neg = [];
+        for iamp = 1:numel(avail_trials)
+            cur_trial_N = avail_trials(iamp);
+            amp_idx = find(select_amp_vec(iamp) == amp_vec);
+            cur_phase_vec = phase_vec(:,1,amp_idx,1,ichan,ifreq);
+
+            % Divide available trials by phase
+            cur_trials_idx = find(cur_phase_vec == 1,cur_trial_N/2,'first');
+            avail_pos = [avail_pos; OFF_2f(cur_trials_idx,amp_idx,1,ichan,ifreq)];
+            cur_trials_idx = find(cur_phase_vec == -1,cur_trial_N/2,'first');
+            avail_neg = [avail_neg; OFF_2f(cur_trials_idx,amp_idx,1,ichan,ifreq)];
+
+        end
+
+        %% Calculate bootstrapped distribution for each simulated lower asymptote data point
+        % Calculate number of amplitudes you want to simulate, and how many
+        % trials you can assign for each with the maximum number of trials
+        % you can assign to each amplitude given all available trials
+        % You want to maximize the number of trials you can include in the
+        % average
+
+        % Make sure enough trials are available for simulating the last amps
+        length(amps_to_sim);
+        if length(avail_pos) ~= length(avail_neg)
+            fprintf('Uneven available trials for simulation\n')
+        end
+        % How many trials can we give to each amplitude we want to simulate?
+        N_trials_each = floor(length(avail_pos)/length(amps_to_sim));
+
+        % Randomize order of available trials
+        rand_idx = randperm(length(avail_pos));
+        avail_pos = avail_pos(rand_idx);
+        rand_idx = randperm(length(avail_neg));
+        avail_neg = avail_neg(rand_idx);
+        idx = 1;
+
+        % Build simulated data points for amps that had no response (after the first no response)
+        % Since this is supposed to imitate the ON-OFF bootstrap procedure,
+        % split half of the available trials for this amplitude as ON and
+        % then use the other for OFF even though technically they are OFF
+        for iamp = 1:numel(amps_to_sim)
+            p = avail_pos(idx:idx+N_trials_each-1);
+            n = avail_neg(idx:idx+N_trials_each-1);
+            balanced_set = reshape([p(:) n(:)].', [], 1); % Reshape so that the balanced set is ordered +-+-...
+            length_set = length(balanced_set);
+            F_stat_results = calc_F_stat_2samp(balanced_set(1:(length_set/2))', balanced_set(((length_set/2)+1):end)');
+
+            F_growth.sim.F_vals(ichan,iamp) = F_stat_results(1);
+            idx = idx+N_trials_each;
+        end
+
+        % Now add in real data at amplitudes we do not need to simulate to sim vector
+        for iamp = (length(amps_to_sim)+1):length(amp_vec)
+            F_growth.sim.F_vals(ichan,iamp) = F_growth.all.F_vals(ichan,iamp);
+        end
+    end
+end
+
+if yes_plot
+    figure; tiledlayout(1,length(my_chans_name),'TileSpacing','tight','Padding','tight');
+end
+
+%% Fit sigmoid
+% Preallocate fit quality variables
+n_chan = length(my_chans_name);
+fit_quality.all.resnorm  = NaN(n_chan,1);
+fit_quality.all.exitflag = NaN(n_chan,1);
+fit_quality.all.pinned   = NaN(n_chan,4);
+
+fit_quality.sim.resnorm  = NaN(n_chan,1);
+fit_quality.sim.exitflag = NaN(n_chan,1);
+fit_quality.sim.pinned   = NaN(n_chan,4);
+
+% Loop through data
+for ichan = 1:length(my_chans_name)
+    % Reset threshold variables so they don't get passed over from channel to channel
+    cur_thresh = NaN;
+    cur_thresh_sim = NaN;
+    if yes_plot
+        nexttile
+    end
+    cur_color = select_chan_color(ichan);
+
+    % Assign the y values you want to fit the model to
+    cur_y = F_growth.all.F_vals(ichan,:);
+    % Transform F data to log10
+    cur_y = log10(max(cur_y,realmin,'includenan')); 
+    if thresh_found
+        cur_y_sim = F_growth.sim.F_vals(ichan,:);
+        % Transform p data to log10
+        cur_y_sim = log10(max(cur_y_sim,realmin,'includenan')); 
+
+        % Identify how similar the simulated vs. full lower asymptote means are
+        % Compare means since this is noise, calculate percentage difference in
+        % the lower asymptote mean values
+        all_mean = mean(cur_y(1:length(amps_to_sim)));
+        sim_mean = mean(cur_y_sim(1:length(amps_to_sim)));
+        F_growth.sim.mean_diff(ichan) = all_mean - sim_mean;   
+    end
+
+    % Check for NaNs
+    if any(isnan(cur_y)), continue; end
+
+    %% Fit all data sigmoid
+    try
+        [p, logistic, fq] = param_logistic(cur_y, reshape(amp_vec,1,[]));
+    catch ME % Catch cases where fit is unsuccessful
+        fprintf('fit_F_stat_model: %s sigmoid fit failed, skipping channel (%s)\n', my_chans_name{ichan}, ME.message);
+        continue
+    end
+
+    %% Store fit quality information
+    fit_quality.all.resnorm(ichan)  = fq.resnorm;
+    fit_quality.all.exitflag(ichan) = fq.exitflag;
+    fit_quality.all.pinned(ichan,:) = fq.pinned;
+    F_growth.all.p(ichan,:) = p;
+
+    % Create fitted sigmoid y vector
+    y_vec = logistic(p, x_vec);
+
+    % Find and assign alpha value crossing threshold
+    if y_vec(1) < log_trans_alpha
+        cross_idx = find(y_vec >= log_trans_alpha, 1, 'first');
+        if ~isempty(cross_idx)
+            cur_thresh = x_vec(cross_idx);
+            F_growth.all.thresh(ichan) = cur_thresh;
+        end
+    end
+
+    if thresh_found
+        %% Fit sim data sigmoid
+        if ~any(isnan(cur_y_sim))
+            % Fit sigmoid
+            try
+                [p, logistic, fq] = param_logistic(cur_y_sim, reshape(amp_vec,1,[]));
+            catch ME
+                fprintf('fit_F_stat_model: %s sim sigmoid fit failed (%s)\n', my_chans_name{ichan}, ME.message);
+                fq = [];
+            end
+
+            %% Save fit quality information
+            if ~isempty(fq)
+                fit_quality.sim.resnorm(ichan)  = fq.resnorm;
+                fit_quality.sim.exitflag(ichan) = fq.exitflag;
+                fit_quality.sim.pinned(ichan,:) = fq.pinned;
+                F_growth.sim.p(ichan,:) = p;
+
+                % Create fitted sigmoid y vector
+                y_vec_sim = logistic(p, x_vec);
+
+                % Find and assign 0 crossing threshold value
+                if y_vec_sim(1) < log_trans_alpha
+                    cross_idx = find(y_vec_sim >= log_trans_alpha, 1, 'first');
+                    if ~isempty(cross_idx)
+                        cur_thresh_sim = x_vec(cross_idx);
+                        F_growth.sim.thresh(ichan) = cur_thresh_sim;
+                    end
+                end
+            end
+        end
+    end
+
+    %% Plot model fit only all data
+    if yes_plot
+        plot(x_vec,y_vec,'Color',cur_color,'LineWidth',1.5)
+        hold on;
+
+        % Scale point opacity based on trial count
+        max_batch = (max_trials/trials_per_block);
+        alpha = 1 + ((growth_func_trials(ichan,:)- max_batch) / max_batch);
+        scatter(amp_vec, cur_y, 36*1.5, cur_color, 'filled', ...
+            'AlphaData', alpha, 'MarkerFaceAlpha', 'flat', ...
+            'MarkerEdgeColor', cur_color)
+        yline(log_trans_alpha,'--')
+        xline(cur_thresh, '--', sprintf('%.2f dB', cur_thresh), 'FontSize', 12, ...
+            'LabelVerticalAlignment', 'middle', 'LabelOrientation', 'horizontal', 'Color',cur_color)
+        if thresh_found
+            xline(cur_thresh_sim, '--', 'Color',cur_color) % Indicate the simulation threshold
+        end
+        xlabel('Stimulus Amplitude')
+        if ichan == 1, ylabel('log10(F)'); end
+        title(sprintf('%s', my_chans_name{ichan}))
+        hold on;
+    end
+
+end
+
+if yes_plot
+    sgtitle(sprintf('%d Hz %s: sigmoid fit to log10(F)',cur_freq,my_tag))
+    linkaxes
+end

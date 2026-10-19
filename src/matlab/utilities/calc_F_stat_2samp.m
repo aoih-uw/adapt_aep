@@ -13,6 +13,6 @@ SS = sum(abs(vals_ON - mean(vals_ON)).^2) + sum(abs(vals_OFF - mean(vals_OFF)).^
 F = (n1+n2-2) * (n1*n2/(n1+n2)) * d2 / SS;
 
 % Calculate p value
-p = 1 - fcdf(F, 2, 2*(n1+n2-2));
+p = fcdf(F, 2, 2*(n1+n2-2), 'upper');
 
 my_F_stats = [F p];

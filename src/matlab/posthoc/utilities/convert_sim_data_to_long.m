@@ -1,7 +1,6 @@
 %% convert_sim_data_to_long
 function sim_results = convert_sim_data_to_long(subjid, cur_freq, amp_vec, it_vec, CI_vec, ...
-    boot_count, F_count, twof_growth, low_growth, fit_quality_low, ...
-    my_chans, my_chans_name, cumu, polar)
+    F_count, twof_growth, F_growth, fit_quality_F, my_chans, my_chans_name, cumu, polar)
 
 % Assign variables
 sim_results = struct();
@@ -26,25 +25,15 @@ subjid_col = repmat(subjid,length(Chan(:)),1);
 freq_col = repmat(cur_freq,length(Chan(:)),1);
 col = @(X,k) reshape(X(:,k,:,:), [], 1); % Pull stat k out as one column
 F_stats_table = table(subjid_col, categorical(Chan(:),1:n_chans,my_chans_name),freq_col, Amp(:), ...
-   Batches(:),cumu.n(:), col(cumu.F_stats_ON,1), col(cumu.F_stats_ON,2), ...
-    col(cumu.F_stats_ON,3), col(cumu.F_stats_ON,4), ...
+   Batches(:),cumu.n(:), col(cumu.F_stats,1), col(cumu.F_stats,2),...
    'VariableNames',{'Subj_ID','Chan','Freq', 'Amp', 'Batch','N_trials' ...
-   'PLV', 'R','F','p'});
+   'F','p'});
 
 % Store varialbes
 sim_results.polar = polar_table;
 sim_results.F_stats = F_stats_table;
 
 %% Resp_found heatmap
-% Boot
-[Chan, Amp, IT, CI] = ndgrid(1:n_chans,amp_vec, it_vec,CI_vec);
-subjid_col = repmat(subjid,length(Chan(:)),1);
-freq_col = repmat(cur_freq,length(Chan(:)),1);
-boot_resp_found = table(subjid_col, categorical(Chan(:),1:n_chans,my_chans_name),freq_col, Amp(:), ...
-    IT(:), CI(:), boot_count.stable(:), boot_count.first(:), boot_count.inconsist(:), ...
-    'VariableNames',{'Subj_ID','Chan','Freq', 'Amp',...
-    'Boot_It_N','CI','Stable','First','N_Inconsist'});
-
 % F stat
 [Chan, Amp] = ndgrid(1:n_chans,amp_vec);
 subjid_col = repmat(subjid,length(Chan(:)),1);
@@ -55,7 +44,6 @@ F_resp_found = table(subjid_col, categorical(Chan(:),1:n_chans,my_chans_name),fr
     'Stable','First','N_Inconsist'});
 
 % Store
-sim_results.boot_resp_found = boot_resp_found;
 sim_results.F_resp_found = F_resp_found;
 
 %% 2f growth functions
@@ -70,35 +58,34 @@ twof_summary = table(subjid_col, categorical(Chan(:),1:n_chans,my_chans_name), f
 % Store variables
 sim_results.twof.summary = twof_summary;
 
-%% Low CI growth functions
-%% now low_growth.all vs. low_growth.sim
+%% F_growth.all vs. F_growth.sim
 % Summary vals
 [Chan, Amp] = ndgrid(1:n_chans, amp_vec);
 subjid_col = repmat(subjid,length(Chan(:)),1);
 freq_col = repmat(cur_freq,length(Chan(:)),1);
-lowCI_summary = table(subjid_col, categorical(Chan(:),1:n_chans,my_chans_name), freq_col, Amp(:), ...
-    low_growth.all.low_CI(:), low_growth.sim.low_CI(:), ...
+F_summary = table(subjid_col, categorical(Chan(:),1:n_chans,my_chans_name), freq_col, Amp(:), ...
+    F_growth.all.F_vals(:), F_growth.sim.F_vals(:), ...
     'VariableNames',  {'Subj_ID','Chan','Freq','Amp','All','Sim'});
 
 % Threshold
-thresh_vec = low_growth.all.thresh_ci;
-thresh_vec_sim = low_growth.sim.thresh_ci;
+thresh_vec = F_growth.all.thresh;
+thresh_vec_sim = F_growth.sim.thresh;
 chan_col = (1:n_chans)';
 subjid_col = repmat(subjid,length(thresh_vec),1);
 freq_col = repmat(cur_freq,length(thresh_vec),1);
 
-lowCI_thresh = table(subjid_col, categorical(chan_col,1:n_chans,my_chans_name), ...
+F_thresh = table(subjid_col, categorical(chan_col,1:n_chans,my_chans_name), ...
     freq_col, thresh_vec, thresh_vec_sim, ...
     'VariableNames',  {'Subj_ID','Chan','Freq','All', 'Sim'});
 
 % Fit parameters
-p = low_growth.all.p;
-p_sim = low_growth.sim.p;
+p = F_growth.all.p;
+p_sim = F_growth.sim.p;
 chan_col = (1:n_chans)';
 subjid_col = repmat(subjid,length(chan_col),1);
 freq_col = repmat(cur_freq,length(chan_col),1);
 
-lowCI_p = table(subjid_col, categorical(chan_col,1:n_chans,my_chans_name), freq_col, ...
+F_p = table(subjid_col, categorical(chan_col,1:n_chans,my_chans_name), freq_col, ...
     p(:,1), p(:,2), p(:,3), p(:,4), ...
     p_sim(:,1), p_sim(:,2), p_sim(:,3), p_sim(:,4), ...
     'VariableNames',{'Subj_ID','Chan','Freq',...
@@ -106,10 +93,10 @@ lowCI_p = table(subjid_col, categorical(chan_col,1:n_chans,my_chans_name), freq_
     'a_Sim','k_Sim','x0_Sim','b_Sim'});
 
 % Store in sim_results
-sim_results.lowCI.summary = lowCI_summary;
-sim_results.lowCI.thresholds = lowCI_thresh;
-sim_results.lowCI.p = lowCI_p;
-sim_results.lowCI.fit_q = make_fit_qual(subjid, cur_freq, fit_quality_low, n_chans, my_chans_name);
+sim_results.F.summary = F_summary;
+sim_results.F.thresholds = F_thresh;
+sim_results.F.p = F_p;
+sim_results.F.fit_q = make_fit_qual(subjid, cur_freq, fit_quality_F, n_chans, my_chans_name);
 end
 
 function qual = make_fit_qual(subjid, cur_freq, fq, n_chans, my_chans_name)

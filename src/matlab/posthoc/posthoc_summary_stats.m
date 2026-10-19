@@ -1,13 +1,14 @@
 %% Posthoc calc_summary_stats
 % Create a cross subject summary table
 % Load in presummary tables by subject and combine into one mega table
-subjids = [29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51];
+% Remember to remove subject 37
+subjids = [29 30 31 32 33 34 35 36 38 39 40 41 42 43 44 45 46 47 48 49 50 51];
 sort_loc = 'D:\2026\Research\Aug Sept Midshipman\sorted_data';
 presum_loc = 'D:\2026\Research\Aug Sept Midshipman\pre_summary';
+outdir =  'D:\2026\Research\Aug Sept Midshipman\pre_summary';
 cd(presum_loc)
-all_sim = struct('resp_found',{},'lowCI_fit',{},'threshold',{});
+all_sim = struct('resp_found',{},'F_fit',{},'threshold',{});
 all_hydro = struct('ON',{},'noise',{});
-max_trials = 260;
 
 for isubj = 1:length(subjids)
     cur_subj = subjids(isubj);
@@ -22,7 +23,7 @@ for isubj = 1:length(subjids)
 
     % Load and sort
     S = load(fullfile(presum_loc, files(1).name));
-    lowCI = [S.sim_results.lowCI];
+    F = [S.sim_results.F];
     twof = [S.sim_results.twof];
 
     % Hydrophone
@@ -30,14 +31,13 @@ for isubj = 1:length(subjids)
     all_hydro(isubj).noise = vertcat(S.hydro_results.noise);
     
     % How many trials needed to detect response
-    all_sim(isubj).boot_resp_found = vertcat(S.sim_results.boot_resp_found);
     all_sim(isubj).F_resp_found = vertcat(S.sim_results.F_resp_found);
 
     % Low CI Model 
-    all_sim(isubj).model_p = vertcat(lowCI.p); % Vertcat across all frequencies
-    all_sim(isubj).lowCI_vals = vertcat(lowCI.summary); % raw lowCI values for each subject 
-    all_sim(isubj).lowCI_fitq = vertcat(lowCI.fit_q);
-    all_sim(isubj).threshold = vertcat(lowCI.thresholds);
+    all_sim(isubj).model_p = vertcat(F.p); % Vertcat across all frequencies
+    all_sim(isubj).F_vals = vertcat(F.summary); % raw F values for each subject 
+    all_sim(isubj).F_fitq = vertcat(F.fit_q);
+    all_sim(isubj).threshold = vertcat(F.thresholds);
   
     % Typical 2f growth function
     all_sim(isubj).twof = vertcat(twof.summary);
@@ -52,10 +52,9 @@ for isubj = 1:length(subjids)
 end
 
 % Sort Tables
-T_brf = vertcat(all_sim.boot_resp_found);
-T_Frf = vertcat(all_sim.F_resp_found);
-T_lowCI = vertcat(all_sim.lowCI_vals);
-T_lowCI_fitq = vertcat(all_sim.lowCI_fitq);
+T_Frf = vertcat(all_sim.F_resp_found); % F response found heatmaps
+T_F = vertcat(all_sim.F_vals); % Raw F values to plot with
+T_F_fitq = vertcat(all_sim.F_fitq); % Fit quality
 T_twof = vertcat(all_sim.twof);
 T_thresh = vertcat(all_sim.threshold);
 T_mp = vertcat(all_sim.model_p);
@@ -67,10 +66,9 @@ T_wl = readtable('weight_length_table.xlsx');
 T_polar = vertcat(all_sim.polar);
 
 % Merge "subcutaneous"/"Subcutaneous" in all tables
-T_brf = fixChan(T_brf);
 T_Frf = fixChan(T_Frf);
-T_lowCI = fixChan(T_lowCI);
-T_lowCI_fitq = fixChan(T_lowCI_fitq);
+T_F = fixChan(T_F);
+T_F_fitq = fixChan(T_F_fitq);
 T_twof = fixChan(T_twof);
 T_thresh = fixChan(T_thresh);
 T_mp = fixChan(T_mp);

@@ -241,7 +241,7 @@ for iname = 1:length(grand_ex_save)
                 end
 
                 % Stim OFF (for simulating AEP data)
-                if strcmp(cur_stim_type, 'ONOFF') && strcmp(my_chans_name{ichan}, 'Subcranial')
+                if strcmp(cur_stim_type, 'ONOFF') && strcmpi(my_chans_name{ichan}, 'Subcranial')
                     stim_OFF_time(row_range,1:size(stim_OFF,2),amp_idx,1,freq_idx)   = stim_OFF;
                 end
 
@@ -444,7 +444,6 @@ org_data.phase_vec    = phase_vec;
 org_data.time_vec = time_vec;
 
 % Hydrophone
-org_data.hydro_ds_rate  = hydro_ds_rate;
 org_data.hydro_ON_time  = hydro_ON_time;
 org_data.hydro_OFF_time = hydro_OFF_time;
 org_data.hydro_ON_fft   = hydro_ON_fft;

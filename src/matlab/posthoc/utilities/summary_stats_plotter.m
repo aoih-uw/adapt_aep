@@ -1,22 +1,28 @@
 % Categories are metadata they dont get removed when you filter the data
-outdir = 'F:\2026\Research\Aug Sept Midshipman\pre_summary';
-chan_inc = ["Subcutaneous", "Subcranial"];
+chan_inc = ["Subcranial","Subcutaneous"];
 freq_inc = [55, 100, 410];
 my_colors = {tableau_10('red'), tableau_10('blue'), tableau_10('orange'), tableau_10('teal'), tableau_10('purple'),tableau_10('yellow')};
-my_color_order = colororder([tableau_10('blue'); tableau_10('orange')]);
+my_color_order = [tableau_10('blue'); tableau_10('orange')];
+set(groot, 'defaultAxesColorOrder', my_color_order);
+
+% Significance variables
+max_trials = 260;
+my_alpha = 0.01;
+log_trans_alpha = log10(finv(1 - my_alpha, 2, 2*(2*max_trials - 2)));
+
+%% Growth Function
+summary_plot_growth_function
+
 %% Summary polar plot
 summary_polar_plot
 
 %% Plot consistency of 2f response
 summary_plot_2f_consistency
 
-%% Low CI Fit Quality summary
-summary_plot_low_CI_fit_quality
+%% F Fit Quality summary
+summary_plot_F_fit_quality
 
-%% Growth Function
-summary_plot_growth_function
-
-%% Lower CI GF Model Fit Parameters Box plot
+%% F GF Model Fit Parameters Box plot
 summary_plot_GF_fit_params
 
 %% Hydrophone Acoustics Summary
@@ -38,4 +44,4 @@ summary_threshold_boxplot
 apply_tufte
 
 % % Save figs to powerpoint
-% save_figs_to_ppt(outdir, 'Midshipman AEP Summary Stats 2026')
+save_figs_to_ppt(outdir, 'Midshipman AEP Summary Stats 2026')
