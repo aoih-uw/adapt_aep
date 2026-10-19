@@ -17,9 +17,9 @@ for ichan = 1:length(chan_inc)
     y_vec = x_vec;
     plot(x_vec,y_vec,'--','Color',tableau_10('grey'))
 
-    % Show +/- 3 dB difference range
+    % Show +/- 5 dB difference range
     xb = [x_vec, fliplr(x_vec)];
-    yb = [x_vec + 3, fliplr(x_vec - 3)];
+    yb = [x_vec + 5, fliplr(x_vec - 5)];
     fill(xb, yb, tableau_10('grey'), 'FaceAlpha', 0.1, 'EdgeColor', 'none')
 
     xlabel('Bootstrap Threshold')
@@ -50,7 +50,7 @@ for i = 1:numel(chan_inc)
     nexttile
     cur_chan = sub_T(sub_T.Chan == chan_inc{i},:);
     lims = [my_min my_max];
-    fill([lims fliplr(lims)], [lims+3 fliplr(lims)-3], tableau_10('grey'), ...
+    fill([lims fliplr(lims)], [lims+5 fliplr(lims)-5], tableau_10('grey'), ...
         'FaceAlpha', 0.1, 'EdgeColor', 'none', 'HandleVisibility', 'off')
     hold on;
     plot(lims,lims,'--','Color',tableau_10('grey'))

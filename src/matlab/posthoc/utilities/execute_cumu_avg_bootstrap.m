@@ -118,22 +118,24 @@ for ichan = 1:length(my_chans)
             cumu.noise_floor.sem.twof(ibatch,iamp,ichan)    = cur_noise_floor_sem; % Will figure equation out later
 
             % F Stats
-            % output = [myPLV R F p];
-            cumu.F_stats_ON(ibatch,:,iamp,ichan) = calc_F_stat(cur_ON_batch);
+            % output = [F p];
+            cumu.F_stats(ibatch,:,iamp,ichan) = calc_F_stat_2samp(cur_ON_batch,cur_OFF_batch);
             
-            % Loop through N bootstrap iterations (all CI levels share one run)
-            for iit = 1:length(itvec)
-                n_bootstrap = itvec(iit);
-
-                % Difference
-                [bootstat, lower_CI_all] = ...
-                    calculate_bootstrap(n_bootstrap, cur_ON_batch, cur_OFF_batch, CI_vec);
-
-                boot.diff.mean(ibatch,iamp,ichan,iit,:) = mean(bootstat);
-                boot.diff.std(ibatch,iamp,ichan,iit,:)  = std(bootstat);
-                boot.diff.lower_ci(ibatch,iamp,ichan,iit,:)  = lower_CI_all;
-                boot.diff.resp_found(ibatch,iamp,ichan,iit,:) = lower_CI_all > 0;
-            end
+            %% Pause on bootstrapping for now
+            % % Loop through N bootstrap iterations (all CI levels share one run)
+            % for iit = 1:length(itvec)
+            %     n_bootstrap = itvec(iit);
+            % 
+            %     % Difference
+            %     [bootstat, lower_CI_all] = ...
+            %         calculate_bootstrap(n_bootstrap, cur_ON_batch, cur_OFF_batch, CI_vec);
+            % 
+            %     boot.diff.mean(ibatch,iamp,ichan,iit,:) = mean(bootstat);
+            %     boot.diff.std(ibatch,iamp,ichan,iit,:)  = std(bootstat);
+            %     boot.diff.lower_ci(ibatch,iamp,ichan,iit,:)  = lower_CI_all;
+            %     boot.diff.resp_found(ibatch,iamp,ichan,iit,:) = lower_CI_all > 0;
+            % end
+            
             % Progress cumulative counter
             idx = idx+trials_per_block;
         end
@@ -151,5 +153,4 @@ mystruct.mag.mean(iamp,ichan) = abs(cur_mean);
 mystruct.mag.std(iamp,ichan) = std(vals); % Spread of dots
 mystruct.angle.mean(iamp,ichan) = angle(cur_mean);
 mystruct.PLV(iamp,ichan) = abs(mean(vals./abs(vals))); % I am not familiar with this equation
-
 end

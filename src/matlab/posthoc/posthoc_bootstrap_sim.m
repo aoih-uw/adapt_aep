@@ -7,7 +7,7 @@
     % inconsistent_vec(chan, amp,n_boot,CI)
     % twof/low_growth.mean/sem/noise_floor(chan,amp)
     % twof/low_growth.x/y_vec(1,:,chan)
-    % low_growth.thresh_ci(chan)
+    % low_growth.thresh(chan)
     % low_growth.p(chan,4)
 
 %% Assign variables
@@ -41,8 +41,8 @@ CI_vec = [99];
 max_batches = max_trials/trials_per_block; % e.g. 130 trials in batches of 10
 twof_growth = [];
 
-clear sim_results fit_quality_2f fit_quality_low
-% Loop through first by frequency
+% Clear vars
+clear sim_results fit_quality_2f fit_quality_low fit_quality_F% Loop through first by frequency
 for ifreq = 1:length(stim_freqs)
     %% Assign frequency specific variables
     tic()
@@ -60,10 +60,7 @@ for ifreq = 1:length(stim_freqs)
     cumu.diff.sem.twof             =  NaN(sz); 
     cumu.noise_floor.mean.twof     = NaN(sz); 
     cumu.noise_floor.sem.twof     =  NaN(sz);
-
-    % F Stats [F, p]
-    sz = [max_batches, 2, length(amp_vec), length(my_chans)];
-    cumu.F_stats_ON                = NaN(sz);
+    cumu.F_stats                = NaN([max_batches, 2, length(amp_vec), length(my_chans)]);
 
     % Simulation
     sz = [max_batches, length(amp_vec), length(my_chans), length(itvec), length(CI_vec)];
@@ -89,13 +86,10 @@ for ifreq = 1:length(stim_freqs)
     my_params.trials_per_block = trials_per_block;
     my_params.itvec            = itvec;
     my_params.CI_vec           = CI_vec;
+    my_params.my_alpha         = 0.01/max_batches; % Base alpha value divided by the number of looks you are going to take
 
     %% Execute cumulative averaging/bootstrapping simulation
     [cumu, boot, polar] = execute_cumu_avg_bootstrap(my_params, cumu, boot);
-
-    %% Plot 2f and noise floor raw growth function across batches
-    % [cumu_noise, cumu_diff] = plot_cumulative_sigs...
-    % (max_trials,trials_per_block,my_chans,my_chans_name,amp_vec,cumu);
 
     %% Simulate adaptive trial count
     % By n iteration
@@ -104,64 +98,19 @@ for ifreq = 1:length(stim_freqs)
     
     %% Plot 2f growth functions
     [twof_growth, fit_quality_2f(ifreq)] = plot_2f_growth_func...
-        (cumu, boot_count.first, amp_vec, my_chans, my_chans_name, ...
+        (cumu, F_count.first, amp_vec, my_chans, my_chans_name, ...
         trials_per_block, stim_freqs(ifreq), use_sigmoid,plot_linear);
 
-    % Estimate threshold based on lower CI value and estimate bias
-    % Fit softplus to lower_CI growth functions and find zero-crossing threshold
-    % Only look at highest bootstrap iteration data
-
-    % By n iteration
-    lower_ci_vec = boot.diff.lower_ci(:,:,:,end,end); % use highest CI rate and n_bootstrap
-
-    [low_growth, fit_quality_low(ifreq)] = ...
-    fit_low_CI_model(amp_vec, lower_ci_vec, boot_count.first,  my_params, ifreq, ...
-    trials_per_block, max_trials, my_chans_name, my_params.cur_freq, 'Full dataset', 1);
+    %% Plot p value across amplitude
+    [F_growth, fit_quality_F(ifreq)] = fit_F_stat_model(amp_vec, cumu, F_count.first, my_params, ifreq, ...
+    trials_per_block, max_trials, my_chans_name, cur_freq, 'Full dataset', 1);
 
     %% Simulate removal of data points
 
-    % %% Plot mean 2f amplitude across batches and ID when resp_found
-    % for ichan = 1:length(my_chans)
-    %     figure;
-    %     tiledlayout(5,4,'Padding','tight','TileSpacing','tight');
-    %     for iamp = 1:length(amp_vec)
-    %         nexttile; hold on;
-    % 
-    %         batch_num  = cumu.n(:,iamp,ichan);
-    %         resp_found = boot.diff.resp_found(:,iamp,ichan,end,end); % Use highest iteration and CI numbers
-    %         batch_mean = cumu.diff.mean.twof(:,iamp,ichan);
-    %         batch_sem  = cumu.diff.sem.twof(:,iamp,ichan);
-    % 
-    %         % Sort batch data
-    %         [batch_num, si] = sort(batch_num);
-    %         batch_mean = batch_mean(si);
-    %         batch_sem  = batch_sem(si);
-    %         resp_found = resp_found(si);
-    % 
-    %         % Create error fill
-    %         x_vec  = batch_num(:).';
-    %         lo = (batch_mean - batch_sem).';
-    %         hi = (batch_mean + batch_sem).';
-    %         fill([x_vec fliplr(x_vec)], [lo fliplr(hi)], [.7 .7 .7], ...
-    %             'FaceAlpha',.25,'EdgeColor','none','HandleVisibility','off');
-    %         plot(x_vec, batch_mean, 'Color',[.7 .7 .7],'HandleVisibility','off');
-    % 
-    %         % Plot raw data
-    %         scatter(batch_num(resp_found==1),batch_mean(resp_found==1),40,tableau_10('green'),'filled');
-    %         scatter(batch_num(resp_found==0),batch_mean(resp_found==0),40,tableau_10('red'),'filled');
-    %         title(sprintf('%d dB',amp_vec(iamp)));
-    %         xlabel('N trials in average'); ylabel('Amplitude (\muV)');
-    %     end
-    %     sgtitle(sprintf('%d Hz; Channel %d', stim_freqs(ifreq), my_chans(ichan)));
-    %     hold off;
-    % end
-
-    % Convert simulation results to long form table
+    %% Convert simulation results to long form table
     sim_results(ifreq) = convert_sim_data_to_long(subjid, cur_freq, amp_vec, itvec, CI_vec, ...
-    boot_count, F_count, twof_growth, low_growth, fit_quality_low(ifreq), ...
-    my_chans, my_chans_name, cumu, polar);
+    F_count, twof_growth, F_growth, fit_quality_F(ifreq), my_chans, my_chans_name, cumu, polar);
     
     %% Report progress
     toc()
 end
-

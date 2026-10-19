@@ -1,6 +1,13 @@
 function [p, cur_data, my_weights, softplus, fit_quality] ...
-    = param_softplus(cur_data, my_weights, amp_vec, noise_floor,weight_data)
-%% Assing vars
+    = param_softplus(cur_data, my_weights, amp_vec, noise_floor, weight_data)
+%% 10/14/2026: param_softplus will not use asinh anymore to transform the
+% data. This means for model fits for threshold finding, the data must be
+% transformed (using -log10(x) for example) before using in this function.
+% Normal growth functions used for illustrative purposes won't use (or
+% likely need) this correction factor, since it was initially used
+% specifically to better fit lower asymptote small values
+
+%% Assign vars
 % Force row
 cur_data = cur_data(:).';  my_weights = my_weights(:).';  amp_vec = amp_vec(:).';
 
@@ -23,26 +30,6 @@ if isempty(noise_floor)
 else
     base = noise_floor;
 end
-
-%% Create scaling factor needed to penalize residuals at low amplitudes
-%#%# Ask someone from eScience to help confirm this is the correct thing to do
-% my_noise = noise
-% If the data were perfectly flat, the standard deviation will be 0, which
-% will break the code, so use eps to prevent this
-% asinh = inverse hyperbolic sine, barely changes small values e.g., asinh(0.5) =
-% 0.48, and compresses large values, asinh(100) = 5.3.
-
-% Identify how the noise floor varies
-my_noise = max(std(cur_data(amp_vec < min(amp_vec) + 0.3*range(amp_vec))), eps);
-if my_noise == eps
-    fprintf('param_softplus: std of noise floor suspicious.\n')
-end
-
-% Setup anonymous scaling function
-% By dividing by the std/how noisy my data is, it defines the switch point
-% of when to start squashing values when the values are larger than the
-% noise. The switch point of asinh is typically 1, without this correction
-my_trans = @(y) asinh(y./my_noise); % Squashes larger y values, keeps small y values the same
 
 %% Assign upper/lower bounds and initial parameter values
 % x0 init
@@ -71,10 +58,8 @@ ub = [Inf, Inf,  max(amp_vec) inf];
 p0 = min(max(p0, lb), ub);
 
 %% Fit model
-% Squashing of data happens after fitting the model, then compares the fit
-% to the squashed data, then try out different p values
-[p, resnorm, ~, exitflag, ~, ~, ~] = lsqcurvefit(@(p,x) my_trans(softplus(p,x)).*weight_vec, p0, ...
-    amp_vec, my_trans(cur_data).*weight_vec, lb, ub, optimset('Display','off'));
+[p, resnorm, ~, exitflag, ~, ~, ~] = lsqcurvefit(@(p,x) softplus(p,x).*weight_vec, p0, ...
+    amp_vec, cur_data.*weight_vec, lb, ub, optimset('Display','off'));
 
 %% Identify trials with pinned or non-converged fits
 % Did the fitter end up pressed against one of the limits I set? If so the

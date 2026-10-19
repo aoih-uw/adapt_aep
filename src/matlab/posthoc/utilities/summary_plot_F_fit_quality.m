@@ -1,8 +1,7 @@
-%% summary_plot_low_CI_fit_quality
-
+%% summary_plot_F_fit_quality
 % Filter dataset
-sub_T = T_lowCI_fitq(ismember(T_lowCI_fitq.Freq, freq_inc) & ...
-    ismember(T_lowCI_fitq.Chan, chan_inc),:);
+sub_T = T_F_fitq(ismember(T_F_fitq.Freq, freq_inc) & ...
+    ismember(T_F_fitq.Chan, chan_inc),:);
 
 % All Data
 % Set up figure
