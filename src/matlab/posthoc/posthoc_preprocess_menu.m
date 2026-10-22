@@ -8,15 +8,15 @@ addpath(genpath('C:\Users\Aoi Hunsaker\Desktop\adapt_aep\src\matlab\'))
 old_vis = get(0,'DefaultFigureVisible');
 
 % Decide wether to load in raw file
-load_raw_file = 0;
+load_raw_file = 1;
 file_type = 'mixed_freqs';
 % file_type = 'benzo';
 
 %% Set this when doing bulk processing!
-set(0,'DefaultFigureVisible','off');
+% set(0,'DefaultFigureVisible','off');
 try
-    % subjids = 44;
-    subjids = 29:51;
+    subjids = 52;
+    % subjids = 29:51;
     failed = [];
     failed_files_all = {};
     for isubj = 1:length(subjids)
@@ -40,6 +40,8 @@ try
                 end
             end
 
+            failed_files_all = [failed_files_all, failed_files];
+
             %% Sort
             fprintf('\nSorting data...\n')
             [meta, org_data] = posthoc_sort_data(grand_ex_save, base_dir, ...
@@ -60,8 +62,8 @@ try
             posthoc_resp_consist
 
             % %% Waterfall
-            % fprintf('\nPlotting waterfall...\n')
-            % posthoc_waterfall % Plot grand average waterfalls
+            fprintf('\nPlotting waterfall...\n')
+            posthoc_waterfall % Plot grand average waterfalls
 
             %% Simulate
             fprintf('\nSimulating adapt_aep...\n')

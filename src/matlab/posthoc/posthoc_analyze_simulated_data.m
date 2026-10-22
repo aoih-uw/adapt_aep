@@ -11,6 +11,11 @@ latency_samples = 0;
 
 % Number of times you want to run this simulation
 n_rep = 50;
+pre_alpha = 0.01;
+
+%% What "stimulus amplitudes" do you want to simulate?
+% signal_scale = linspace(0,0.05,16);
+signal_scale = linspace(0,1,16);
 
 % Load in sorted data and get OFF_2f
 setup_noise_data
@@ -29,7 +34,7 @@ for irep = 1:n_rep
 
     % Setup vars after make_simulated_aep
     snr_dB_vec = 20.*log10(snr_vec);
-    my_alpha = 0.01 / (n_trials/trials_per_block);
+    my_alpha = pre_alpha / (n_trials/trials_per_block);
 
     %% Preallocate analysis results fields
     fprintf('Analyzing simulated AEPs...\n')
@@ -110,7 +115,7 @@ end
 
 %% Difference map
 F_diff_median = median(F_stable,3,'omitnan')-median(F_first,3,'omitnan');
-F_diff_mad = mad(F_stable,1,3)-mad(F_first,1,3);
+F_diff_mad = mad(F_stable-F_first,1,3);
 
 %% Calculate false positive rate
 no_sig = squeeze(F_first(:,1,:));
@@ -120,6 +125,9 @@ first_false_pos_rate = (numel(false_pos)/numel(no_sig))*100;
 no_sig = squeeze(F_stable(:,1,:));
 false_pos = find(no_sig < 1030);
 stable_false_pos_rate = (numel(false_pos)/numel(no_sig))*100;
+
+false_pos_rate.first = first_false_pos_rate;
+false_pos_rate.stable = stable_false_pos_rate;
 
 %% Plot trial count heatmaps
 all_data = {F_first, F_stable, F_inconsist, F_diff_median};
@@ -154,12 +162,12 @@ for i = 1:numel(all_data)
     end
 end
 
+%% Plot models
+fit_simulated_models
+
 %% Save results
 stim_freqs = ex.info.mixed.stim_freqs;
 save(sprintf('posthoc_sim_results_%s.mat', datestr(now,'yyyymmdd_HHMMSS')), ...
     'my_results','F_first','F_stable','F_inconsist','false_pos_rate', ...
     'snr_dB_vec','signal_scale','stim_freqs', ...
     'n_rep','n_trials','trials_per_block','my_alpha');
-
-%% Plot models
-fit_simulated_models

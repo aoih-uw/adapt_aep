@@ -1,7 +1,5 @@
 %% Load your data first with load_my_file
 function [meta, org_data] = posthoc_sort_data(grand_ex_save, base_dir, save_dir)
-%% What this code does:
-%
 %% Assign Variables
 info = grand_ex_save{1,2}.info;
 meta.subjid            = info.animal.subject_ID;
@@ -11,12 +9,6 @@ if strcmp(meta.exp_type,'Mixed freqs')
     meta.stim_type_vec     = info.mixed.stim_name;
     meta.stim_freqs         = info.mixed.stim_freqs;
     meta.ON_OFF_max_trials = info.mixed.max_trials(1);
-elseif strcmp(meta.exp_type,'Timed')
-    meta.amp_vecs = {info.stimulus.amplitude_spl};
-    meta.stim_type_vec = {'trim'};
-    meta.stim_freqs = info.stimulus.frequency_hz;
-    meta.trim_stim_pre_dur_ms = info.stimulus.trim_stim_pre_dur_ms;
-    meta.ON_OFF_max_trials = 5000;
 end
 % 10/8/2026: datasets after this date use info.electrodes instead of info.channels
 if isfield(info, 'electrodes') % New datasets
@@ -32,6 +24,11 @@ meta.trials_per_block  = info.trials.trials_per_block;
 meta.experiment_date = info.experiment.exp_date;
 meta.data_path = save_dir;
 
+% Include accelerometer metadata
+if strcmp(info.experiment.test_tag,'accelerometer')
+   meta.accel = grand_ex_save{1,1}.info.accel;
+end
+
 % Metadata
 subjid = meta.subjid;
 amp_vecs = meta.amp_vecs;
@@ -43,6 +40,9 @@ else
     stim_type_vec = meta.stim_type_vec;
 end
 stim_freqs = meta.stim_freqs;
+meta.ramp_duration_samples = NaN(length(stim_freqs),1);
+meta.full_amp_samples = NaN(length(stim_freqs),1);
+
 my_chans = meta.my_chans;
 my_chans_name = meta.my_chans_name;
 target_freq_range = meta.target_freq_range;
@@ -54,6 +54,7 @@ n_bins = [];
 model_sample_length = [];
 low_lim = 0 ; up_lim = 2000;
 phase_vec = NaN(max_rows, 1, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(my_chans), length(stim_freqs),'single');
+jitter_vec = NaN(max_rows, 1, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(my_chans), length(stim_freqs),'single');
 time_vec = NaT(max_rows, 1, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(my_chans), length(stim_freqs),'TimeZone','America/Los_Angeles');
 
 % AEPs
@@ -64,21 +65,19 @@ OFF_2f = NaN(max_rows, length(amp_vecs{largest_amp_vec}), 1, length(my_chans), l
 % FFTs- allocated on first trial, once the true bin count is known
 freq_vec = []; ON_fft = []; OFF_fft = [];
 
-% Time domain 
-% (77632 # of samples of longest stimuli /4 to downsample)
+% Time domain
 % Hydrophone
-hydro_ON_time = NaN(max_rows, 8820, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(stim_freqs),'single');
-hydro_OFF_time = NaN(max_rows, 8820, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(stim_freqs),'single');
+max_sample = 77632;
+ds_rate = 2;
+hydro_time = NaN(max_rows,ceil(max_sample/ds_rate),length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(stim_freqs),'single');
+hydro_fs = 44100/ds_rate;
 
 % Stim OFF
 stim_OFF_time = [];
 if strcmp(meta.exp_type,'Mixed freqs')
-stim_OFF_time = NaN(max_rows, 8820, length(amp_vecs{largest_amp_vec}), 1, length(stim_freqs),'single');
+    stim_OFF_time = NaN(max_rows, 8820, length(amp_vecs{largest_amp_vec}), 1, length(stim_freqs),'single');
 end
 
-% FFTs
-hydro_ON_fft = [];
-hydro_OFF_fft = [];
 
 %% Begin searching through datasets
 for iname = 1:length(grand_ex_save)
@@ -89,6 +88,7 @@ for iname = 1:length(grand_ex_save)
     if isfield(cur_info, 'DAC') % New datasets
         latency_samples = cur_info.DAC.latency_samples;
         fs = cur_info.DAC.sampling_rate_hz;
+        meta.latency_samples = latency_samples;
     else % Old datasets
         latency_samples = cur_info.recording.latency_samples;
         fs = cur_info.recording.sampling_rate_hz;
@@ -111,9 +111,6 @@ for iname = 1:length(grand_ex_save)
         in_mult = arrayfun(@(f,l) f:l, first_batch_loc, last_batch_loc, 'UniformOutput', false);
         mult_batch_locs = [first_batch_loc last_batch_loc]; % Matrix showing first batch and corresponding last batch
         single_batch_locs = setdiff(1:n_batches, [in_mult{:}])';
-    elseif strcmp(meta.exp_type,'Timed')
-        mult_batch_locs = [];
-        single_batch_locs = 1:20;
     end
     for ichan = 1:length(my_chans)
         cur_chan = my_chans(ichan);
@@ -133,18 +130,19 @@ for iname = 1:length(grand_ex_save)
             if strcmp(meta.exp_type,'Mixed freqs')
                 cur_freq = grand_ex_save{1,iname}.block_level_info(ibatch).stim_freq;
                 freq_idx = find(info.mixed.stim_freqs == cur_freq);
-            elseif strcmp(meta.exp_type,'Timed')
-                cur_freq = stim_freqs;
-                freq_idx = 1;
             end
             stimulus = grand_ex_save{1,iname}.info.stimulus(freq_idx).waveform;
             cur_amp_vec = amp_vecs{freq_idx};
             ramp_duration_samples = grand_ex_save{1,iname}.info.stimulus(freq_idx).ramp_duration_ms/1e3*fs;
-            trim_stim_pre_dur_ms = grand_ex_save{1,iname}.info.stimulus(freq_idx).trim_stim_pre_dur_ms;
+            meta.ramp_duration_samples(freq_idx) = ramp_duration_samples;
+            meta.full_amp_samples(freq_idx) = length(stimulus);
 
             %% Assign target frequency
-            % target_freq = 130;
-            target_freq = cur_freq*2;
+            if strcmp(info.experiment.test_tag,'accelerometer')
+                target_freq = cur_freq;
+            else
+                target_freq = cur_freq*2;
+            end
 
             if ~isempty(kept_trials)
                 % Preallocate
@@ -158,10 +156,6 @@ for iname = 1:length(grand_ex_save)
                     stim_type_idx = find(strcmp(stim_type_vec, ...
                         grand_ex_save{1,iname}.block_level_info(ibatch).stim_type));
                     cur_stim_type = grand_ex_save{1,iname}.block_level_info(ibatch).stim_type;
-                elseif strcmp(meta.exp_type,'Timed')
-                    amp_idx = 1;
-                    stim_type_idx = 1;
-                    cur_stim_type = stim_type_vec{1};
                 end
 
                 % Check if nothing matches
@@ -194,59 +188,34 @@ for iname = 1:length(grand_ex_save)
                 end
 
                 %% Extract ON/OFF Time Domain Signals
-                if strcmp(cur_stim_type, 'trim')
-                    % AEP signal
-                    [stim_ON , stim_OFF] = extract_stim_ON_OFF( ...
-                        kept_trials, 0, fs, ...
-                        latency_samples, length(stimulus), ramp_duration_samples,...
-                        trim_stim_pre_dur_ms,...
-                        kept_jitter);
-
-                    % Hydrophone
-                    if ichan == 1
-                        [hydro_ON_time_tmp , hydro_OFF_time_tmp] = extract_stim_ON_OFF( ...
-                            kept_hydro, 0, fs, ...
-                            latency_samples, length(stimulus), ramp_duration_samples,...
-                            trim_stim_pre_dur_ms,...
-                            kept_jitter);
-                    end
-                else % It is ONOFF
+                if strcmp(cur_stim_type, 'ONOFF')
                     % AEP signal
                     [stim_ON , stim_OFF] = extract_stim_ON_OFF( ...
                         kept_trials, 1, fs, ...
                         latency_samples, length(stimulus), ramp_duration_samples,...
                         [],...
                         kept_jitter);
-
-                    % Hydrophone
-                    if ichan == 1
-                        [hydro_ON_time_tmp , hydro_OFF_time_tmp] = extract_stim_ON_OFF( ...
-                            kept_hydro, 1, fs, ...
-                            latency_samples, length(stimulus), ramp_duration_samples,...
-                            [],...
-                            kept_jitter);
-                    end
-
                 end
 
                 %% Save time domain signals
-                % Hydrophone
-                if ichan == 1
-                    for itrial = 1:size(hydro_ON_time_tmp,1)
-                        tmp_ON = hydro_ON_time_tmp(itrial,:);
-                        tmp_OFF = hydro_OFF_time_tmp(itrial,:);
-                        hydro_ON_time(row_range(itrial),1:numel(tmp_ON),amp_idx,stim_type_idx,freq_idx)   = tmp_ON;
-                        hydro_OFF_time(row_range(itrial),1:numel(tmp_OFF),amp_idx,stim_type_idx,freq_idx) = tmp_OFF;
-                    end
-                end
-
                 % Stim OFF (for simulating AEP data)
                 if strcmp(cur_stim_type, 'ONOFF') && strcmpi(my_chans_name{ichan}, 'Subcranial')
                     stim_OFF_time(row_range,1:size(stim_OFF,2),amp_idx,1,freq_idx)   = stim_OFF;
                 end
 
+                %% Save hydrophone time domain data
+                if ichan == 1
+                    for itrial = 1:size(kept_hydro,1)
+                        cur_data = kept_hydro(itrial,:);
+                        cur_data(isnan(cur_data)) = [];
+                        hydro_ds = decimate(cur_data,ds_rate);
+                        hydro_time(row_range(itrial),1:size(hydro_ds,2),amp_idx,stim_type_idx,freq_idx) = hydro_ds;
+                    end
+                end
+
                 %% Save phase_vector
                 phase_vec(row_range, 1, amp_idx, stim_type_idx, ichan,freq_idx) = kept_phase;
+                jitter_vec(row_range, 1, amp_idx, stim_type_idx, ichan,freq_idx) = kept_jitter;
                 time_vec(row_range,1,amp_idx,stim_type_idx,ichan,freq_idx) = kept_time;
 
                 %% Calculate stim ON/OFF ffts
@@ -257,15 +226,6 @@ for iname = 1:length(grand_ex_save)
                     % Ensure no NaNs
                     if any(isnan(cur_trial))
                         keyboard
-                    end
-
-                    % Hydrophone
-                    if ichan == 1
-                        cur_hydro_trial = hydro_ON_time_tmp(itrial,:);
-                        % Ensure no NaNs
-                        if any(isnan(cur_hydro_trial))
-                            keyboard
-                        end
                     end
 
                     % Save very first sample length of stim_ON to ensure all
@@ -285,15 +245,6 @@ for iname = 1:length(grand_ex_save)
 
                     %% Calculate ON fft
                     [tmp_freq_vec, tmp_fft_vals] = calc_fft_complex(cur_trial, fs); % AEP
-                    if ichan == 1
-                        [hydro_tmp_freq_vec, hydro_tmp_fft_vals] = calc_fft_complex(cur_hydro_trial, fs); % Hydrophone
-                    end
-
-                    % Check that freq_ves are the same for AEPs and
-                    % Hydrophone signals
-                    if ichan == 1 && ~isequal(tmp_freq_vec,hydro_tmp_freq_vec)
-                        error('freq_vecs of aep and hydrophone signals are not the same')
-                    end
 
                     %% AEP Signal: Get the bin at the target frequency
                     [temp_ON_2f(itrial), ~] = ...
@@ -305,9 +256,6 @@ for iname = 1:length(grand_ex_save)
 
                     % Filter fft values to desired range
                     select_fft_vals = tmp_fft_vals(freq_vec_range); % AEP
-                    if ichan == 1
-                        select_hydro_fft_vals = hydro_tmp_fft_vals(freq_vec_range); % Hydrophone
-                    end
 
                     %% Preallocate FFT vectors
                     if isempty(n_bins)
@@ -315,12 +263,6 @@ for iname = 1:length(grand_ex_save)
                         % AEP
                         ON_fft  = NaN(max_rows, n_bins, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(my_chans), length(stim_freqs),'single');
                         OFF_fft = NaN(max_rows, n_bins, length(amp_vecs{largest_amp_vec}), 1, length(my_chans), length(stim_freqs),'single');
-
-                        % Hydrophone
-                        if ichan == 1
-                            hydro_ON_fft = NaN(max_rows, n_bins, length(amp_vecs{largest_amp_vec}), length(stim_type_vec), length(stim_freqs),'single');
-                            hydro_OFF_fft = NaN(max_rows, n_bins, length(amp_vecs{largest_amp_vec}), 1, length(stim_freqs),'single');
-                        end
                     elseif numel(freq_vec_range) ~= n_bins
                         error('organize_data:BinCount', ...
                             'FFT bin count %d ~= expected %d (fs=%g, N=%d, file %d, batch %d)', ...
@@ -329,9 +271,6 @@ for iname = 1:length(grand_ex_save)
 
                     %% Save fft values
                     ON_fft(row_range(itrial), 1:n_bins, amp_idx, stim_type_idx, ichan,freq_idx) = select_fft_vals; % AEP
-                    if ichan == 1
-                        hydro_ON_fft(row_range(itrial), 1:n_bins, amp_idx, stim_type_idx,freq_idx) = select_hydro_fft_vals; % Hydrophone
-                    end
 
                     %% Calculate FFT for Stim OFF
                     % AEP
@@ -340,16 +279,6 @@ for iname = 1:length(grand_ex_save)
                         error('organize_data:OFFNaN', ...
                             'NaNs in stim_OFF (file %d, batch %d, chan %d, trial %d)', ...
                             iname, ibatch, ichan, itrial);
-                    end
-
-                    % Hydrophone
-                    if ichan == 1
-                        cur_hydro_OFF = hydro_OFF_time_tmp(itrial,:);
-                        if any(isnan(cur_hydro_OFF))
-                            error('organize_data:OFFNaN', ...
-                                'NaNs in stim_OFF (file %d, batch %d, chan %d, trial %d)', ...
-                                iname, ibatch, ichan, itrial);
-                        end
                     end
 
                     % Check if we get the expected sample length
@@ -365,13 +294,6 @@ for iname = 1:length(grand_ex_save)
                     freq_vec_range_OFF = find(tmp_freq_vec_OFF >= low_lim & tmp_freq_vec_OFF <= up_lim);
                     select_freq_vec_OFF = tmp_freq_vec_OFF(freq_vec_range_OFF);
 
-                    % Hydrophone
-                    if ichan == 1
-                        [tmp_hydro_freq_vec_OFF, tmp_hydro_fft_vals_OFF] = calc_fft_complex(cur_hydro_OFF, fs);
-                        freq_vec_range_hydro_OFF = find(tmp_hydro_freq_vec_OFF >= low_lim & tmp_hydro_freq_vec_OFF <= up_lim);
-                        select_freq_vec_hydro_OFF = tmp_hydro_freq_vec_OFF(freq_vec_range_hydro_OFF);
-                    end
-
                     % Check for size mismatches between ON/OFF periods
                     if strcmp(meta.exp_type,'Mixed freqs') && (~isequal(size(cur_trial), size(cur_trial_OFF)) || ...
                             (~isequal(select_freq_vec_OFF, select_freq_vec)))
@@ -380,33 +302,14 @@ for iname = 1:length(grand_ex_save)
                             iname, ibatch, ichan, itrial);
                     end
 
-                    % Timed OFF stimuli are shorter so need to account for
-                    % this in the preallocation
-                    if strcmp(meta.exp_type,'Timed')
-                        off_n_bins = length(tmp_fft_vals_OFF(freq_vec_range_OFF));
-                        % Save OFF fft values
-                        OFF_fft(row_range(itrial),1:off_n_bins,amp_idx,1,ichan,freq_idx) = ...
-                            tmp_fft_vals_OFF(freq_vec_range_OFF); % AEP
-                        if ichan == 1
-                            hydro_OFF_fft(row_range(itrial),1:off_n_bins,amp_idx,1,freq_idx) = ...
-                                tmp_hydro_fft_vals_OFF(freq_vec_range_hydro_OFF); % Hydrophone
-                        end
-                    elseif strcmp(meta.exp_type,'Mixed freqs')
+                    if strcmp(meta.exp_type,'Mixed freqs')
                         % Save OFF fft values
                         OFF_fft(row_range(itrial),1:n_bins,amp_idx,1,ichan,freq_idx) = ...
                             tmp_fft_vals_OFF(freq_vec_range_OFF); % AEP
-                        if ichan == 1
-                            hydro_OFF_fft(row_range(itrial),1:n_bins,amp_idx,1,freq_idx) = ...
-                                tmp_hydro_fft_vals_OFF(freq_vec_range_hydro_OFF); % Hydrophone
-                        end
                     end
 
                     % Get OFF target frequency bin
-                    if strcmp(meta.exp_type,'Timed')
-                        target_freq_range_OFF = diff(tmp_freq_vec_OFF(1:2));
-                    else
-                        target_freq_range_OFF = target_freq_range;
-                    end
+                    target_freq_range_OFF = target_freq_range;
                     [temp_OFF_2f(itrial), ~] = ...
                         find_fft_bins(target_freq, target_freq_range_OFF, tmp_fft_vals_OFF, tmp_freq_vec_OFF);
                 end
@@ -437,17 +340,16 @@ org_data.stim_OFF_time = stim_OFF_time;
 org_data.ON_2f        = ON_2f;
 org_data.OFF_2f       = OFF_2f;
 org_data.freq_vec     = select_freq_vec;
-org_data.freq_vec_OFF = select_freq_vec_hydro_OFF;
+org_data.freq_vec_OFF = select_freq_vec_OFF;
 org_data.ON_fft  = ON_fft;
 org_data.OFF_fft = OFF_fft;
 org_data.phase_vec    = phase_vec;
+org_data.jitter_vec = jitter_vec;
 org_data.time_vec = time_vec;
 
 % Hydrophone
-org_data.hydro_ON_time  = hydro_ON_time;
-org_data.hydro_OFF_time = hydro_OFF_time;
-org_data.hydro_ON_fft   = hydro_ON_fft;
-org_data.hydro_OFF_fft  = hydro_OFF_fft;
+org_data.hydro_time  = hydro_time;
+org_data.hydro_fs = hydro_fs;
 
 % Save organized data
 cd(save_dir)

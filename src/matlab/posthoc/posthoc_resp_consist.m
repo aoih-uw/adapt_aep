@@ -12,6 +12,8 @@ end
 my_chans = meta.my_chans;
 nchans = length(my_chans);
 my_chans_name = meta.my_chans_name;
+my_chans_name = regexprep(my_chans_name, {'^subcranial$','^subcutaneous$'}, ...
+    {'Subcranial','Subcutaneous'}, 'ignorecase');
 target_freq_range = meta.target_freq_range;
 trials_per_block = meta.trials_per_block;
 max_trials = meta.ON_OFF_max_trials;
@@ -69,12 +71,13 @@ for ifreq = 1:length(stim_freqs)
     cur_freq = stim_freqs(ifreq);
     for iamp = 1:numel(amp_vec)
         nexttile; hold on
-        for ichan = 2:3
+        for ichan = 1:numel(inc_electrodes)
             idx = G.Freq == cur_freq ...
-                & G.Chan == my_chans_name(ichan) ...
+                & G.Chan == inc_electrodes(ichan) ...
                 & G.Amp == amp_vec(iamp);
+            if ~any(idx), continue; end
             errorbar(G.Time(idx), G.median_AbsVal(idx), G.mad_AbsVal(idx), 'o-',...
-                'Color', select_chan_color(ichan), 'MarkerFaceColor', select_chan_color(ichan))
+                'Color', select_chan_color(ichan+1), 'MarkerFaceColor', select_chan_color(ichan+1))
             hold on;
             
             % Fit regression line
@@ -85,11 +88,11 @@ for ifreq = 1:length(stim_freqs)
             my_slope = mdl.Coefficients.Estimate(2);
             my_p = mdl.Coefficients.pValue(2);
             % Plot regression line
-            plot(G.Time(idx), mdl.Fitted, 'Color',select_chan_color(ichan), 'LineWidth',3)
+            plot(G.Time(idx), mdl.Fitted, 'Color',select_chan_color(ichan+1), 'LineWidth',3)
 
             % Save to slope table
             idx = T_slope.Freq == cur_freq ...
-                & T_slope.Chan == my_chans_name(ichan) ...
+                & T_slope.Chan == inc_electrodes(ichan) ...
                 & T_slope.Amp == amp_vec(iamp);
 
             T_slope.Slope(idx) = my_slope;
@@ -106,13 +109,13 @@ T_slope.Chan = categorical(T_slope.Chan);
 figure; tiledlayout(1,3,'TileSpacing','tight','Padding','tight');
 for ifreq = 1:length(stim_freqs)
     nexttile; hold on;
-    for ichan = 2:3
-        cur_chan = my_chans_name(ichan);
+    for ichan = 1:numel(inc_electrodes)
+        cur_chan = inc_electrodes(ichan);
         % Get slopes and p values for current channel and frequency
         Slopes = T_slope(T_slope.Freq == stim_freqs(ifreq) & T_slope.Chan == cur_chan, :);
         sig = Slopes.P_Val < 0.05;
-        h = plot(Slopes.Amp, Slopes.Slope, '-o', 'Color', select_chan_color(ichan), 'LineWidth',2);
-        scatter(Slopes.Amp(sig), Slopes.Slope(sig),[], select_chan_color(ichan), 'filled', 'HandleVisibility', 'off')
+        h = plot(Slopes.Amp, Slopes.Slope, '-o', 'Color', select_chan_color(ichan+1), 'LineWidth',2);
+        scatter(Slopes.Amp(sig), Slopes.Slope(sig),[], select_chan_color(ichan+1), 'filled', 'HandleVisibility', 'off')
     end
     title(stim_freqs(ifreq) + " Hz")
     ylabel('Slope (\muV / min)');

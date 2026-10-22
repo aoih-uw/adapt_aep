@@ -8,8 +8,9 @@ presum_loc = 'D:\2026\Research\Aug Sept Midshipman\pre_summary';
 outdir =  'D:\2026\Research\Aug Sept Midshipman\pre_summary';
 cd(presum_loc)
 all_sim = struct('resp_found',{},'F_fit',{},'threshold',{});
-all_hydro = struct('ON',{},'noise',{});
+hydro_results = struct('hydro',{});
 
+% Loop through subjects
 for isubj = 1:length(subjids)
     cur_subj = subjids(isubj);
     myname = sprintf('subject_%d*',cur_subj);
@@ -27,13 +28,12 @@ for isubj = 1:length(subjids)
     twof = [S.sim_results.twof];
 
     % Hydrophone
-    all_hydro(isubj).ON = vertcat(S.hydro_results.ON);
-    all_hydro(isubj).noise = vertcat(S.hydro_results.noise);
+    hydro_results(isubj).hydro = vertcat(S.hydro_results);
     
     % How many trials needed to detect response
     all_sim(isubj).F_resp_found = vertcat(S.sim_results.F_resp_found);
 
-    % Low CI Model 
+    % F Model
     all_sim(isubj).model_p = vertcat(F.p); % Vertcat across all frequencies
     all_sim(isubj).F_vals = vertcat(F.summary); % raw F values for each subject 
     all_sim(isubj).F_fitq = vertcat(F.fit_q);
@@ -58,8 +58,7 @@ T_F_fitq = vertcat(all_sim.F_fitq); % Fit quality
 T_twof = vertcat(all_sim.twof);
 T_thresh = vertcat(all_sim.threshold);
 T_mp = vertcat(all_sim.model_p);
-T_hydro_noise = vertcat(all_hydro.noise);
-T_hydro_ON = vertcat(all_hydro.ON);
+T_hydro = vertcat(hydro_results.hydro);
 T_slope = vertcat(all_sim.slope);
 T_twof_over_time = vertcat(all_sim.twof_over_time);
 T_wl = readtable('weight_length_table.xlsx');
@@ -72,8 +71,7 @@ T_F_fitq = fixChan(T_F_fitq);
 T_twof = fixChan(T_twof);
 T_thresh = fixChan(T_thresh);
 T_mp = fixChan(T_mp);
-T_hydro_noise = fixChan(T_hydro_noise);
-T_hydro_ON = fixChan(T_hydro_ON);
+T_hydro = fixChan(T_hydro);
 T_slope = fixChan(T_slope);
 T_twof_over_time = fixChan(T_twof_over_time);
 T_polar = fixChan(T_polar);

@@ -68,6 +68,7 @@ for ichan = 1:numel(chan_inc)
     figure; tiledlayout(1,length(freq_inc));
     for ifreq = 1:numel(freq_inc)
         nexttile
+        hold on;
         cur_color = select_chan_color(ifreq);
         cur_T = T_polar(T_polar.Chan == chan_inc(ichan) & ...
             T_polar.Freq == freq_inc(ifreq),:);
@@ -76,7 +77,6 @@ for ichan = 1:numel(chan_inc)
             tmp_T = cur_T(cur_T.Subj_ID == subj_list(isubj),:);
             plot(tmp_T.Amp,tmp_T.PLV_ON,'Color',cur_color,'LineWidth',.5);
             plot(tmp_T.Amp,tmp_T.PLV_OFF,'Color',tableau_10('grey'),'LineWidth',.5);
-            hold on;
         end
         xlabel('Amplitude (dB)');
         ylabel('Phase Locking Value');

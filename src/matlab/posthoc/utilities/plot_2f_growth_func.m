@@ -45,10 +45,7 @@ for ichan = 1:length(my_chans)
 
     % Fit model
     if use_sigmoid
-        % Fit sigmoid
-        [p, ~, ~, logistic] = param_logistic(cur_y, [], amp_vec, []);
-        x_vec = linspace(min(amp_vec),max(amp_vec),my_reso);
-        y_vec = logistic(p, x_vec);
+        keyboard
     else
         % Fit softplus
         [p, ~, ~, softplus, fq] = param_softplus(cur_y,[], amp_vec, [],0); % Fit to the raw data without correction

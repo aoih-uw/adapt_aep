@@ -1,5 +1,5 @@
 %% convert_sim_data_to_long
-function sim_results = convert_sim_data_to_long(subjid, cur_freq, amp_vec, it_vec, CI_vec, ...
+function sim_results = convert_sim_data_to_long(subjid, cur_freq, amp_vec, ...
     F_count, twof_growth, F_growth, fit_quality_F, my_chans, my_chans_name, cumu, polar)
 
 % Assign variables

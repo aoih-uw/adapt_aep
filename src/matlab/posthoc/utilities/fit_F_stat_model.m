@@ -15,11 +15,11 @@ OFF_2f = my_params.OFF_2f;
 my_reso = 2000;
 phase_vec = my_params.phase_vec;
 x_vec = linspace(min(amp_vec), max(amp_vec), my_reso);
-valid_chans = find(ismember(my_chans_name,{'Subcutaneous','Subcranial'})); % Only analyze subcutaneous and subcranial channels
+valid_chans = find(ismember(lower(my_chans_name),{'subcutaneous','subcranial'})); % Only analyze subcutaneous and subcranial channels
 my_alpha = my_params.my_alpha;
 
 %# Figure out how this works
-log_trans_alpha = log10(finv(1 - my_alpha, 2, 2*(2*max_trials - 2)));
+log_trans_alpha = log10(finv(1 - my_alpha, 2, 2*(max_trials - 1)));
 
 %% Preallocate Variables
 % Low CI growth function matricies

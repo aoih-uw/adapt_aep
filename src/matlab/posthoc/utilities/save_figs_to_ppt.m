@@ -27,6 +27,15 @@ if isempty(figs), fprintf('No open figures.\n'); return; end
 [~,si] = sort([figs.Number]);
 figs = figs(si);
 
+% Export PNGs before starting PowerPoint, forcing OpenGL so transparency is kept
+pngs = cell(numel(figs),1);
+for i = 1:numel(figs)
+    pngs{i} = fullfile(outdir, sprintf('fig%02d.png', i));
+    figs(i).Renderer = 'opengl';
+    drawnow
+    exportgraphics(figs(i), pngs{i}, 'Resolution', 300, 'BackgroundColor', 'white');
+end
+
 app = actxserver('PowerPoint.Application');
 app.Visible = 1;
 pres = app.Presentations.Add;
@@ -86,9 +95,7 @@ end
 
 % ---- One slide per figure ----
 for i = 1:numel(figs)
-    png = fullfile(outdir, sprintf('fig%02d.png', i));
-    exportgraphics(figs(i), png, 'Resolution', 300, 'BackgroundColor', 'white');
-    info  = imfinfo(png);
+    png = pngs{i};info  = imfinfo(png);
     scale = min((W-40)/info.Width, (H-40)/info.Height);
     w = info.Width*scale;
     h = info.Height*scale;

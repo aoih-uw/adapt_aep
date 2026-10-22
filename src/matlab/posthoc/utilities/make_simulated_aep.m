@@ -1,7 +1,5 @@
 %% make_simulated_aep
 % Setup variables
-% signal_scale = linspace(0,0.05,16);
-signal_scale = linspace(0,1,16);
 n_trials = 1030;
 trials_per_block = 10;
 noise_idx = 1; % Counter for which stim_OFF/noise trial we have used
