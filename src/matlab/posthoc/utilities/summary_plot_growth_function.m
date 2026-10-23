@@ -8,12 +8,12 @@ for ifreq = 1:length(freq_inc)
     % All data
     figure;
     tiledlayout(1,3,'TileSpacing','tight','Padding','tight')
-    plot_growth_func(sub_T,chan_inc,freq_inc,ifreq, 1,log_trans_alpha, 'log_{10} F Stat (\muV)', 'All',1);
+    plot_growth_func(sub_T,chan_inc,freq_inc,ifreq, 1,log_trans_alpha, 'log_{10} F Stat', 'All',1);
 
     % Simulated lower asymptote data
     figure;
     tiledlayout(1,3,'TileSpacing','tight','Padding','tight')
-    plot_growth_func(sub_T,chan_inc,freq_inc,ifreq, 1,log_trans_alpha, 'log_{10} F Stat (\muV)', 'Sim',1);
+    plot_growth_func(sub_T,chan_inc,freq_inc,ifreq, 1,log_trans_alpha, 'log_{10} F Stat', 'Sim',1);
 end
 
 % 2f

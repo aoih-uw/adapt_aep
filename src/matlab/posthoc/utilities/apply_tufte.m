@@ -37,7 +37,7 @@ if numel(tax) < 2, continue; end
         row  = ceil(tile / ncol);
         col  = mod(tile - 1, ncol) + 1;
         xl = arrayfun(@(a) string(a.XLabel.String), tax);
-        yl = arrayfun(@(a) string(a.YLabel.String), tax);
+        yl = arrayfun(@(a) join(string(a.YLabel.String)), tax);
 for a = 1:numel(tax)
 if all(xl == xl(1)) && row(a) < max(row)
                 tax(a).XLabel.String = '';

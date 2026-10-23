@@ -1,7 +1,7 @@
 %% summary_threshold_comparisons
 myColors = [tableau_10('blue'); tableau_10('orange');tableau_10('red')];
 
-%% Compare Bootstrap Threshold vs. Model
+%% Compare F Stat Threshold vs. Model
 figure; tiledlayout(1,2,'TileSpacing','tight','Padding','tight')
 for ichan = 1:length(chan_inc)
     nexttile
@@ -22,11 +22,11 @@ for ichan = 1:length(chan_inc)
     yb = [x_vec + 5, fliplr(x_vec - 5)];
     fill(xb, yb, tableau_10('grey'), 'FaceAlpha', 0.1, 'EdgeColor', 'none')
 
-    xlabel('Bootstrap Threshold')
+    xlabel('F Stat Threshold')
     ylabel('Model Threshold')
     title(chan_inc(ichan))
 end
-sgtitle('Are bootstrap threshold and model thresholds in good agreement?')
+sgtitle('Are F Stat threshold and model thresholds in good agreement?')
 
 %% Join tables
 size_T = outerjoin(join_T,T_wl,'Keys',{'Subj_ID'}, 'MergeKeys',true);

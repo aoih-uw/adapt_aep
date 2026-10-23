@@ -1,15 +1,4 @@
 %% posthoc_bootstrap_simulation
-%% OUTPUT
-% MAIN STRUCT
-    % sim_results(ifreq)
-% SUBFIELDS
-    % resp_stable(chan, amp,n_boot,CI)
-    % inconsistent_vec(chan, amp,n_boot,CI)
-    % twof/low_growth.mean/sem/noise_floor(chan,amp)
-    % twof/low_growth.x/y_vec(1,:,chan)
-    % low_growth.thresh(chan)
-    % low_growth.p(chan,4)
-
 %% Assign variables
 % Metadata
 subjid = meta.subjid;
@@ -36,13 +25,18 @@ phase_vec    = org_data.phase_vec;
 
 % Function specific vars
 stim_type_idx = find(strcmp('ONOFF',stim_type_vec));
-itvec = [5000];
-CI_vec = [99];
 max_batches = max_trials/trials_per_block; % e.g. 130 trials in batches of 10
 twof_growth = [];
 
+%% Set pre-alpha value 
+% pre_alpha: before adding correction for multiple comparisons
+pre_alpha = 0.01;
+my_alpha = pre_alpha/max_batches; % Each batch you take one peek...
+
 % Clear vars
-clear sim_results fit_quality_2f fit_quality_low fit_quality_F% Loop through first by frequency
+clear sim_results fit_quality_2f fit_quality_low fit_quality_F
+
+% Loop through first by frequency
 for ifreq = 1:length(stim_freqs)
     %% Assign frequency specific variables
     tic()
@@ -62,13 +56,6 @@ for ifreq = 1:length(stim_freqs)
     cumu.noise_floor.sem.twof     =  NaN(sz);
     cumu.F_stats                = NaN([max_batches, 2, length(amp_vec), length(my_chans)]);
 
-    % Simulation
-    sz = [max_batches, length(amp_vec), length(my_chans), length(itvec), length(CI_vec)];
-    boot.diff.mean              = NaN(sz);
-    boot.diff.std               = NaN(sz);
-    boot.diff.lower_ci          = NaN(sz);
-    boot.diff.resp_found        = NaN(sz);
-
     % Set to empty
     all_data = []; ds_data = []; bottom_up = []; top_down = [];
 
@@ -84,17 +71,15 @@ for ifreq = 1:length(stim_freqs)
     my_params.cur_freq          = stim_freqs(ifreq);
     my_params.max_batches      = max_batches;
     my_params.trials_per_block = trials_per_block;
-    my_params.itvec            = itvec;
-    my_params.CI_vec           = CI_vec;
-    my_params.my_alpha         = 0.01/max_batches; % Base alpha value divided by the number of looks you are going to take
+    my_params.my_alpha         = my_alpha; % Base alpha value divided by the number of looks you are going to take
 
-    %% Execute cumulative averaging/bootstrapping simulation
-    [cumu, boot, polar] = execute_cumu_avg_bootstrap(my_params, cumu, boot);
+    %% Execute cumulative averaging/adaptive simulation
+    [cumu, polar] = execute_cumu_avg_bootstrap(my_params, cumu);
 
     %% Simulate adaptive trial count
     % By n iteration
-   [boot_count, F_count] = sim_trial_count_heatmap(amp_vec, boot, cumu,...
-        max_trials, my_chans, my_chans_name, trials_per_block, itvec, CI_vec,my_params);
+   F_count = sim_trial_count_heatmap(amp_vec, cumu,...
+        max_trials, my_chans, my_chans_name, trials_per_block, my_params);
     
     %% Plot 2f growth functions
     [twof_growth, fit_quality_2f(ifreq)] = plot_2f_growth_func...
@@ -108,7 +93,7 @@ for ifreq = 1:length(stim_freqs)
     %% Simulate removal of data points
 
     %% Convert simulation results to long form table
-    sim_results(ifreq) = convert_sim_data_to_long(subjid, cur_freq, amp_vec, itvec, CI_vec, ...
+    sim_results(ifreq) = convert_sim_data_to_long(subjid, cur_freq, amp_vec, ...
     F_count, twof_growth, F_growth, fit_quality_F(ifreq), my_chans, my_chans_name, cumu, polar);
     
     %% Report progress

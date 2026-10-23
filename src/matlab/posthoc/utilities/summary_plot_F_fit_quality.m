@@ -35,7 +35,7 @@ boxchart(categorical(sub_T.Freq), sub_T.Pin_b_All,'GroupByColor', sub_T.Chan)
 xlabel('Frequency (Hz)'); ylabel('N Pins')
 title('b')
 legend({'Subcranial','Subcutaneous'}, 'Location','northwest', 'Box','off')
-sgtitle('Low CI Model Fit Quality (All Data)')
+sgtitle('log10(F) Stat Fit Quality (All Data)')
 
 % Sim Lower Asymptote
 % Set up figure
@@ -45,7 +45,7 @@ tiledlayout(2,3,'TileSpacing','tight','Padding','tight')
 % Resnorm
 nexttile
 boxchart(categorical(sub_T.Freq), sub_T.Resnorm_Sim,'GroupByColor', sub_T.Chan)
-xlabel('Frequency (Hz)'); ylabel('SSE (\muV)')
+xlabel('Frequency (Hz)'); ylabel('SSE')
 title('Total Squared Errors of Fit')
 
 % Number of pins
@@ -69,4 +69,4 @@ boxchart(categorical(sub_T.Freq), sub_T.Pin_b_Sim,'GroupByColor', sub_T.Chan)
 xlabel('Frequency (Hz)'); ylabel('N Pins')
 title('b')
 legend({'Subcranial','Subcutaneous'}, 'Location','northwest', 'Box','off')
-sgtitle('Low CI Model Fit Quality (Simulated Lower Asymptote)')
+sgtitle('log10(F) Fit Quality (Simulated Lower Asymptote)')

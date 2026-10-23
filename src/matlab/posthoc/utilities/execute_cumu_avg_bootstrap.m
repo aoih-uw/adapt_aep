@@ -1,4 +1,4 @@
-function [cumu, boot, polar] = execute_cumu_avg_bootstrap(my_params, cumu, boot)
+function [cumu, polar] = execute_cumu_avg_bootstrap(my_params, cumu)
 %% Simulate cumulative averaging and bootstrap algorithm
 % Assign vars
 my_chans = my_params.my_chans;  my_chans_name = my_params.my_chans_name; amp_vec = my_params.amp_vec;
@@ -6,7 +6,6 @@ phase_vec = my_params.phase_vec;  ON_2f = my_params.ON_2f;  OFF_2f = my_params.O
 stim_type_idx = my_params.stim_type_idx;  ifreq = my_params.ifreq;
 cur_freq = my_params.cur_freq;
 max_batches = my_params.max_batches;  trials_per_block = my_params.trials_per_block;
-itvec = my_params.itvec;  CI_vec = my_params.CI_vec;
 
 % Preallocate
 sz = [length(amp_vec), length(my_chans)];
@@ -120,21 +119,6 @@ for ichan = 1:length(my_chans)
             % F Stats
             % output = [F p];
             cumu.F_stats(ibatch,:,iamp,ichan) = calc_F_stat_2samp(cur_ON_batch,cur_OFF_batch);
-            
-            %% Pause on bootstrapping for now
-            % % Loop through N bootstrap iterations (all CI levels share one run)
-            % for iit = 1:length(itvec)
-            %     n_bootstrap = itvec(iit);
-            % 
-            %     % Difference
-            %     [bootstat, lower_CI_all] = ...
-            %         calculate_bootstrap(n_bootstrap, cur_ON_batch, cur_OFF_batch, CI_vec);
-            % 
-            %     boot.diff.mean(ibatch,iamp,ichan,iit,:) = mean(bootstat);
-            %     boot.diff.std(ibatch,iamp,ichan,iit,:)  = std(bootstat);
-            %     boot.diff.lower_ci(ibatch,iamp,ichan,iit,:)  = lower_CI_all;
-            %     boot.diff.resp_found(ibatch,iamp,ichan,iit,:) = lower_CI_all > 0;
-            % end
             
             % Progress cumulative counter
             idx = idx+trials_per_block;

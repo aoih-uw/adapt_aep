@@ -7,8 +7,9 @@ set(groot, 'defaultAxesColorOrder', my_color_order);
 
 % Significance variables
 max_trials = 260;
-my_alpha = 0.01;
-log_trans_alpha = log10(finv(1 - my_alpha, 2, 2*(2*max_trials - 2)));
+trials_per_block = 10;
+my_alpha = 0.01/(max_trials/trials_per_block);
+log_trans_alpha = log10(finv(1 - my_alpha, 2, 2*(max_trials - 1)));
 
 %% Growth Function
 summary_plot_growth_function
