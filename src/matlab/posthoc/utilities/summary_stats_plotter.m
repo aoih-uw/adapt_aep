@@ -37,6 +37,7 @@ summary_create_threshold_table
 
 %% Compare Thresholds
 summary_threshold_comparisons
+summary_endorgan_comparisons
 
 %% Threshold Box plot
 summary_threshold_boxplot

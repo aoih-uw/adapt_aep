@@ -34,10 +34,10 @@ for isubj = 1:length(subjids)
     all_sim(isubj).F_resp_found = vertcat(S.sim_results.F_resp_found);
 
     % F Model
-    all_sim(isubj).model_p = vertcat(F.p); % Vertcat across all frequencies
+    all_sim(isubj).model_p = vertcat(F.p); % F model fit parameters
     all_sim(isubj).F_vals = vertcat(F.summary); % raw F values for each subject 
-    all_sim(isubj).F_fitq = vertcat(F.fit_q);
-    all_sim(isubj).threshold = vertcat(F.thresholds);
+    all_sim(isubj).F_fitq = vertcat(F.fit_q); % Fit quality of F model fit
+    all_sim(isubj).threshold = vertcat(F.thresholds); % Thresholds from F model fit, including bootstrapped mean, lowCI and UpCI values
   
     % Typical 2f growth function
     all_sim(isubj).twof = vertcat(twof.summary);
@@ -49,22 +49,26 @@ for isubj = 1:length(subjids)
     % Polar plots
     all_sim(isubj).polar = vertcat(S.sim_results.polar);
 
+    % Data removal error plots
+    all_sim(isubj).error = vertcat(S.T_error);
+
 end
 
 % Sort Tables
 T_Frf = vertcat(all_sim.F_resp_found); % F response found heatmaps
 T_F = vertcat(all_sim.F_vals); % Raw F values to plot with
 T_F_fitq = vertcat(all_sim.F_fitq); % Fit quality
-T_twof = vertcat(all_sim.twof);
-T_thresh = vertcat(all_sim.threshold);
-T_mp = vertcat(all_sim.model_p);
-T_hydro = vertcat(hydro_results.hydro);
-T_slope = vertcat(all_sim.slope);
-T_twof_over_time = vertcat(all_sim.twof_over_time);
-T_wl = readtable('weight_length_table.xlsx');
-T_polar = vertcat(all_sim.polar);
+T_twof = vertcat(all_sim.twof); % 2f growth function
+T_thresh = vertcat(all_sim.threshold); 
+T_mp = vertcat(all_sim.model_p); % F model fit parameters (e.g., a,k,x0,b)
+T_hydro = vertcat(hydro_results.hydro); % Hydrophone data
+T_slope = vertcat(all_sim.slope); % Slope of 2f response across experiment time
+T_twof_over_time = vertcat(all_sim.twof_over_time); % Raw 2f response over experiment time
+T_wl = readtable('weight_length_table.xlsx'); % Weight vs. Length data
+T_polar = vertcat(all_sim.polar); % Polar plots all data, all trials, no adaptive
+T_error = vertcat(all_sim.error); % Error associated with incremental data deletion (robustness measure)
 
-% Merge "subcutaneous"/"Subcutaneous" in all tables
+%% Merge "subcutaneous"/"Subcutaneous" in all tables
 T_Frf = fixChan(T_Frf);
 T_F = fixChan(T_F);
 T_F_fitq = fixChan(T_F_fitq);
@@ -76,6 +80,7 @@ T_slope = fixChan(T_slope);
 T_twof_over_time = fixChan(T_twof_over_time);
 T_polar = fixChan(T_polar);
 T_wl = fixChan(T_wl);
+T_error = fixChan(T_error);
 
 %% Plot!
 summary_stats_plotter

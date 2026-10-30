@@ -1,42 +1,38 @@
 function [F_count] = sim_trial_count_heatmap(amp_vec, cumu, ...
     max_trials, my_chans, my_chans_name, trials_per_block, my_params)
 %% Assign Variables
-% F statistic based decisions
-F_first = NaN(length(my_chans),length(amp_vec));
-F_stable = NaN(length(my_chans),length(amp_vec));
-F_inconsist =  false(length(my_chans),length(amp_vec));
-
-% General vars
+n_boot = my_params.n_boot;
 cur_freq = my_params.cur_freq;
 my_alpha = my_params.my_alpha;
+
+% F statistic based decisions
+F_first = NaN(length(my_chans),length(amp_vec),n_boot);
+F_stable = NaN(length(my_chans),length(amp_vec),n_boot);
+F_inconsist =  false(length(my_chans),length(amp_vec),n_boot);
 
 %% For each iamp and ichan find the first and first *stable* resp_found batch
 % F Stat Based
 for iamp = 1:length(amp_vec)
     for ichan = 1:length(my_chans)
-        % 2 column is p value
-        cur_data = cumu.F_stats(:,2,iamp,ichan);
-        n_filled = find(~isnan(cur_data),1,'last');
-        cur_data = cur_data(1:n_filled) < my_alpha;
-        % Get values
-        [cur_first, cur_stable, cur_inconsist] = ...
-            find_first_stable(cur_data, n_filled,max_trials,trials_per_block);
-        F_first(ichan,iamp) = cur_first;
-        F_stable(ichan,iamp) = cur_stable;
-        F_inconsist(ichan,iamp) = cur_inconsist;
+        for iboot = 1:n_boot
+            % 2 column is p value
+            cur_data = cumu.F_stats(:,2,iamp,ichan,iboot);
+            n_filled = find(~isnan(cur_data),1,'last');
+            cur_data = cur_data(1:n_filled) < my_alpha;
+            % Get values
+            [cur_first, cur_stable, cur_inconsist] = ...
+                find_first_stable(cur_data, n_filled,max_trials,trials_per_block);
+            F_first(ichan,iamp,iboot) = cur_first;
+            F_stable(ichan,iamp,iboot) = cur_stable;
+            F_inconsist(ichan,iamp,iboot) = cur_inconsist;
+        end
     end
 end
 
 %% Plots
 % Plot Trials Needed Heatmap
-% Fstat
-figure;
-cur_title = 'F Test | First';
-plot_heatmap(F_first,my_chans_name,amp_vec,max_trials,cur_freq,cur_title)
-
-figure;
-cur_title = 'F Test | Stable';
-plot_heatmap(F_stable,my_chans_name,amp_vec,max_trials,cur_freq,cur_title)
+plot_boot(F_first, my_chans_name, amp_vec, max_trials, cur_freq, 'F Test | First')
+plot_boot(F_stable, my_chans_name, amp_vec, max_trials, cur_freq,'F Test | Stable')
 
 %% Store variables
 F_count    = struct('first',F_first,'stable',F_stable,'inconsist',F_inconsist);
@@ -57,4 +53,33 @@ h.ColorbarVisible = 'off';
 h.Colormap = interp1([0 1], [1 1 1; tableau_10('blue')], linspace(0,1,256));
 title(sprintf('%s | N Trials Needed: %d Hz ',cur_title,cur_freq))
 h.XLabel = 'Stimulus Amplitude (dB SPL)';
+end
+
+function plot_boot(F, my_chans_name, amp_vec, max_trials, cur_freq, cur_title)
+keep = ~contains(my_chans_name, {'EKG', 'Forebrain'}, 'IgnoreCase', true);
+F = F(keep,:,:); my_chans_name = my_chans_name(keep);
+
+% Why end: Select "true" bootstrapped run, doesn't resample with replacment and
+% keeps trial order
+figure; plot_heatmap(F(:,:,end), my_chans_name, amp_vec, max_trials, cur_freq, cur_title)
+
+% Here only analyze bootstrapped runs
+boot = F(:,:,1:end-1);
+boot(boot == max_trials) = NaN;
+my_mean = mean(boot,3,'omitnan');
+ci = prctile(boot,[2.5 97.5],3);
+
+figure; t = tiledlayout('flow','TileSpacing','tight','Padding','tight');
+for ichan = 1:size(F,1)
+    cur_color = select_chan_color(ichan);
+    nexttile; hold on
+    errorbar(amp_vec, my_mean(ichan,:), ...
+        my_mean(ichan,:)-ci(ichan,:,1), ci(ichan,:,2)-my_mean(ichan,:), ...
+        'o','Color',cur_color,'MarkerFaceColor',cur_color)
+    plot(amp_vec, F(ichan,:,end), '*', 'Color',cur_color,'MarkerSize',15)
+    yline(260)
+    title(my_chans_name{ichan})
+end
+xlabel(t, 'Stimulus Amplitude (dB SPL)'); ylabel(t, 'N Trials Needed')
+title(t, sprintf('%s | Mean & 95%% CI: %d Hz', cur_title, cur_freq))
 end
