@@ -73,7 +73,7 @@ try
             fprintf('\nSaving summary data...\n')
             cd(summary_loc)
             save(sprintf('subject_%d', cur_subj), ...
-                'meta', 'hydro_results', 'sim_results', 'T_ON_2f', 'T_slope','-v7.3');
+                'meta', 'hydro_results', 'sim_results', 'T_ON_2f', 'T_slope','T_error','-v7.3');
 
             % %% Apply Tufte styling
             apply_tufte

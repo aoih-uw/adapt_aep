@@ -15,16 +15,17 @@ twof_growth_func.y_vec = NaN(1,my_reso,length(my_chans));
 %% Generate vector simulating live experiment with uneven trial counts based on bootstrap decisions
 for iamp = 1:length(amp_vec)
     for ichan = 1:length(my_chans)
-        cur_idx = resp_first(ichan,iamp,end,end)/trials_per_block;
+        cur_idx = resp_first(ichan,iamp,end)/trials_per_block;
         if isnan(cur_idx) % Get the mean and sem of the last measured batch
+            % end = to use only the last true iboot experiment simulation
             fprintf('cur_idx for 2f growth function plotting is NaN')
-            twof_growth_func.mean(ichan,iamp) = cumu.diff.mean.twof(end,iamp,ichan);
-            twof_growth_func.sem(ichan,iamp) = cumu.diff.sem.twof(end,iamp,ichan);
-            twof_growth_func.noise_floor(ichan,iamp) = cumu.noise_floor.mean.twof(end,iamp,ichan); % cur_OFF_batch value
+            twof_growth_func.mean(ichan,iamp) = cumu.diff.mean.twof(end,iamp,ichan,end);
+            twof_growth_func.sem(ichan,iamp) = cumu.diff.sem.twof(end,iamp,ichan,end);
+            twof_growth_func.noise_floor(ichan,iamp) = cumu.noise_floor.mean.twof(end,iamp,ichan,end); % cur_OFF_batch value
         else % Get the valid resp_found idx and extract its mean/sem
-            twof_growth_func.mean(ichan,iamp) = cumu.diff.mean.twof(cur_idx,iamp,ichan);
-            twof_growth_func.sem(ichan,iamp) = cumu.diff.sem.twof(cur_idx,iamp,ichan);
-            twof_growth_func.noise_floor(ichan,iamp) = cumu.noise_floor.mean.twof(cur_idx,iamp,ichan);
+            twof_growth_func.mean(ichan,iamp) = cumu.diff.mean.twof(cur_idx,iamp,ichan,end);
+            twof_growth_func.sem(ichan,iamp) = cumu.diff.sem.twof(cur_idx,iamp,ichan,end);
+            twof_growth_func.noise_floor(ichan,iamp) = cumu.noise_floor.mean.twof(cur_idx,iamp,ichan,end);
         end
     end
 end

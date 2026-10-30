@@ -10,12 +10,15 @@
 latency_samples = 0;
 
 % Number of times you want to run this simulation
-n_rep = 50;
-pre_alpha = 0.01;
+n_rep = 300;
+pre_alpha = 0.05;
 
 %% What "stimulus amplitudes" do you want to simulate?
 % signal_scale = linspace(0,0.05,16);
-signal_scale = linspace(0,1,16);
+% signal_scale = linspace(0,1,16);
+% Simulates a fish AEP heatmap the best...
+signal_scale = [ 0 0.0033 0.0100 0.0133 0.0200 0.0398 0.0631 0.1259 0.2512 0.5012 0.8 1.0000 1.5 2 2.5 3];
+% signal_scale = [0 0.002];
 
 % Load in sorted data and get OFF_2f
 setup_noise_data
@@ -64,6 +67,7 @@ for irep = 1:n_rep
             cur_jitter = reshape(cur_jitter, [], 1);
 
             % Extract ON/OFF periods
+            cur_data(:, any(isnan(cur_data),1)) = [];
             [ON,OFF] = extract_stim_ON_OFF(cur_data,1,fs,latency_samples,period_length_samples, ...
                 ramp_duration_samples, [], cur_jitter);
 
@@ -123,6 +127,7 @@ false_pos = find(no_sig < 1030);
 first_false_pos_rate = (numel(false_pos)/numel(no_sig))*100;
 
 no_sig = squeeze(F_stable(:,1,:));
+no_sig = no_sig(:);
 false_pos = find(no_sig < 1030);
 stable_false_pos_rate = (numel(false_pos)/numel(no_sig))*100;
 

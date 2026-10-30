@@ -5,36 +5,28 @@ OFF_1f = NaN(max_trials,1,numel(stim_freqs),numel(largest_amp_vec),numel(my_chan
 
 %% Plot dB Comparisons and Impedance
 figure;
-tiledlayout(1,4,'TileSpacing','tight','Padding','tight');
-colororder([tableau_10('red'); tableau_10('blue'); tableau_10('orange')])
+tiledlayout(1,3,'TileSpacing','tight','Padding','tight');
+colororder([tableau_10('blue'); tableau_10('orange')])
 
 % Plot Hydrophone Amplitudes
 nexttile
 hold on
-for ifreq = 1:numel(stim_freqs)
-    boxchart(ifreq*ones(size(hydro_dB,1),1), hydro_dB(:,ifreq))
-end
-title('Hydrophone Amplitude')
+cur_accel = accel_dB_all(:,:,end);
+% n_trials x frequencies, layer different groups row-wise
+x = [repmat(1:numel(stim_freqs),size(hydro_dB,1),1); repmat(1:numel(stim_freqs),size(cur_accel,1),1)];
+y = [hydro_dB ; cur_accel];
+g = [repmat("Hydrophone", size(hydro_dB)); repmat("Accelerometer", size(cur_accel))];
+% Flatten with :
+boxchart(x(:), y(:),'GroupByColor',g(:))
+title('Hydrophone and Accelerometer (Vector Normalized) Amplitude')
 xticks(1:numel(stim_freqs))
 xticklabels(string(stim_freqs))
 xlabel('Frequency (Hz)')
 ylabel('dB RMS SPL (re: 1 \muPa)')
-ylim([137 143])
-
-% Plot Accelerometer Amplitudes
-nexttile
-hold on
-cur_data = accel_dB_all(:,:,end);
-for ifreq = 1:numel(stim_freqs)
-    boxchart(ifreq*ones(size(cur_data,1),1), cur_data(:,ifreq))
-end
-title('Accelerometer (Vector Normalized) Amplitude')
-xticks(1:numel(stim_freqs))
-xticklabels(string(stim_freqs))
-xlabel('Frequency (Hz)')
-ylabel('dB PAL (re: 1 \mum/s^2)')
 
 % Plot Impedance across Frequency
+colororder([tableau_10('red'); tableau_10('blue'); tableau_10('orange')])
+
 % RMS
 nexttile
 hold on
@@ -46,19 +38,20 @@ xticks(1:numel(stim_freqs))
 xticklabels(string(stim_freqs))
 xlabel('Frequency (Hz)')
 ylabel('RMS Impedance re: 1.5597 MRayl')
+ylim([-34 -16])
 
 % P2P
 nexttile
 hold on
 for ifreq = 1:numel(stim_freqs)
-    boxchart(ifreq*ones(size(imp_RMS,1),1), imp_p2p(:,ifreq))
+    boxchart(ifreq*ones(size(imp_p2p,1),1), imp_p2p(:,ifreq))
 end
 title('Pk-Pk Impedance')
 xticks(1:numel(stim_freqs))
 xticklabels(string(stim_freqs))
 xlabel('Frequency (Hz)')
 ylabel('Pk-Pk Impedance re: 1.5597 MRayl')
-
+ylim([-34 -16])
 sgtitle('For Assigned Stimulus Frequency 140 dB SPL')
 
 %% Plot time domain signals
@@ -70,7 +63,7 @@ ax_hydro = gobjects(numel(stim_freqs),1);
 ax_accel = gobjects(numel(stim_freqs),3);
 
 % Randomly select one trial
-rand_idx = randperm(size(exemplar_time_sigs,1),1);
+rand_idx = randperm(size(exemplar_accel_sigs,1),1);
 for ifreq = 1:numel(stim_freqs)
     cur_color = select_chan_color(ifreq);
     % Get sigs

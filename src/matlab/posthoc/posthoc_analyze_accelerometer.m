@@ -45,8 +45,8 @@ try
             %% Sort accelerometer data (and calculate dB...)
             sort_accelerometer_data
 
-            %% Process accelerometer ffts
-            process_accelerometer_ffts
+            %% Plop
+            plot_accelerometer_analysis
 
             %% Apply Tufte styling
             apply_tufte

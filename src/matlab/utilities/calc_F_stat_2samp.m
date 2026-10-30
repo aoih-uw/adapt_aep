@@ -14,13 +14,20 @@ D = vals_ON - vals_OFF;
 M = numel(D);
 
 % Signal: abs(mean(D))^2 = squared length of the AVERAGE arrow.
+%   Phase is taken into acount when we take the mean(D), then AFTER we take
+%   the abs() and look at length, allowing random directions of vectors to
+%   cancel eachother first, and then we evaluate the magnitude of the
+%   average vector
 %   If ON and OFF don't differ, arrows point randomly and average out
 %   to nearly zero length. A real effect makes them point the same way.
+
 % Noise: sum(abs(D - mean(D)).^2) = how much each arrow strays from the
 %   average arrow, squared and added up.
+
 % M*(M-1) scales signal/noise so the result follows an F-distribution:
 %   M because averaging M arrows shrinks noise in the mean by a factor of M,
 %   (M-1) because computing the mean used up one degree of freedom.
+
 F = M*(M-1) * abs(mean(D))^2 / sum(abs(D - mean(D)).^2);
 
 % p-value: chance of getting an F this large if there were no real effect.

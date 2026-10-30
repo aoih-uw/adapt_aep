@@ -4,7 +4,7 @@ latency = grand_ex_save{1,1}.info.DAC.latency_samples;
 fs = grand_ex_save{1,1}.info.DAC.sampling_rate_hz;
 microphone_mV_per_Pa = grand_ex_save{1,1}.info.hydrophone.gain_mV_per_Pa;
 
-% Accelerometer
+% Accelerometer conversion factors
 mV_per_m_per_s_sqrd = grand_ex_save{1,1}.info.accel.mV_per_m_per_s_sqrd;
 
 stim_freqs = grand_ex_save{1,1}.info.mixed.stim_freqs;
@@ -91,6 +91,8 @@ for iname = 1:size(grand_ex_save,2)
                         tmp_hydro, 1, fs, latency, full_amp_on_samp, ...
                         ramp_duration_samples,[], cur_jitter);
 
+                    % Calculate Pascals and then amplitude using RMS and
+                    % Pk-Pk
                     cur_Pa = rms(stim_ON./microphone_mV_per_Pa,2); % Stim_ON is in mV
                     hydro_Pa_RMS(cur_rows,freq_idx) = cur_Pa;
                     hydro_dB(cur_rows,freq_idx) = 20*log10(cur_Pa/1e-6);
@@ -98,12 +100,13 @@ for iname = 1:size(grand_ex_save,2)
                 end
             end
 
-            %% Separate ON/OFF periods
+            %% Separate time domain ON/OFF periods
             [stim_ON , stim_OFF] = extract_stim_ON_OFF( ...
                 cur_sigs, 1, fs, latency, full_amp_on_samp, ...
                 ramp_duration_samples,[], cur_jitter);
 
-            %% Calculate acceleration of stim ON
+            %% Calculate acceleration of stim ON and OFF periods 
+            % convert from mV to m/s^2
             stim_ON_m_per_s_sqrd(cur_rows,:,freq_idx,amp_idx,ichan) = stim_ON./mV_per_m_per_s_sqrd(ichan);
             stim_OFF_m_per_s_sqrd(cur_rows,:,freq_idx,amp_idx,ichan) = stim_OFF./mV_per_m_per_s_sqrd(ichan);
 
@@ -120,13 +123,14 @@ for iname = 1:size(grand_ex_save,2)
 
                 % Calculate acceleration magnitude
                 accel_rms = rms(filt_tmp,2);
-                accel_p2p = 2*max(filt_tmp,[],2); % Multiply the peak*2 since the signal got rectified, so its not possible to do a pk-pk measure
+                accel_p2p = 2*max(filt_tmp,[],2); 
+                % Multiply the peak*2 since the signal got rectified when
+                % we squared, so we cant use peak2peak() as usual
 
-                % Calculate ratio
+                % Calculate impedance ratio
                 f = stim_freqs(freq_idx);
                 imp_RMS(cur_rows,freq_idx) = 20*log10(((hydro_Pa_RMS(cur_rows,freq_idx))./(accel_rms/(2*pi*f)))./Rayl_ref);
                 imp_p2p(cur_rows,freq_idx) = 20*log10(((hydro_Pa_p2p(cur_rows,freq_idx))./(accel_p2p/(2*pi*f)))./Rayl_ref);
-
             end
 
             %% Calculate complex fft per trial
@@ -139,7 +143,7 @@ for iname = 1:size(grand_ex_save,2)
             end
         end
 
-        %% Calculate dB RMS %#% CHECK CODE
+        %% Calculate dB RMS of accelerometer signals (in units of m/s^2)
         my_ON = reshape(stim_ON_m_per_s_sqrd(cur_rows,:,freq_idx,amp_idx,:), ...
             n_trials, [], numel(my_chans));
         accel_dB_per_dim(cur_rows,freq_idx,amp_idx,:) = 20*log10(rms(my_ON,2)/1e-6);

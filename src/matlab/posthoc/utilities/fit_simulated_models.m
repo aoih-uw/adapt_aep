@@ -2,7 +2,7 @@
 % input: my_results.F_stats
 F_stats = my_results.F_stats; %([F p], n_freq, n_amps, n_batches, n_reps)
 trials_per_block = 10;
-max_trials = size(F_stats,4);
+max_trials = size(F_stats,4)*trials_per_block;
 log_trans_alpha = log10(finv(1 - my_alpha, 2, 2*(max_trials - 1)));
 amp_vec = snr_dB_vec;
 freq_inc = ex.info.mixed.stim_freqs;
@@ -10,11 +10,11 @@ thresholds = NaN(size(F_stats,5),numel(freq_inc));
 
 % "True threshold" is completely defined by the amplitude sampling
 % resolution we chose, it is only the last amplitude we saw a response
-true_thresh = -23.5;
+true_thresh = snr_dB_vec(2);
 
 % Model fit accuracy appears to be dependent on the lower asymptote, test
 % this directly
-as_vec = linspace(-23.6,-100,50);
+as_vec = linspace(-50,-100,50);
 median_threshold_error = NaN(numel(as_vec),numel(freq_inc));
 
 % Loop through
@@ -49,16 +49,21 @@ for ias = 1:numel(as_vec)
 
             % Identify threshold
             idx = find(y_vec > log_trans_alpha,1,'first');
-            thresholds(irep,ifreq) = x_vec(idx);
+            if ~isempty(idx)
+                thresholds(irep,ifreq) = x_vec(idx);
+            else
+                thresholds(irep,ifreq) = NaN;
+            end
 
             if ismember(ias,[1 10 50])
-                plot(x_vec,y_vec,'Color',[cur_color 0.2],'LineWidth',.5);
+                plot(x_vec,y_vec,'Color',[cur_color 0.3],'LineWidth',.5);
                 hold on;
+                plot(amp_vec,cur_y,'o','Color',cur_color)
                 yline(log_trans_alpha)
             end
         end
         % Calculate threshold estimation error
-        median_threshold = median(thresholds(:,ifreq));
+        median_threshold = median(thresholds(:,ifreq),'omitnan');
         median_threshold_error(ias,ifreq) = median_threshold - (true_thresh);
 
         if ismember(ias,[1 10 50])
@@ -68,7 +73,7 @@ for ias = 1:numel(as_vec)
 
             % Threshold histograms
             nexttile
-            histogram(thresholds,'FaceColor',cur_color);
+            histogram(thresholds(:,ifreq),'FaceColor',cur_color);
             xline(true_thresh);
             title(sprintf('Error: %g dB', median_threshold_error(ias,ifreq)));
             xlabel('SNR (dB)'); ylabel('Frequency')

@@ -17,6 +17,9 @@ max_trials = meta.ON_OFF_max_trials;
 use_sigmoid = 0;
 plot_linear = 0;
 
+% Number of reliability/robustness runs
+n_boot = 5000;
+
 % Organized data
 ON_2f        = org_data.ON_2f;
 OFF_2f       = org_data.OFF_2f;
@@ -30,7 +33,7 @@ twof_growth = [];
 
 %% Set pre-alpha value 
 % pre_alpha: before adding correction for multiple comparisons
-pre_alpha = 0.01;
+pre_alpha = 0.05;
 my_alpha = pre_alpha/max_batches; % Each batch you take one peek...
 
 % Clear vars
@@ -48,7 +51,7 @@ for ifreq = 1:length(stim_freqs)
     amp_vec = amp_vecs{ifreq};
 
     % Cumulative trial averaging matrix
-    sz = [max_batches, length(amp_vec), length(my_chans)];
+    sz = [max_batches, length(amp_vec), length(my_chans), n_boot];
     cumu.n                       = NaN(sz);
     cumu.diff.mean.twof            = NaN(sz); % Mean 2f microvolt amplitude for each cumulative average by 10 trials for each batch and channel and stim amplitude
     cumu.diff.sem.twof             =  NaN(sz); 
@@ -72,7 +75,7 @@ for ifreq = 1:length(stim_freqs)
     my_params.max_batches      = max_batches;
     my_params.trials_per_block = trials_per_block;
     my_params.my_alpha         = my_alpha; % Base alpha value divided by the number of looks you are going to take
-
+    my_params.n_boot           = n_boot;
     %% Execute cumulative averaging/adaptive simulation
     [cumu, polar] = execute_cumu_avg_bootstrap(my_params, cumu);
 
@@ -91,6 +94,7 @@ for ifreq = 1:length(stim_freqs)
     trials_per_block, max_trials, my_chans_name, cur_freq, 'Full dataset', 1);
 
     %% Simulate removal of data points
+    T_error = sim_data_removal(F_growth,amp_vec,my_params,cur_freq);
 
     %% Convert simulation results to long form table
     sim_results(ifreq) = convert_sim_data_to_long(subjid, cur_freq, amp_vec, ...
