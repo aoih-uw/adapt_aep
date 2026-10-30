@@ -18,7 +18,7 @@ use_sigmoid = 0;
 plot_linear = 0;
 
 % Number of reliability/robustness runs
-n_boot = 5000;
+n_boot = 100;
 
 % Organized data
 ON_2f        = org_data.ON_2f;

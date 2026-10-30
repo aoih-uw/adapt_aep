@@ -94,6 +94,8 @@ for ichan = 1:length(my_chans)
                 end
                 boot_idx = sort(boot_idx);
             else
+                % Randomly select trials we will work with to simulate batch based averaging
+                % with replacement by phase 
                 for ip = 1:length(phases)
                     phase_idx = find(cur_phase_all == phases(ip));
                     % inc_select contains idx of of equal phases
@@ -117,7 +119,7 @@ for ichan = 1:length(my_chans)
                 inc_select = [];
                 for ip = 1:length(phases)
                     phase_idx = find(cur_phase == phases(ip));
-                    inc_select = [inc_select; phase_idx(1:n_per_phase)];
+                    inc_select = [inc_select; phase_idx(1:n_per_phase)]; % 1:n_per_phase gurantees that we are testing "in trial order"
                 end
 
                 % Ensure that even phases are selected for cumulative batches
@@ -163,5 +165,10 @@ cur_mean = mean(vals);
 mystruct.mag.mean(iamp,ichan) = abs(cur_mean);
 mystruct.mag.std(iamp,ichan) = std(vals); % Spread of dots
 mystruct.angle.mean(iamp,ichan) = angle(cur_mean);
+%% Phase locking value 
+% gives a value from 0-1 since by dividing by abs(vals)
+% all vectors have a length of 1, and then by dividing by N when
+% calculating the mean, the highest possible value is 1 (all N arrows with
+% magnitude value of 1 point the same way), and lowest 0 (all arrows point randomly in different directions)
 mystruct.PLV(iamp,ichan) = abs(mean(vals./abs(vals))); % I am not familiar with this equation
 end

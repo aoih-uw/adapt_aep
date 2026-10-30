@@ -38,7 +38,8 @@ F_growth.sim.p = NaN(length(my_chans_name),4);
 % Growth function n trials scaling
 growth_func_trials =  NaN(length(my_chans_name),length(amp_vec),n_boot);
 
-%% F Statistic based growth function (sigmoid)
+%% Get F Statistic values
+% For based growth function (sigmoid)
 % Generate a growth function vector simulating live experiment with uneven trial counts based on bootstrap decisions
 for iamp = 1:length(amp_vec)
     for ichan = 1:length(my_chans_name)
@@ -58,9 +59,10 @@ for iamp = 1:length(amp_vec)
 end
 
 
-%% Find the bootstrap threshold and identify how many trials we have to work with to build the lower asymptote
+%% Build lower asymptote
+% Find the bootstrap threshold and identify how many trials we have to work with to build the lower asymptote
 % Identify amps and channels a response was found for current frequency
-%#%# Check this indexing logic!! %#%#%#
+%% #%# Check indexing logic more! %#%#
 
 % Display matrix to check
 fprintf('Trials needed: \n')
@@ -72,24 +74,26 @@ found_resp_mask = resp_first(:,:,end) < max_trials;
 found_resp_mask = found_resp_mask(valid_chans,:);
 contains_one = any(found_resp_mask, 2);
 
-% Require that there is at least one amp that found a response
+%% Require that there is at least one amp that found a response
 valid_rows = find(contains_one);
 
-% Which was the lowest amplitude where a response was found? (Check across all valid channels)
+%% Which channel had the lowest amplitude where a response was found? 
+% (Check across all valid channels)
 % We want to know the lowest amplitude where a response was found, or in
 % other words, the most sensitive channel is, since in a live experiment we
 % would keep testing until the most sensitive channel did not detect a
 % response
 [~,thresh_col] = max(found_resp_mask(valid_rows,:), [],2);
 
-% Require that at least at one amplitude no response was found
+%% Require that at least at one amplitude no response was found
+% since we are trying to simulate a lower asymptote
 valid_col = find(thresh_col > 1);
 if isempty(valid_col)
     % no threshold was found at the most sensitive channel so skip
     thresh_found = 0;
     fprintf("No threshold found for %d Hz\n", cur_freq)
 else
-    % Identify the most sensitive channel
+    %% Identify the most sensitive channel
     thresh_col = thresh_col(valid_col);
     thresh_found = 1;
     [~, idx_sens_chan] = min(thresh_col);
@@ -100,8 +104,8 @@ else
     fprintf("Most sensitive channel : %d\n",most_sens_chan)
     avail_trials = resp_first(most_sens_chan,:,end);
 
-    % Identify the highest amplitude where no response was found, this
-    % amplitude will count towards our available trials to choose from
+    %% Identify the highest amplitude where no response was found
+    % this amplitude will count towards our available trials to choose from
     % Since in the live adaptive protocol, you would test at lower and
     % lower amplitudes until you have one amplitude that took up to the max
     % trial limit and you did not see a response. We want to simulate this
@@ -112,11 +116,12 @@ else
         avail_trials
     end
 
-    % Identify the number of trials we are able to simulate the lower
+    %% Identify the number of trials we are able to simulate the lower
     % asymptote with
     avail_trials = avail_trials(first_no_resp:end);
     amps_to_sim = amp_vec(1:first_no_resp-1); % There were no responses at these frequencies
 
+    %% Get stim OFF data
     % Select stim OFF trials based on amplitudes where we found a response AND the first amplitude where no response was found
     % and ensure equal phases (it shouldn't really matter because it is noise though...)
     for ichan = 1:length(my_chans_name)
@@ -325,7 +330,7 @@ end
 figure;
 % Only analyze forebrain, subcutaneous and subcranial
 keep = ~contains(my_chans_name, 'NaN', 'IgnoreCase', true);
-boot = squeeze(F_growth.all.thresh(:,:,1:end-1));
+boot = squeeze(F_growth.all.thresh(:,:,1:end-1)); % don't include "true" experiment case with no resampling with replacement
 boot = boot(keep,:);
 names = my_chans_name(keep);
 chan_idx = find(keep);

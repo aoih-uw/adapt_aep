@@ -59,8 +59,11 @@ function plot_boot(F, my_chans_name, amp_vec, max_trials, cur_freq, cur_title)
 keep = ~contains(my_chans_name, {'EKG', 'Forebrain'}, 'IgnoreCase', true);
 F = F(keep,:,:); my_chans_name = my_chans_name(keep);
 
+% Why end: Select "true" bootstrapped run, doesn't resample with replacment and
+% keeps trial order
 figure; plot_heatmap(F(:,:,end), my_chans_name, amp_vec, max_trials, cur_freq, cur_title)
 
+% Here only analyze bootstrapped runs
 boot = F(:,:,1:end-1);
 boot(boot == max_trials) = NaN;
 my_mean = mean(boot,3,'omitnan');

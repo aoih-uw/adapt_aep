@@ -1,5 +1,5 @@
 function T_error = sim_data_removal(F_growth,amp_vec,my_params,cur_freq)
-F_data = F_growth.all.F_vals(:,:,end); % Only use the true experiment simulation
+F_data = F_growth.all.F_vals(:,:,end); % Only use the true experiment simulation where no resampling with replacement is used
 ref_thresh = F_growth.all.thresh(:,1,end);
 my_chans = my_params.my_chans;
 my_alpha = my_params.my_alpha;
@@ -28,6 +28,7 @@ error_mat = NaN(4,n,numel(my_chans));
 
 % Fit models and identify thresholds
 remov_thresh = NaN(numel(my_chans),numel(idxSets));
+warning('off','optimlib:lsqncommon:SwitchToLineSearch')
 for iset = 1:numel(idxSets)
         idx = idxSets{iset};
     for ichan = 1:numel(my_chans)
@@ -86,7 +87,6 @@ for iset = 1:3
     end
     yregion(-3,3,'FaceColor',tableau_10('grey'),'FaceAlpha',0.1,'HandleVisibility','off');
     yline(0,'--','Color',tableau_10('grey'),'HandleVisibility','off');
-    
     ylabel('Error (dB)')
     title(titles{iset})
     if iset == 3
@@ -96,12 +96,12 @@ for iset = 1:3
     else
         xlabel('N data points included')
         set(gca, 'XDir', 'reverse');
-
     end
 
     % Increment idx
     idx = idx + cur_N;
 end
+% Formatting
 sgtitle(sprintf('%g Hz | How stable is the threshold estimate with less data points', cur_freq))
 delete(findobj(gcf,'-regexp','DisplayName','Forebrain|EKG'))
 legend('Location','northeast')
@@ -116,3 +116,6 @@ Channel = my_chans_name(C);
 T_error = table(categorical(Method(:),mylabels),S(:),categorical(Channel(:),my_chans_name), error_mat(:), ...
     'VariableNames', {'Method','Step','Channel','Error'});
 T_error(isnan(T_error.Error),:) = [];
+
+% Set back warning message
+warning('on','optimlib:lsqncommon:SwitchToLineSearch')
