@@ -50,7 +50,7 @@ end
 for ichan = 1:length(chan_inc)
     cur_chan = chan_inc(ichan);
     figure;
-    tiledlayout(3,9,'TileSpacing','tight','Padding','tight')
+    tiledlayout(3,3,'TileSpacing','tight','Padding','tight')
     for ifreq = 1:length(freq_inc)
         cur_color = my_colors{ifreq};
         cur_freq = freq_inc(ifreq);
@@ -66,9 +66,11 @@ for ichan = 1:length(chan_inc)
         %     amp_vec = [140 128 116];
         % end
 
-        amp_vec = [140:-3:116];
+        % amp_vec = [140:-3:116];
+        amp_vec = [140 128 116]
+        ax = gobjects(1, length(amp_vec));   % NEW: holds this row's axes
         for iamp = 1:length(amp_vec)
-            nexttile
+            ax(iamp) = nexttile; 
             cur_amp = amp_vec(iamp);
             subj_T = groupsummary(tmp_T(tmp_T.Amp == cur_amp,:), {'Subj_ID', 'rel_time'},'median','rel_val');
             subjs = unique(subj_T.Subj_ID);
@@ -79,6 +81,7 @@ for ichan = 1:length(chan_inc)
                 h.DataTipTemplate.DataTipRows(end+1) = dataTipTextRow('Subject', repmat(cur_subj, height(s_T), 1));
                 hold on;
             end
+            linkaxes(ax)
             % FORMATTING
             yline(0,'--')
             xlabel('Time (h)')

@@ -22,6 +22,7 @@ make_heatmap(G,freqs,sub_T,chans,ampVals, sprintf('%s: First Hit',cur_title))
 
 % Last stable hit
 G = groupsummary(sub_T,{'Freq','Chan','Amp'},{'median',@(x) mad(x,1)},'Stable');
+make_lineplot(G,freqs,sub_T,chans,ampVals, sprintf('%s: First Stable Hit',cur_title))
 make_heatmap(G,freqs,sub_T,chans,ampVals, sprintf('%s: First Stable Hit',cur_title))
 end
 
@@ -65,4 +66,30 @@ for ifreq = 1:length(freqs)
     title(sprintf('%d Hz',freqs(ifreq)),'FontSize',14)
 end
 sgtitle(mytitle)
+end
+
+function make_lineplot(G,freqs,sub_T,chans,ampVals,mytitle)
+figure; tiledlayout(1,numel(freqs),'TileSpacing','tight','Padding','tight')
+G.Properties.VariableNames(end-1:end) = {'med','madv'};
+for ifreq = 1:length(freqs)
+    nexttile
+    for ichan = 1:numel(chans)
+        cur_color = select_chan_color(ichan+1);
+        x_vec = unique(G.Amp((ismember(G.Chan,chans(ichan)) & ismember(G.Freq,freqs(ifreq)))));
+        y_vec = G.med(ismember(G.Chan,chans(ichan)) & ismember(G.Freq,freqs(ifreq)));
+        var_vec = G.madv(ismember(G.Chan,chans(ichan)) & ismember(G.Freq,freqs(ifreq)));
+        fill([x_vec(:); flipud(x_vec(:))], [y_vec + var_vec; flipud(y_vec - var_vec)], ...
+            cur_color, 'FaceAlpha', 0.1, 'EdgeColor', 'none','HandleVisibility','off')
+        hold on;
+        plot(x_vec,y_vec,'-','LineWidth',1.75,'Color',cur_color,'MarkerFaceColor',cur_color) 
+        scatter(x_vec,y_vec,36,cur_color,'filled','MarkerFaceAlpha',0.5,'MarkerEdgeAlpha',0.5,'HandleVisibility','off')
+        yline(260,'-','Not detected','HandleVisibility','off')
+    end
+    title(sprintf('%g Hz',freqs(ifreq)))
+    xlabel('Stimulus Amplitude (dB SPL)')
+    ylabel('N Trials Needed')
+    xlim([min(ampVals) max(ampVals)])
+end
+sgtitle('Subcranial electrodes detect responses with less trials')
+legend({'Subcranial','Subcutaneous'}, 'Location','northwest', 'Box','off')
 end

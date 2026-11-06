@@ -231,7 +231,10 @@ for ichan = 1:length(my_chans_name)
         end
 
         % Check for NaNs
-        if any(isnan(cur_y)), continue; end
+        if any(isnan(cur_y))
+            fprintf('fit_F_stat_model: NaN found in cur_y\n')
+            continue; 
+        end
 
         %% Fit all data sigmoid
         try

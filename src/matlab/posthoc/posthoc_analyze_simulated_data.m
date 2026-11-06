@@ -123,12 +123,12 @@ F_diff_mad = mad(F_stable-F_first,1,3);
 
 %% Calculate false positive rate
 no_sig = squeeze(F_first(:,1,:));
-false_pos = find(no_sig < 1030);
+false_pos = find(no_sig < n_trials);
 first_false_pos_rate = (numel(false_pos)/numel(no_sig))*100;
 
 no_sig = squeeze(F_stable(:,1,:));
 no_sig = no_sig(:);
-false_pos = find(no_sig < 1030);
+false_pos = find(no_sig < n_trials);
 stable_false_pos_rate = (numel(false_pos)/numel(no_sig))*100;
 
 false_pos_rate.first = first_false_pos_rate;

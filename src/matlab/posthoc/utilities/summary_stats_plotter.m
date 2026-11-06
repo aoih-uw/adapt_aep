@@ -32,15 +32,17 @@ summary_plot_hydro_acoustics
 %% HEATMAP
 summary_heatmap
 
-%% Create summary threshold table
-summary_create_threshold_table
+%% Plot model robustness
+summary_model_robustness
 
-%% Compare Thresholds
+%% Calculate 95% CI Threshold estimates
+summary_95_CI_thresh_est
+
+%% Compare Thresholds based on T_Frf and T_thresh table
+summary_create_threshold_table
+summary_threshold_boxplot
 summary_threshold_comparisons
 summary_endorgan_comparisons
-
-%% Threshold Box plot
-summary_threshold_boxplot
 
 % Apply Tufte
 apply_tufte

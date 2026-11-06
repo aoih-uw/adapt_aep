@@ -65,7 +65,6 @@ figure; plot_heatmap(F(:,:,end), my_chans_name, amp_vec, max_trials, cur_freq, c
 
 % Here only analyze bootstrapped runs
 boot = F(:,:,1:end-1);
-boot(boot == max_trials) = NaN;
 my_mean = mean(boot,3,'omitnan');
 ci = prctile(boot,[2.5 97.5],3);
 
@@ -77,8 +76,10 @@ for ichan = 1:size(F,1)
         my_mean(ichan,:)-ci(ichan,:,1), ci(ichan,:,2)-my_mean(ichan,:), ...
         'o','Color',cur_color,'MarkerFaceColor',cur_color)
     plot(amp_vec, F(ichan,:,end), '*', 'Color',cur_color,'MarkerSize',15)
-    yline(260)
+    yline(max_trials)
     title(my_chans_name{ichan})
+    xlim([min(amp_vec)-5 max(amp_vec)+5])
+
 end
 xlabel(t, 'Stimulus Amplitude (dB SPL)'); ylabel(t, 'N Trials Needed')
 title(t, sprintf('%s | Mean & 95%% CI: %d Hz', cur_title, cur_freq))
