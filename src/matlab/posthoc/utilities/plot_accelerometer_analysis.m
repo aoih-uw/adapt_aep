@@ -22,7 +22,7 @@ title('Hydrophone and Accelerometer (Vector Normalized) Amplitude')
 xticks(1:numel(stim_freqs))
 xticklabels(string(stim_freqs))
 xlabel('Frequency (Hz)')
-ylabel('dB RMS SPL (re: 1 \muPa)')
+ylabel('dB RMS')
 
 % Plot Impedance across Frequency
 colororder([tableau_10('red'); tableau_10('blue'); tableau_10('orange')])

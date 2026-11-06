@@ -7,7 +7,8 @@ for ichan = 1:length(chan_inc)
     nexttile
     cur_T = join_T(join_T.Chan == chan_inc(ichan),:);
     cur_color = select_chan_color(ichan + 1);
-    scatter(cur_T,"Heat_Thresh",'Model_Thresh','SizeData',60,'ColorVariable', 'Freq','LineWidth', 1.5)
+    scatter(cur_T,"Heat_Thresh",'Model_Thresh','filled','SizeData',30,'ColorVariable', 'Freq','LineWidth', 1.5,...
+        'MarkerFaceColor',cur_color,'XJitter','rand','XJitterWidth',1)
     hold on;
     % Set color
     colormap(gca, myColors)
@@ -54,7 +55,7 @@ for i = 1:numel(chan_inc)
         'FaceAlpha', 0.1, 'EdgeColor', 'none', 'HandleVisibility', 'off')
     hold on;
     plot(lims,lims,'--','Color',tableau_10('grey'))
-    gscatter(cur_chan.Model_Thresh, cur_chan.Sim, cur_chan.Freq,myColors)
+    gscatter(cur_chan.Model_Thresh, cur_chan.Sim, cur_chan.Freq,myColors,'.', 15)
     title(chan_inc{i}); xlabel('All'); ylabel('Sim'); axis equal
     xlabel('Threshold with All Data (dB)')
     ylabel('Threshold with Simulated Asymptote (dB)')

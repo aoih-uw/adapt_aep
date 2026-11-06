@@ -18,7 +18,7 @@ use_sigmoid = 0;
 plot_linear = 0;
 
 % Number of reliability/robustness runs
-n_boot = 100;
+n_boot = 5000;
 
 % Organized data
 ON_2f        = org_data.ON_2f;
@@ -30,10 +30,11 @@ phase_vec    = org_data.phase_vec;
 stim_type_idx = find(strcmp('ONOFF',stim_type_vec));
 max_batches = max_trials/trials_per_block; % e.g. 130 trials in batches of 10
 twof_growth = [];
+T_error = [];
 
 %% Set pre-alpha value 
 % pre_alpha: before adding correction for multiple comparisons
-pre_alpha = 0.05;
+pre_alpha = 0.01;
 my_alpha = pre_alpha/max_batches; % Each batch you take one peek...
 
 % Clear vars
@@ -94,7 +95,10 @@ for ifreq = 1:length(stim_freqs)
     trials_per_block, max_trials, my_chans_name, cur_freq, 'Full dataset', 1);
 
     %% Simulate removal of data points
-    T_error = sim_data_removal(F_growth,amp_vec,my_params,cur_freq);
+    cur_error = sim_data_removal(F_growth,amp_vec,my_params,cur_freq);
+    cur_error.Subj_ID = repmat(subjid, height(cur_error), 1);
+    cur_error.Freq = repmat(cur_freq, height(cur_error), 1);
+    T_error = [T_error; cur_error];
 
     %% Convert simulation results to long form table
     sim_results(ifreq) = convert_sim_data_to_long(subjid, cur_freq, amp_vec, ...

@@ -59,7 +59,7 @@ for i = 1:length(g)
             cur_thic = .5;
         end
 
-        errorbar(tmp_T_2.Frequency_Hz,tmp_T_2.Threshold,tmp_T_2.Lower_Error-tmp_T_2.Threshold,tmp_T_2.Upper_Error-tmp_T_2.Threshold,'-o','MarkerFaceColor',cur_color,'Color',cur_color, 'LineWidth',cur_thic);
+        errorbar(tmp_T_2.Frequency_Hz,tmp_T_2.Threshold,tmp_T_2.Threshold-tmp_T_2.Lower_Error,tmp_T_2.Upper_Error-tmp_T_2.Threshold,'-o','MarkerFaceColor',cur_color,'Color',cur_color, 'LineWidth',cur_thic);
         text(tmp_T_2.Frequency_Hz(end) + 5, tmp_T_2.Threshold(end), [gg(ii) g(i)], ...
             'Color', cur_color, 'Interpreter', 'none','FontSize',8);
         hold on;

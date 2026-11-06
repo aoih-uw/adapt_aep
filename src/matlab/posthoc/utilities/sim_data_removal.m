@@ -33,7 +33,12 @@ for iset = 1:numel(idxSets)
         idx = idxSets{iset};
     for ichan = 1:numel(my_chans)
         cur_y = log10(max(F_data(ichan, idx),realmin,'includenan'));
+        try
         [p, logistic, ~] = param_logistic(cur_y, amp_vec(idx));
+        catch
+            fprintf('sim_data_removal: Failed model fit')
+            continue
+        end
         y_vec = logistic(p, x_vec);
 
         % Find and assign alpha value crossing threshold
@@ -114,7 +119,7 @@ mylabels = {'Bottom-up','Top_down','6_dB_1','6_dB_2'};
 Method = mylabels(M);
 Channel = my_chans_name(C);
 T_error = table(categorical(Method(:),mylabels),S(:),categorical(Channel(:),my_chans_name), error_mat(:), ...
-    'VariableNames', {'Method','Step','Channel','Error'});
+    'VariableNames', {'Method','Step','Chan','Error'});
 T_error(isnan(T_error.Error),:) = [];
 
 % Set back warning message
