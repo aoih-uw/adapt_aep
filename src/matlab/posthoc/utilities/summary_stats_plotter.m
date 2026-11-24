@@ -4,6 +4,7 @@ freq_inc = [55, 100, 410];
 my_colors = {tableau_10('red'), tableau_10('blue'), tableau_10('orange'), tableau_10('teal'), tableau_10('purple'),tableau_10('yellow')};
 my_color_order = [tableau_10('blue'); tableau_10('orange')];
 set(groot, 'defaultAxesColorOrder', my_color_order);
+PAL_cor = [42.75 39.1 38.6];
 
 % Significance variables
 max_trials = 260;

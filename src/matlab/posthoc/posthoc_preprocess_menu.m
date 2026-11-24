@@ -13,10 +13,11 @@ file_type = 'mixed_freqs';
 % file_type = 'benzo';
 
 %% Set this when doing bulk processing!
-set(0,'DefaultFigureVisible','off');
+set(0,'DefaultFigureVisible','on');
 try
-    % subjids = 52;
-    subjids = 29:51;
+    % subjids = 52; % dead control
+    subjids = 39;
+    % subjids = 29:51;
     failed = [];
     failed_files_all = {};
     for isubj = 1:length(subjids)

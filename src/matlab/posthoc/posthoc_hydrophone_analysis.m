@@ -99,6 +99,8 @@ for ifreq = 1:size(hydro_time,5)
                 plot(x_vec,cur_sub_set(itrial,:),'Color',cur_color); hold on;
             end
             title(sprintf('%g dB',cur_amp_vec(iamp)))
+            xlabel('Time (s)')
+            ylabel('Amplitude (mV)')
             
             % FFT
             nexttile
@@ -115,6 +117,8 @@ for ifreq = 1:size(hydro_time,5)
             xlim([1 stim_freqs(ifreq)+50])
             xline(30)
             xline(stim_freqs(ifreq))
+            xlabel('Frequency(Hz)')
+            ylabel('Amplitude (mV)')
         end
     end
     sgtitle(sprintf('%g Hz',stim_freqs(ifreq)))
@@ -122,7 +126,7 @@ end
 
 %% Summary stats
 figure;
-h = tiledlayout(numel(stim_freqs),2,'TileSpacing','tight','Padding','tight');
+h = tiledlayout(1, numel(stim_freqs),'TileSpacing','tight','Padding','tight');
 for ifreq = 1:size(hydro_time,5)
     cur_color = select_chan_color(ifreq);
     cur_amp_vec = amp_vecs{ifreq};
@@ -136,29 +140,31 @@ for ifreq = 1:size(hydro_time,5)
     rms_Pa = rms_mV./microphone_mV_per_Pa;
     cur_1f = 20.*log10(rms_Pa./1e-6); % 1 micro Pa
 
-    % 30 Hz
-    rms_mV = abs(cur_30)./sqrt(2);
-    rms_Pa = rms_mV./microphone_mV_per_Pa;
-    cur_30 = 20.*log10(rms_Pa./1e-6); % 1 micro Pa
+    % % 30 Hz
+    % rms_mV = abs(cur_30)./sqrt(2);
+    % rms_Pa = rms_mV./microphone_mV_per_Pa;
+    % cur_30 = 20.*log10(rms_Pa./1e-6); % 1 micro Pa
 
     nexttile
+    plot(83:140,83:140,'--','Color',tableau_10('grey'))
+    hold on;
     boxchart(x_vec(:),cur_1f(:),'BoxFaceColor',cur_color,'JitterOutliers','on','MarkerColor',cur_color)
-    xticks(cur_amp_vec)
-    xticklabels(string(cur_amp_vec))
-    title('1f')
+    % xticks(cur_amp_vec)
+    % xticklabels(string(cur_amp_vec))
+    title(sprintf('%d Hz',stim_freqs(ifreq)))
     xlabel('Assigned Amplitude (dB SPL)')
     ylabel('Measured Amplitude (dB SPL)')
     
-    nexttile
-    boxchart(x_vec(:),cur_30(:),'BoxFaceColor',cur_color,'JitterOutliers','on','MarkerColor',cur_color)
-    xticks(cur_amp_vec)
-    xticklabels(string(cur_amp_vec))
-    title('30 Hz')
-    xlabel('Assigned Amplitude (dB SPL)')
-    ylabel('Measured Amplitude (dB SPL)')
+    % nexttile
+    % boxchart(x_vec(:),cur_30(:),'BoxFaceColor',cur_color,'JitterOutliers','on','MarkerColor',cur_color)
+    % xticks(cur_amp_vec)
+    % xticklabels(string(cur_amp_vec))
+    % title('30 Hz')
+    % xlabel('Assigned Amplitude (dB SPL)')
+    % ylabel('Measured Amplitude (dB SPL)')
 end
 sgtitle('Non trimmed hydrophone signal amplitude at stimulus frequency and 30 Hz')
-linkaxes(findobj(h,'Type','axes'),'x')
+linkaxes(findobj(h,'Type','axes'),'xy')
 
 %% Separate into different periods
 for ifreq = 1:size(hydro_time,5)
@@ -317,22 +323,30 @@ hydro_results = array2table(hydro_results,'VariableNames',column_name);
 hydro_results(isnan(hydro_results.ON_1f),:) = [];
 
 %% Plot 
-cmap = [tableau_10('blue'); tableau_10('orange')];
-for f = unique(hydro_results.Freq)'
+cmap = [tableau_10('red'); tableau_10('green'); tableau_10('purple')];
+freqs = unique(hydro_results.Freq)';
+figure; tiledlayout(1,numel(stim_freqs),'TileSpacing','tight','Padding','tight')
+
+for i = 1:numel(freqs)
+    f = freqs(i);
+    c = cmap(i,:);
     T = hydro_results(hydro_results.Freq == f,:);
     x = [T.Amp; T.Amp];
     cond = categorical([repmat("ON",height(T),1); repmat("OFF",height(T),1)]);
-
-    figure; colororder(cmap); tiledlayout(1,2)
-
-    nexttile
-    boxchart(x,[T.ON_1f; T.OFF_1f],'GroupByColor',cond,'JitterOutliers','on')
-    title('1f'); xlabel('Amp (dB SPL)'); ylabel('Measured (dB SPL)'); legend
+    G = groupsummary(T,'Amp',{'min','max'},{'ON_1f','OFF_1f'});
 
     nexttile
-    boxchart(x,[T.ON_30Hz; T.OFF_30Hz],'GroupByColor',cond,'JitterOutliers','on')
-    title('30 Hz'); xlabel('Amp (dB SPL)'); ylabel('Measured (dB SPL)'); legend
-
-    sgtitle(f + " Hz")
-    linkaxes
-end
+    plot(83:140,83:140,'--','Color',tableau_10('grey'),'HandleVisibility', 'off') 
+    hold on;
+    fill([G.Amp; flipud(G.Amp)],[G.min_OFF_1f; flipud(G.max_OFF_1f)],tableau_10('grey'),'FaceAlpha',0.2,'EdgeColor','none','HandleVisibility','off')
+    % fill([G.Amp; flipud(G.Amp)],[G.min_ON_1f; flipud(G.max_ON_1f)],c,'FaceAlpha',0.2,'EdgeColor','none','HandleVisibility','off')
+    b = boxchart(x,[T.ON_1f; T.OFF_1f],'GroupByColor',cond,'MarkerStyle','none','BoxFaceColor',c,'WhiskerLineColor',c);
+    b(1).BoxFaceColor = 'w'; b(1).BoxFaceAlpha = 1; b(1).BoxEdgeColor = tableau_10('grey');   % OFF = white
+    b(1).WhiskerLineColor = tableau_10('grey');
+    b(2).BoxFaceAlpha = 0.6;
+    xlabel('Assigned (dB SPL)'); ylabel('Measured (dB SPL)');
+    title(f + " Hz")
+end    
+linkaxes
+legend
+sgtitle('Stimulus and noise floor amplitude')

@@ -1,5 +1,6 @@
 %% summary_threshold_comparisons
-myColors = [tableau_10('blue'); tableau_10('orange');tableau_10('red')];
+myColors = [tableau_10('red'); tableau_10('green');tableau_10('purple')];
+myChanColors = [tableau_10('teal'); tableau_10('yellow')];
 
 %% Compare F Stat Threshold vs. Model
 figure; tiledlayout(1,2,'TileSpacing','tight','Padding','tight')
@@ -33,15 +34,50 @@ sgtitle('Are F Stat threshold and model thresholds in good agreement?')
 size_T = outerjoin(join_T,T_wl,'Keys',{'Subj_ID'}, 'MergeKeys',true);
 
 %% Compare Thresholds to body size
-% Subcranial
-figure; tiledlayout(1,3,'TileSpacing','tight','Padding','tight')
-cur_T = size_T(size_T.Chan == chan_inc(2),:);
-plot_size_comp(cur_T,myColors);
+figure; tiledlayout(3,1,'TileSpacing','tight','Padding','tight')
+% Weight
+for ifreq = 1:numel(freq_inc)
+    ax = nexttile;
+    for ichan = 1:numel(chan_inc)
+        cur_color = myChanColors(ichan,:);
 
-% Subcutaneous
-figure; tiledlayout(1,3,'TileSpacing','tight','Padding','tight')
-cur_T = size_T(size_T.Chan == chan_inc(1),:);
-plot_size_comp(cur_T,myColors);
+        % Select current frequency and channel
+        t_T = size_T(size_T.Freq == string(freq_inc(ifreq)) & ...
+            size_T.Chan == chan_inc(ichan),:);
+
+        % Calculate Fulton's Condition Factor K = W in grams /L in cm ^3
+        t_T.Fultons_K = t_T.Weight./(t_T.Length).^3;
+        scatter(t_T.Weight,t_T.Model_Thresh,[],cur_color,'filled','MarkerFaceAlpha',0.7)
+        hold on;
+
+        % Fit line
+        xvar = 'Weight';
+        mdl = fitlm(t_T, ['Model_Thresh ~ ' xvar]);
+        b = mdl.Coefficients.Estimate;
+        xl = [min(t_T.(xvar)) max(t_T.(xvar))];
+        h(ichan) = plot(ax, xl, b(1) + b(2)*xl, 'Color', cur_color, 'LineWidth', 2, ...
+            'DisplayName', sprintf('(%.2f, %.3g)', ...
+            mdl.Rsquared.Ordinary, mdl.Coefficients.pValue(2)));
+
+        % Label the line with the stats
+        text(ax, xl(2), b(1) + b(2)*xl(2), sprintf('(%.2f, %.3g)', ...
+            mdl.Rsquared.Ordinary, mdl.Coefficients.pValue(2)), ...
+            'Color', cur_color, 'FontSize', 8, 'VerticalAlignment', 'middle')
+
+    end
+    title(ax, string(freq_inc(ifreq)))
+    xlim(ax, [50 200])
+    if ifreq == 2
+        xlabel('Weight (g)')
+    end
+
+    if ifreq == 1
+        ylabel('Threshold (dB SPL)')
+    end
+
+end
+sgtitle('Fish size vs. Estimated Thresholds')
+
 
 %% Compare all data threshold with simulated lower asymptote threshold
 figure;tiledlayout(1,2,'TileSpacing','tight','Padding','tight')
@@ -62,59 +98,3 @@ for i = 1:numel(chan_inc)
 
 end
 sgtitle('Are Simulated Asymptote Model in Good Agreement with the Full Dataset?')
-
-function plot_size_comp(cur_T,myColors)
-% Plot Basic Length vs. Weight Correlation
-nexttile
-c = tableau_10('blue');
-scatter(cur_T,"Weight","Length",'filled','SizeData',60, ...
-    'MarkerFaceColor',c,'MarkerEdgeColor',c,'LineWidth',1.5)
-hold on;
-p = polyfit(cur_T.Weight, cur_T.Length, 1);
-xl = xlim;
-% Significance
-mdl = fitlm(cur_T,"Length ~ Weight");
-pval = mdl.Coefficients.pValue("Weight");
-plot(xl, polyval(p, xl),'Color', tableau_10('blue'), 'LineWidth', 2)
-text(0.05, 0.95, sprintf('slope = %.3f, p = %.3g', ...
-    mdl.Coefficients.Estimate("Weight"), pval), ...
-    'Units','normalized', 'VerticalAlignment','top', 'Color', c)
-title('Subject Weight vs. Length')
-
-% Weight
-ax = nexttile;
-scatter(cur_T,"Weight",'Model_Thresh','filled','SizeData',60,'ColorVariable', 'Freq','LineWidth', 1.5)
-hold on;
-colormap(gca, myColors)
-add_freq_fits(ax, cur_T, 'Weight', myColors)
-xlabel('Weight (g)')
-ylabel('Model Threshold')
-title('Weight vs. Threshold')
-
-% Length
-ax = nexttile;
-scatter(cur_T,"Length",'Model_Thresh','filled','SizeData',60,'ColorVariable', 'Freq','LineWidth', 1.5)
-hold on;
-colormap(gca, myColors)
-add_freq_fits(ax, cur_T, 'Length', myColors)
-xlabel('Length (cm)')
-ylabel('Model Threshold')
-title('Length vs. Threshold')
-sgtitle(sprintf('Size and Auditory Threshold Comparison (%s)',string(cur_T.Chan(1))))
-end
-
-function add_freq_fits(ax, T, xvar, cmap)
-hold(ax, 'on')
-freqs = unique(T.Freq);
-h = gobjects(numel(freqs),1);
-for i = 1:numel(freqs)
-    sub = T(T.Freq == freqs(i), :);
-    mdl = fitlm(sub, ['Model_Thresh ~ ' xvar]);
-    b = mdl.Coefficients.Estimate;
-    xl = [min(sub.(xvar)) max(sub.(xvar))];
-    h(i) = plot(ax, xl, b(1) + b(2)*xl, 'Color', cmap(double(freqs(i)),:), 'LineWidth', 2, ...
-        'DisplayName', sprintf('%s: R^2 = %.2f, p = %.3g', string(freqs(i)), ...
-        mdl.Rsquared.Ordinary, mdl.Coefficients.pValue(2)));
-end
-legend(ax, h, 'Location', 'best', 'Box','off')
-end

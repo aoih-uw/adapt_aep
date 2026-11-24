@@ -69,27 +69,27 @@ sgtitle(mytitle)
 end
 
 function make_lineplot(G,freqs,sub_T,chans,ampVals,mytitle)
-figure; tiledlayout(1,numel(freqs),'TileSpacing','tight','Padding','tight')
+figure; tiledlayout(2,1,"TileSpacing",'tight','Padding','tight')
+cur_colors = [tableau_10('red'); tableau_10('green'); tableau_10('purple')];
+line_styles = {'-','-'};
 G.Properties.VariableNames(end-1:end) = {'med','madv'};
-for ifreq = 1:length(freqs)
+for ichan = 1:numel(chans)
     nexttile
-    for ichan = 1:numel(chans)
-        cur_color = select_chan_color(ichan+1);
+    for ifreq = 1:length(freqs)
+        cur_color = cur_colors(ifreq,:);
         x_vec = unique(G.Amp((ismember(G.Chan,chans(ichan)) & ismember(G.Freq,freqs(ifreq)))));
         y_vec = G.med(ismember(G.Chan,chans(ichan)) & ismember(G.Freq,freqs(ifreq)));
         var_vec = G.madv(ismember(G.Chan,chans(ichan)) & ismember(G.Freq,freqs(ifreq)));
         fill([x_vec(:); flipud(x_vec(:))], [y_vec + var_vec; flipud(y_vec - var_vec)], ...
-            cur_color, 'FaceAlpha', 0.1, 'EdgeColor', 'none','HandleVisibility','off')
+            cur_color, 'FaceAlpha', 0.3, 'EdgeColor', 'none','HandleVisibility','off')
         hold on;
-        plot(x_vec,y_vec,'-','LineWidth',1.75,'Color',cur_color,'MarkerFaceColor',cur_color) 
+        plot(x_vec,y_vec,line_styles{ichan},'LineWidth',1.75,'Color',cur_color,'MarkerFaceColor',cur_color)
         scatter(x_vec,y_vec,36,cur_color,'filled','MarkerFaceAlpha',0.5,'MarkerEdgeAlpha',0.5,'HandleVisibility','off')
-        yline(260,'-','Not detected','HandleVisibility','off')
+        yline(260,'--','Not detected','Color',tableau_10('red'),'HandleVisibility','off','LineWidth',3)
     end
-    title(sprintf('%g Hz',freqs(ifreq)))
+    title(chans{ichan})
     xlabel('Stimulus Amplitude (dB SPL)')
     ylabel('N Trials Needed')
     xlim([min(ampVals) max(ampVals)])
 end
-sgtitle('Subcranial electrodes detect responses with less trials')
-legend({'Subcranial','Subcutaneous'}, 'Location','northwest', 'Box','off')
 end

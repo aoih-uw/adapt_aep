@@ -9,7 +9,15 @@ sub_T(isnan(sub_T.All),:) = [];
 
 % Plop
 figure;
-boxchart(categorical(sub_T.Freq),sub_T.CI_range,"GroupByColor",sub_T.Chan)
+my_color_order = [tableau_10('teal'); tableau_10('yellow')];
+colororder(my_color_order)
+
+freq = categorical(sub_T.Freq);
+x = double(freq);                      % 1, 2, 3... for each frequency
+g = findgroups(sub_T.Chan);            % 1 or 2 for each channel
+boxchart(freq, sub_T.CI_range, "GroupByColor", sub_T.Chan, "MarkerStyle", "none")
+hold on
+
 xlabel('Frequency (Hz)')
 ylabel('Threshold Estimate Range (dB)')
 title('95% CI Threshold Estimate')

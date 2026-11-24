@@ -122,10 +122,23 @@ F_diff_median = median(F_stable,3,'omitnan')-median(F_first,3,'omitnan');
 F_diff_mad = mad(F_stable-F_first,1,3);
 
 %% Calculate false positive rate
+% First
 no_sig = squeeze(F_first(:,1,:));
-false_pos = find(no_sig < n_trials);
-first_false_pos_rate = (numel(false_pos)/numel(no_sig))*100;
+fp = no_sig < n_trials;
+[y,x] = meshgrid(1:15, 1:20);
 
+figure('Position', [100 100 1000 300]);
+tiledlayout(1, numel(stim_freqs), 'TileSpacing', 'compact', 'Padding', 'compact');
+for ifreq = 1:numel(stim_freqs)
+    nexttile
+    scatter(x(:), y(:), 60, sort(fp(ifreq,:),'descend'), 's', 'filled');
+    colormap([0.9 0.9 0.9; tableau_10('blue')]); clim([0 1]);
+    axis equal tight off; set(gca,'YDir','reverse');
+    title(sprintf('%g Hz: %d/%d', stim_freqs(ifreq), sum(fp(ifreq,:)), n_rep));
+end
+sgtitle('AEP detection false positives')
+
+% Stable
 no_sig = squeeze(F_stable(:,1,:));
 no_sig = no_sig(:);
 false_pos = find(no_sig < n_trials);
@@ -133,6 +146,7 @@ stable_false_pos_rate = (numel(false_pos)/numel(no_sig))*100;
 
 false_pos_rate.first = first_false_pos_rate;
 false_pos_rate.stable = stable_false_pos_rate;
+
 
 %% Plot trial count heatmaps
 all_data = {F_first, F_stable, F_inconsist, F_diff_median};
@@ -169,6 +183,7 @@ end
 
 %% Plot models
 fit_simulated_models
+
 
 %% Save results
 stim_freqs = ex.info.mixed.stim_freqs;

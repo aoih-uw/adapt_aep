@@ -3,6 +3,30 @@
 ON_1f = NaN(max_trials,1,numel(stim_freqs),numel(largest_amp_vec),numel(my_chans));
 OFF_1f = NaN(max_trials,1,numel(stim_freqs),numel(largest_amp_vec),numel(my_chans));
 
+%% Plot donuts...dB RMS
+figure;
+names = ['Z'; 'Y'; 'X'];
+my_colors = [tableau_10('red'); tableau_10('green'); tableau_10('purple')];
+amp_idx = find(largest_amp_vec == max(stim_amps{ifreq}));
+cur_data = squeeze(accel_dB_per_dim(:,:,amp_idx,:)); % n_trials,freq_idx, amp_idx, xyz dim)
+cur_data = 10.^(cur_data./20).*1e-6; % convert back to linear units for this, dBs wont add up to a whole like you want since it compresses the numbers
+% RMS now we are back to m per s squared, make sure to multiply the 1e-6!!!
+cur_data = squeeze(mean(cur_data,1,'omitnan'));
+hold on;
+b = bar(cur_data,'stacked');
+alphas = [1 0.3 0.05];   % X, Y, Z (Z is the darkest)
+for k = 1:numel(b)
+    b(k).FaceColor = 'flat';
+    b(k).CData = my_colors;   % row i = color of bar i
+    b(k).FaceAlpha = alphas(k);
+end
+legend(names,'box','off')
+title('Acceleration per dimension and stimulus frequency')
+xlabel('Stimulus Frequency (Hz)')
+ylabel('Acceleration (m/s^2)')
+xticks(1:3)
+xticklabels({'55', '100', '410'})
+
 %% Plot dB Comparisons and Impedance
 figure;
 tiledlayout(1,3,'TileSpacing','tight','Padding','tight');
@@ -55,12 +79,12 @@ ylim([-34 -16])
 sgtitle('For Assigned Stimulus Frequency 140 dB SPL')
 
 %% Plot time domain signals
+% Hydrophone
 figure;
-tiledlayout(numel(stim_freqs),4,'TileSpacing','tight','Padding','tight');
+tiledlayout(numel(stim_freqs),1,'TileSpacing','tight','Padding','tight');
 
 % Set objects
 ax_hydro = gobjects(numel(stim_freqs),1);
-ax_accel = gobjects(numel(stim_freqs),3);
 
 % Randomly select one trial
 rand_idx = randperm(size(exemplar_accel_sigs,1),1);
@@ -68,10 +92,7 @@ for ifreq = 1:numel(stim_freqs)
     cur_color = select_chan_color(ifreq);
     % Get sigs
     hydro_sig = medfilt1(exemplar_hydro_sigs(rand_idx,:,ifreq));
-    x_sig = medfilt1(exemplar_accel_sigs(rand_idx,:,ifreq,1),10);
-    y_sig = medfilt1(exemplar_accel_sigs(rand_idx,:,ifreq,2),10);
-    z_sig = medfilt1(exemplar_accel_sigs(rand_idx,:,ifreq,3),10);
-    
+
     % Make x_vec
     x_vec = (0:(length(hydro_sig)-1))./fs;
 
@@ -81,27 +102,34 @@ for ifreq = 1:numel(stim_freqs)
     title('Hydrophone')
     xlabel('Time (s)')
     ylabel({sprintf('%g Hz', stim_freqs(ifreq)), 'Amplitude (mV)'})
-    
-    ax_accel(ifreq,1) = nexttile; 
-    plot(x_vec,x_sig,'Color',cur_color)
-    title('X')
-    xlabel('Time (s)')
-    
-    ax_accel(ifreq,2) = nexttile; 
-    plot(x_vec,y_sig,'Color',cur_color)
-    title('Y')
-    xlabel('Time (s)')
-    ylim([min(x_sig) max(x_sig)])
-
-    ax_accel(ifreq,3) = nexttile; 
-    plot(x_vec,z_sig,'Color',cur_color)
-    title('Z')
-    xlabel('Time (s)')
-    ylim([min(x_sig) max(x_sig)])
 end
 linkaxes(ax_hydro,'xy')
-linkaxes(ax_accel(:),'xy')
 sgtitle('Exemplar Acoustic Signals')
+
+%% Accelerometer Hodogram
+% Randomly select one trial
+figure; tiledlayout(1,numel(stim_freqs),'TileSpacing','tight','Padding','tight');
+ax_accel = gobjects(numel(stim_freqs),1);
+rand_idx = randperm(size(exemplar_accel_sigs,1),1);
+for ifreq = 1:numel(stim_freqs)
+    cur_color = select_chan_color(ifreq);
+    
+    % Get sigs
+    x_sig = medfilt1(exemplar_accel_sigs(rand_idx,:,ifreq,1),10);
+    y_sig = medfilt1(exemplar_accel_sigs(rand_idx,:,ifreq,2),10);
+    z_sig = medfilt1(exemplar_accel_sigs(rand_idx,:,ifreq,3),10);
+
+    ax_accel(ifreq,1) = nexttile; 
+    plot3(z_sig,y_sig,x_sig,'Color',cur_color)
+    axis('equal')
+    xlabel('X')
+    ylabel('Y')
+    zlabel('Z')
+    title(sprintf('%d Hz',stim_freqs(ifreq)))
+    grid('on')
+end
+linkaxes(ax_accel(:),'xyz')
+sgtitle('Accelerometer Hodogram')
 
 %% Plot FFTs
 for ifreq = 1:numel(stim_freqs)
