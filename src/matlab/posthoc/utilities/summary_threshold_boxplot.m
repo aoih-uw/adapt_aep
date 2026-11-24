@@ -1,11 +1,15 @@
 %% summary_threshold_boxplot
 freqs = unique(sub_T.Freq);
-PAL_cor = [42.75 39.1 38.6];
 [~,idx] = ismember(sub_T.Freq,freqs);
 sub_T.PAL_thresh = sub_T.Model_Thresh - PAL_cor(idx)';
+cur_colors = [tableau_10('teal'); tableau_10('yellow')];
+
+figure;
+colororder(cur_colors)
+tiledlayout(1,2,"TileSpacing","tight",'Padding','tight');
 
 % Plot SPL
-figure;
+nexttile
 [~,fx] = ismember(sub_T.Freq, freqs); % Turn frequencies into x positions
 chans = categories(sub_T.Chan);
 w = 0.6;
@@ -15,7 +19,9 @@ hold on
 % Add N count annotation
 [g,gchan,gfreq] = findgroups(sub_T.Chan,sub_T.Freq); % Find unique combinations of chan and freq in the filtered table
 n = splitapply(@(x) sum(~isnan(x)), sub_T.Model_Thresh, g); % count non-NaN entries in each group
-
+total_n_subj = splitapply(@(x) numel(unique(x)), sub_T.Subj_ID, g); % count non-NaN entries in each group
+no_thresh = total_n_subj - n;
+my_prc = compose('%1.0f%%', (1-(no_thresh./total_n_subj))*100);
 % Where did each box land?
 [~,ci] = ismember(sub_T.Chan, chans);
 gx = (((1:numel(chans))-0.5)/numel(chans) - 0.5)*w; % x placement of each group
@@ -24,8 +30,8 @@ X = fx + gx(ci)';
 % Get the x location for the text
 [~,gci] = ismember(gchan, chans); % identify the idx value of the gchan associated with the chans/box plots order
 [~,gfx] = ismember(gfreq, freqs);
-text(gfx + gx(gci)', repmat(89,size(n)), string(n), ...
-    'HorizontalAlignment', 'center', 'FontSize', 9,'Color',tableau_10('grey'))
+text(gfx + gx(gci)', repmat(145,size(my_prc)), string(my_prc), ...
+    'HorizontalAlignment', 'center', 'FontSize', 11,'Color',tableau_10('grey'))
 
 % connect paired subjects within each frequency
 % Create a list of unique IDs for each frequency and subject ID value,
@@ -36,21 +42,22 @@ g = findgroups(fx, sub_T.Subj_ID); for j = 1:max(g)
         'HandleVisibility', 'off')
 end
 
-for i = 1:numel(chans)
-    k = ci == i;
-    scatter(X(k), sub_T.Model_Thresh(k), 30, 'filled', ...
-        'MarkerFaceColor', select_chan_color(i+1), 'MarkerFaceAlpha', 0.2, ...
-        'MarkerEdgeColor', select_chan_color(i+1), 'HandleVisibility', 'off')
-end
+% Marker
+% for i = 1:numel(chans)
+%     k = ci == i;
+%     scatter(X(k), sub_T.Model_Thresh(k), 30, 'filled', ...
+%         'MarkerFaceColor', select_chan_color(i+1), 'MarkerFaceAlpha', 0.2, ...
+%         'MarkerEdgeColor', select_chan_color(i+1), 'HandleVisibility', 'off')
+% end
 
 xticks(1:numel(freqs)); xticklabels(string(freqs))
-ylim([85 145])
+ylim([85 150])
+yticks(85:5:150)
 xlabel('Frequency (Hz)'); ylabel('Threshold (dB SPL)')
-title('AEP Threshold Estimation')
-legend({'Subcranial','Subcutaneous'}, 'Location','northwest', 'Box','off')
+title('Sound Pressure')
 
 % Plot PAL
-figure;
+nexttile
 [~,fx] = ismember(sub_T.Freq, freqs); % Turn frequencies into x positions
 chans = categories(sub_T.Chan);
 w = 0.6;
@@ -69,8 +76,8 @@ X = fx + gx(ci)';
 % Get the x location for the text
 [~,gci] = ismember(gchan, chans); % identify the idx value of the gchan associated with the chans/box plots order
 [~,gfx] = ismember(gfreq, freqs);
-text(gfx + gx(gci)', repmat(43,size(n)), string(n), ...
-    'HorizontalAlignment', 'center', 'FontSize', 9,'Color',tableau_10('grey'))
+text(gfx + gx(gci)', repmat(110,size(my_prc)), my_prc, ...
+    'HorizontalAlignment', 'center', 'FontSize', 11,'Color',tableau_10('grey'))
 
 % connect paired subjects within each frequency
 % Create a list of unique IDs for each frequency and subject ID value,
@@ -81,14 +88,17 @@ g = findgroups(fx, sub_T.Subj_ID); for j = 1:max(g)
         'HandleVisibility', 'off')
 end
 
-for i = 1:numel(chans)
-    k = ci == i;
-    scatter(X(k), sub_T.PAL_thresh(k), 30, 'filled', ...
-        'MarkerFaceColor', select_chan_color(i+1), 'MarkerFaceAlpha', 0.2, ...
-        'MarkerEdgeColor', select_chan_color(i+1), 'HandleVisibility', 'off')
-end
+% Marker
+% for i = 1:numel(chans)
+%     k = ci == i;
+%     scatter(X(k), sub_T.PAL_thresh(k), 30, 'filled', ...
+%         'MarkerFaceColor', select_chan_color(i+1), 'MarkerFaceAlpha', 0.2, ...
+%         'MarkerEdgeColor', select_chan_color(i+1), 'HandleVisibility', 'off')
+% end
 
 xticks(1:numel(freqs)); xticklabels(string(freqs))
 xlabel('Frequency (Hz)'); ylabel('Threshold (dB m/s^2)')
-title('AEP Threshold Estimation')
-legend({'Subcranial','Subcutaneous'}, 'Location','northwest', 'Box','off')
+title('Particle Acceleration')
+legend({'Subcranial','Subcutaneous'}, 'Location','southeast', 'Box','off')
+ylim([40 115])
+yticks(40:5:115)

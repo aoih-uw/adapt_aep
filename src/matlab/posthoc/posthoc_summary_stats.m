@@ -83,7 +83,7 @@ T_wl = fixChan(T_wl);
 T_error = fixChan(T_error);
 
 %% Plot!
-summary_stats_plotter
+ summary_stats_plotter
 
 %% Local functions
 function T = fixChan(T)
